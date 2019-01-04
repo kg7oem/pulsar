@@ -34,10 +34,5 @@ int main(void)
 
     node1->get_output("Output")->connect(node2->get_input("Input"));
 
-    node1->reset();
-    node2->reset();
-
-    node1->get_output("Output")->notify();
-
-    cout << "Node2 is ready: " << node2->is_ready() << endl;
+    domain->step();
 }

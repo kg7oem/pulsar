@@ -26,6 +26,8 @@ class node;
 
 class domain : public std::enable_shared_from_this<domain> {
     audio::buffer zero_buffer;
+    std::vector<std::shared_ptr<node>> nodes;
+    void reset();
 
     public:
     const std::string name;
@@ -34,11 +36,14 @@ class domain : public std::enable_shared_from_this<domain> {
     domain(const std::string& name_in, const pulsar::size_type sample_rate_in, const pulsar::size_type buffer_size_in);
     virtual ~domain();
     audio::buffer& get_zero_buffer();
+    void step();
 
     template<class T, typename... Args>
     std::shared_ptr<node> make_node(Args... args)
     {
-        return std::make_shared<T>(args..., this->shared_from_this());
+        auto new_node = std::make_shared<T>(args..., this->shared_from_this());
+        nodes.push_back(new_node);
+        return new_node;
     }
 };
 

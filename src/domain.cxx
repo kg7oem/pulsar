@@ -12,6 +12,7 @@
 // GNU Lesser General Public License for more details.
 
 #include "domain.h"
+#include "node.h"
 
 namespace pulsar {
 
@@ -27,6 +28,24 @@ domain::~domain()
 audio::buffer& domain::get_zero_buffer()
 {
     return zero_buffer;
+}
+
+void domain::reset()
+{
+    for(auto node : nodes) {
+        node->reset();
+    }
+}
+
+void domain::step()
+{
+    reset();
+
+    for(auto node : nodes) {
+        if (node->is_ready()) {
+            node->get_output("Output")->notify();
+        }
+    }
 }
 
 } // namespace pulsar
