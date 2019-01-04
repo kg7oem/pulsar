@@ -83,6 +83,7 @@ struct link {
     output * sink;
     input * source;
     link(output * sink_in, input * source_in);
+    void notify();
 };
 
 } // namespace audio

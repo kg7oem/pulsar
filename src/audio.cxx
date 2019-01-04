@@ -119,6 +119,13 @@ void audio::input::connect(audio::output * source_in) {
     source_in->add_link(new_link);
 }
 
+void audio::input::link_ready(link *)
+{
+    if (--links_waiting == 0) {
+        throw std::runtime_error("can't go on CPU yet");
+    }
+}
+
 pulsar::size_type audio::input::get_links_waiting()
 {
     return links_waiting.load();
@@ -175,10 +182,22 @@ void audio::output::connect(audio::input * sink_in)
     sink_in->add_link(new_link);
 }
 
+void audio::output::notify()
+{
+    for(auto link : links) {
+        link->notify();
+    }
+}
+
 audio::link::link(audio::output * sink_in, audio::input * source_in)
 : sink(sink_in), source(source_in)
 {
 
+}
+
+void audio::link::notify()
+{
+    source->link_ready(this);
 }
 
 } // namespace pulsar
