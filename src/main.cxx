@@ -21,18 +21,47 @@ using namespace std;
 
 #define SAMPLE_RATE 48000
 #define BUFFER_SIZE 1024
+#define NUM_THREADS 4
 
 int main(void)
 {
     auto domain = make_shared<pulsar::domain>("main", SAMPLE_RATE, BUFFER_SIZE);
 
-    auto node1 = domain->make_node<pulsar::node>("one");
-    node1->add_output("Output");
+    auto node1 = domain->make_node<pulsar::node>("root");
+    node1->audio.add_output("Output");
 
-    auto node2 = domain->make_node<pulsar::node>("two");
-    node2->add_input("Input");
+    auto node2 = domain->make_node<pulsar::node>("intermediate 1");
+    node2->audio.add_input("Input");
+    node2->audio.add_output("Output");
 
-    node1->get_output("Output")->connect(node2->get_input("Input"));
+    auto node3 = domain->make_node<pulsar::node>("intermediate 2");
+    node3->audio.add_input("Input");
+    node3->audio.add_output("Output");
 
+    auto node4 = domain->make_node<pulsar::node>("intermediate 3");
+    node4->audio.add_input("Input");
+    node4->audio.add_output("Output");
+
+    auto node5 = domain->make_node<pulsar::node>("multiple inputs");
+    node5->audio.add_input("Input 1");
+    node5->audio.add_input("Input 2");
+    node5->audio.add_input("Input 3");
+    node5->audio.add_output("Output");
+
+    auto node6 = domain->make_node<pulsar::node>("mixed outputs");
+    node6->audio.add_input("Input");
+
+    node1->audio.get_output("Output")->connect(node2->audio.get_input("Input"));
+    node1->audio.get_output("Output")->connect(node3->audio.get_input("Input"));
+    node1->audio.get_output("Output")->connect(node4->audio.get_input("Input"));
+
+    node2->audio.get_output("Output")->connect(node5->audio.get_input("Input 1"));
+    node3->audio.get_output("Output")->connect(node5->audio.get_input("Input 2"));
+    node4->audio.get_output("Output")->connect(node5->audio.get_input("Input 3"));
+
+    node2->audio.get_output("Output")->connect(node6->audio.get_input("Input"));
+    node5->audio.get_output("Output")->connect(node6->audio.get_input("Input"));
+
+    domain->activate(NUM_THREADS);
     domain->step();
 }

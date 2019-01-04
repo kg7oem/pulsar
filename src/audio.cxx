@@ -32,16 +32,15 @@ audio::buffer::~buffer()
 
 void audio::buffer::init(const pulsar::size_type buffer_size_in)
 {
+    assert(own_memory == true);
     assert(pointer == nullptr);
 
+    size = buffer_size_in;
     pointer = static_cast<pulsar::sample_type *>(std::calloc(size, sizeof(pulsar::sample_type)));
 
     if (pointer == nullptr) {
         throw std::runtime_error("could not allocate memory for audio buffer");
     }
-
-    own_memory = true;
-    size = buffer_size_in;
 
     return;
 }
@@ -84,12 +83,14 @@ void audio::buffer::mix(buffer * mix_from_in)
 
 audio::channel::channel(const std::string &name_in, pulsar::node * parent_in)
 : parent(parent_in), name(name_in)
+{ }
+
+audio::channel::~channel()
+{ }
+
+void audio::channel::activate()
 {
     buffer.init(parent->get_domain()->buffer_size);
-}
-
-audio::channel::~channel() {
-
 }
 
 void audio::channel::add_link(link * link_in)
@@ -122,7 +123,7 @@ void audio::input::connect(audio::output * source_in) {
 void audio::input::link_ready(link *)
 {
     if (--links_waiting == 0) {
-        throw std::runtime_error("can't go on CPU yet");
+        parent->audio.source_ready(this);
     }
 }
 
@@ -198,6 +199,116 @@ audio::link::link(audio::output * sink_in, audio::input * source_in)
 void audio::link::notify()
 {
     source->link_ready(this);
+}
+
+audio::component::component(node * parent_in)
+: parent(parent_in)
+{
+
+}
+
+audio::component::~component()
+{
+    for (auto i : sources) {
+        delete i.second;
+    }
+
+    for(auto i : sinks) {
+        delete i.second;
+    }
+
+    sources.clear();
+    sinks.clear();
+}
+
+pulsar::size_type audio::component::get_sources_waiting()
+{
+    return sources_waiting.load();
+}
+
+bool audio::component::is_ready()
+{
+    return get_sources_waiting() == 0;
+}
+
+void audio::component::activate()
+{
+    for (auto input : sources) {
+        input.second->activate();
+    }
+
+    for(auto output : sinks) {
+        output.second->activate();
+    }
+}
+
+void audio::component::notify()
+{
+    for (auto output : sinks) {
+        output.second->notify();
+    }
+}
+
+void audio::component::reset()
+{
+    pulsar::size_type inputs_with_links = 0;
+
+    for(auto input : sources) {
+        input.second->reset();
+
+        if (input.second->get_links_waiting() > 0) {
+            inputs_with_links++;
+        }
+    }
+
+    sources_waiting.store(inputs_with_links);
+}
+
+void audio::component::source_ready(audio::input *)
+{
+    if (--sources_waiting == 0 && parent->is_ready()) {
+        parent->get_domain()->add_ready_node(parent);
+    }
+}
+
+audio::input * audio::component::add_input(const std::string& name_in)
+{
+    if (sources.count(name_in) != 0) {
+        throw std::runtime_error("attempt to add duplicate input name: " + name_in);
+    }
+
+    auto new_input = new audio::input(name_in, parent);
+    sources[new_input->name] = new_input;
+    return new_input;
+}
+
+audio::input * audio::component::get_input(const std::string& name_in)
+{
+    if (sources.count(name_in) == 0) {
+        throw std::runtime_error("could not find input channel named " + name_in);
+    }
+
+    return sources[name_in];
+}
+
+audio::output * audio::component::add_output(const std::string& name_in)
+{
+    if (sinks.count(name_in) != 0) {
+        throw std::runtime_error("attempt to add duplicate output name: " + name_in);
+    }
+
+    auto new_output = new audio::output(name_in, parent);
+    sinks[new_output->name] = new_output;
+    return new_output;
+}
+
+audio::output * audio::component::get_output(const std::string& name_in)
+{
+    if (sinks.count(name_in) == 0) {
+        throw std::runtime_error("could not find output channel named " + name_in);
+    }
+
+    return sinks[name_in];
 }
 
 } // namespace pulsar

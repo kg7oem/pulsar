@@ -16,3 +16,5 @@ add_executable(
     src/main.cxx
     src/node.cxx
 )
+
+target_link_libraries(pulsar-dev ${CMAKE_THREAD_LIBS_INIT})

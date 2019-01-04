@@ -14,6 +14,7 @@
 #pragma once
 
 #include <atomic>
+#include <map>
 #include <memory>
 #include <vector>
 
@@ -32,7 +33,7 @@ struct output;
 class buffer {
     pulsar::size_type size = 0;
     pulsar::sample_type * pointer = nullptr;
-    bool own_memory = false;
+    bool own_memory = true;
 
     public:
     ~buffer();
@@ -40,6 +41,7 @@ class buffer {
     pulsar::size_type get_size();
     pulsar::sample_type * get_pointer();
     void set_pointer(pulsar::sample_type * pointer_in);
+    void release_memory();
     void zero();
     void mix(buffer * mix_from_in);
 };
@@ -55,6 +57,7 @@ class channel {
     public:
     const std::string name;
     virtual ~channel();
+    void activate();
     void add_link(link * link_in);
     node * get_parent();
     audio::buffer * get_buffer();
@@ -84,6 +87,27 @@ struct link {
     input * source;
     link(output * sink_in, input * source_in);
     void notify();
+};
+
+class component {
+    node * parent = nullptr;
+    std::map<std::string, audio::input *> sources;
+    std::map<std::string, audio::output *> sinks;
+    std::atomic<pulsar::size_type> sources_waiting = ATOMIC_VAR_INIT(0);
+
+    public:
+    component(node * parent_in);
+    ~component();
+    bool is_ready();
+    void activate();
+    void notify();
+    void reset();
+    void source_ready(audio::input * ready_source_in);
+    pulsar::size_type get_sources_waiting();
+    audio::input * add_input(const std::string& name_in);
+    audio::input * get_input(const std::string& name_in);
+    audio::output * add_output(const std::string& name_in);
+    audio::output * get_output(const std::string& name_out);
 };
 
 } // namespace audio

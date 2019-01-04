@@ -12,7 +12,9 @@
 // GNU Lesser General Public License for more details.
 
 #include <cassert>
+#include <chrono>
 #include <cstdlib>
+#include <iostream>
 #include <stdexcept>
 
 #include "node.h"
@@ -20,27 +22,11 @@
 namespace pulsar {
 
 node::node(const std::string& name_in, std::shared_ptr<pulsar::domain> domain_in)
-: domain(domain_in), name(name_in)
+: domain(domain_in), name(name_in), audio(this)
 { }
 
 node::~node()
-{
-    for (auto i : sources) {
-        delete i;
-    }
-
-    for(auto i : sinks) {
-        delete i;
-    }
-
-    sources.clear();
-    sinks.clear();
-}
-
-pulsar::size_type node::get_sources_waiting()
-{
-    return sources_waiting.load();
-}
+{ }
 
 std::shared_ptr<domain> node::get_domain()
 {
@@ -49,69 +35,41 @@ std::shared_ptr<domain> node::get_domain()
 
 void node::activate()
 {
+    audio.activate();
 
+    handle_activate();
+}
+
+// FIXME placeholder for pure virtual function
+void node::handle_activate()
+{
+
+}
+
+void node::run()
+{
+    handle_run();
+
+    audio.notify();
+}
+
+// FIXME placeholder for pure virtual function
+void node::handle_run()
+{
+    using namespace std::chrono_literals;
+
+    std::cout << "Running node: " << name << std::endl;
+    std::this_thread::sleep_for(1s);
 }
 
 void node::reset()
 {
-    pulsar::size_type inputs_with_links = 0;
-
-    for(auto&& input : sources) {
-        input->reset();
-        if (input->get_links_waiting() > 0) {
-            inputs_with_links++;
-        }
-    }
-
-    sources_waiting.store(inputs_with_links);
-}
-
-void node::source_ready(audio::input *)
-{
-    if (--sources_waiting == 0) {
-        throw std::runtime_error("can't schedule execution yet");
-    }
+    audio.reset();
 }
 
 bool node::is_ready()
 {
-    return get_sources_waiting() == 0;
-}
-
-audio::input * node::add_input(const std::string& name_in)
-{
-    auto new_input = new audio::input(name_in, this);
-    sources.push_back(new_input);
-    return new_input;
-}
-
-audio::input * node::get_input(const std::string& name_in)
-{
-    for (auto input : sources) {
-        if (input->name == name_in) {
-            return input;
-        }
-    }
-
-    throw std::runtime_error("could not find input channel named " + name_in);
-}
-
-audio::output * node::add_output(const std::string& name_in)
-{
-    auto new_output = new audio::output(name_in, this);
-    sinks.push_back(new_output);
-    return new_output;
-}
-
-audio::output * node::get_output(const std::string& name_in)
-{
-    for (auto output : sinks) {
-        if (output->name == name_in) {
-            return output;
-        }
-    }
-
-    throw std::runtime_error("could not find output channel named " + name_in);
+    return audio.is_ready();
 }
 
 } // namespace pulsar
