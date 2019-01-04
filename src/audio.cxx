@@ -143,7 +143,7 @@ pulsar::sample_type * audio::input::get_pointer()
     } else if (num_links == 1) {
         return links[0]->source->get_buffer()->get_pointer();
     } else {
-        mix_inputs();
+        mix_sinks();
         return buffer.get_pointer();
     }
 }
@@ -153,7 +153,7 @@ void audio::input::reset()
     links_waiting.store(links.size());
 }
 
-void audio::input::mix_inputs()
+void audio::input::mix_sinks()
 {
     buffer.zero();
 

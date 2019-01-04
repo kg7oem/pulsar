@@ -47,8 +47,6 @@ class buffer {
 class channel {
     protected:
     node * parent;
-    // FIXME if any thread can wind up changing the contents of this buffer
-    // with out locking does the type need to be made volatile?
     audio::buffer buffer;
     std::vector<link *> links;
 
@@ -62,7 +60,7 @@ class channel {
     audio::buffer * get_buffer();
 };
 
-struct input : public channel {
+class input : public channel {
     std::atomic<pulsar::size_type> links_waiting = ATOMIC_VAR_INIT(0);
 
     public:
@@ -70,7 +68,7 @@ struct input : public channel {
     pulsar::size_type get_links_waiting();
     pulsar::sample_type * get_pointer();
     void connect(output * sink_in);
-    void mix_inputs();
+    void mix_sinks();
     void link_ready(link * link_in);
     void reset();
 };
