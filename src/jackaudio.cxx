@@ -30,6 +30,21 @@ jackaudio::node::~node()
     jack_ports.empty();
 }
 
+void jackaudio::node::reset()
+{
+    did_notify = false;
+    pulsar::node::reset();
+}
+
+bool jackaudio::node::is_ready()
+{
+    if (! did_notify.load()) {
+        return false;
+    }
+
+    return pulsar::node::is_ready();
+}
+
 void jackaudio::node::open(const std::string& jack_name_in)
 {
     jack_client = jack_client_open(jack_name_in.c_str(), jack_options, 0);
@@ -88,13 +103,11 @@ void jackaudio::node::handle_activate()
 
     for(auto name : audio.get_output_names()) {
         auto output = audio.get_output(name);
-        output->get_buffer()->release_memory();
         add_port(output->name, JACK_DEFAULT_AUDIO_TYPE, JackPortIsInput);
     }
 
     for(auto name : audio.get_input_names()) {
         auto input = audio.get_input(name);
-        input->get_buffer()->release_memory();
         add_port(input->name, JACK_DEFAULT_AUDIO_TYPE, JackPortIsOutput);
     }
 
@@ -114,33 +127,28 @@ void jackaudio::node::handle_jack_process(jack_nframes_t nframes_in)
         throw std::runtime_error("jackaudio process request and buffer size were not the same");
     }
 
+    domain->reset();
+
     for(auto name : audio.get_output_names()) {
         auto output = audio.get_output(name);
-        auto buffer = get_port_buffer(name);
-        output->get_buffer()->set_pointer(buffer);
+        auto jack_buffer = get_port_buffer(name);
+        output->get_buffer()->set(jack_buffer, nframes_in);
+        std::cout << "going to notify node: " << output->get_parent()->name << std::endl;
+        output->notify();
     }
+
+    did_notify = true;
+    domain->step();
 
     for(auto name : audio.get_input_names()) {
         auto input = audio.get_input(name);
-        auto buffer = get_port_buffer(name);
-        input->get_buffer()->set_pointer(buffer);
-    }
-
-    domain->step();
-
-    for(auto name : audio.get_output_names()) {
-        audio.get_output(name)->get_buffer()->clear_pointer();
-    }
-
-    for(auto name : audio.get_input_names()) {
-        audio.get_input(name)->get_buffer()->clear_pointer();
+        auto jack_buffer = get_port_buffer(name);
+        input->get_buffer()->set(jack_buffer, nframes_in);
     }
 }
 
 void jackaudio::node::handle_run()
-{
-    std::cout << "jackaudio node handle_run() was invoked" << std::endl;
-}
+{ }
 
 void jackaudio::node::start()
 {

@@ -34,6 +34,7 @@ class node : public pulsar::node {
     client_type * jack_client = nullptr;
     const options_type jack_options = JackNoStartServer;
     std::map<std::string, port_type *> jack_ports;
+    std::atomic<bool> did_notify = ATOMIC_VAR_INIT(false);
     port_type * add_port(const std::string& port_name_in, const char * port_type_in, const flags_type flags_in, const size_type buffer_size_in = 0);
     sample_type * get_port_buffer(const std::string& port_name_in);
     virtual void handle_activate() override;
@@ -43,6 +44,8 @@ class node : public pulsar::node {
     public:
     node(const std::string& name_in, std::shared_ptr<pulsar::domain> domain_in);
     ~node();
+    virtual void reset();
+    virtual bool is_ready();
     void open(const std::string& jack_name_in);
     void start();
 };

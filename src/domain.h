@@ -43,7 +43,6 @@ struct domain : public std::enable_shared_from_this<domain> {
     mutex_type step_done_mutex;
     bool activated = false;
     bool step_done_flag = false;
-    void reset();
     lock_type make_step_done_lock();
     lock_type make_run_queue_lock();
     static void be_thread(domain * domain_in);
@@ -56,6 +55,7 @@ struct domain : public std::enable_shared_from_this<domain> {
     virtual ~domain();
     audio::buffer& get_zero_buffer();
     void activate(const size_type num_threads_in = 1);
+    void reset();
     void step();
     void add_ready_node(node * node_in);
     template<class T, typename... Args>

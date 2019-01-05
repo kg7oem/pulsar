@@ -14,6 +14,7 @@
 #include <cassert>
 #include <cstdlib>
 #include <cstring>
+#include <iostream>
 #include <stdexcept>
 
 #include "audio.h"
@@ -58,24 +59,24 @@ pulsar::sample_type * audio::buffer::get_pointer()
     return pointer;
 }
 
-void audio::buffer::set_pointer(pulsar::sample_type * pointer_in)
-{
-    assert(own_memory == false);
-    pointer = pointer_in;
-}
+// void audio::buffer::set_pointer(pulsar::sample_type * pointer_in)
+// {
+//     assert(own_memory == false);
+//     pointer = pointer_in;
+// }
 
-void audio::buffer::clear_pointer()
-{
-    set_pointer(nullptr);
-}
+// void audio::buffer::clear_pointer()
+// {
+//     set_pointer(nullptr);
+// }
 
-void audio::buffer::release_memory()
-{
-    assert(own_memory == true);
-    free(pointer);
-    pointer = nullptr;
-    own_memory = false;
-}
+// void audio::buffer::release_memory()
+// {
+//     assert(own_memory == true);
+//     free(pointer);
+//     pointer = nullptr;
+//     own_memory = false;
+// }
 
 void audio::buffer::zero()
 {
@@ -93,6 +94,34 @@ void audio::buffer::mix(buffer * mix_from_in)
 
     for(size_type i = 0; i < size; i++) {
         pointer[i] += src_p[i];
+    }
+}
+
+void audio::buffer::set(pulsar::sample_type * pointer_in, const size_type size_in)
+{
+    if (size_in > size) {
+        throw std::runtime_error("attempt to set buffer contents with a size that was too large");
+    }
+
+    for(size_type i = 0; i < size_in; i++) {
+        pointer[i] = pointer_in[i];
+    }
+}
+
+void audio::buffer::set(buffer * buffer_in)
+{
+    if (size != buffer_in->size) {
+        throw std::runtime_error("attempt to set buffer contents from buffer of different size");
+    }
+
+    auto src_p = buffer_in->get_pointer();
+    set(src_p, size);
+}
+
+void audio::buffer::scale(const float scale_in)
+{
+    for(size_type i = 0; i < size; i++) {
+        pointer[i] /= scale_in;
     }
 }
 

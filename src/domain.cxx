@@ -11,6 +11,8 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
 
+#include <iostream>
+
 #include "domain.h"
 #include "node.h"
 
@@ -73,8 +75,6 @@ void domain::step()
     auto lock = make_step_done_lock();
     step_done_flag = false;
 
-    reset();
-
     remaining_nodes.store(nodes.size());
 
     for(auto node : nodes) {
@@ -89,6 +89,9 @@ void domain::step()
 void domain::add_ready_node(node * node_in)
 {
     auto lock = make_run_queue_lock();
+
+    std::cout << "adding ready node: " << node_in->name << std::endl;
+
     run_queue.push_back(node_in);
     run_queue_condition.notify_all();
 }
@@ -105,7 +108,10 @@ void domain::be_thread(domain * domain_in)
         domain_in->run_queue.pop_back();
 
         lock.unlock();
+
+        std::cout << "running node: " << ready_node->name << std::endl;
         ready_node->run();
+        std::cout << "done running node: " << ready_node->name << std::endl;
 
         if (--domain_in->remaining_nodes == 0) {
             auto done_lock = domain_in->make_step_done_lock();

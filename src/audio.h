@@ -40,11 +40,14 @@ class buffer {
     void init(const pulsar::size_type buffer_size_in);
     pulsar::size_type get_size();
     pulsar::sample_type * get_pointer();
-    void set_pointer(pulsar::sample_type * pointer_in);
-    void clear_pointer();
-    void release_memory();
+    // void set_pointer(pulsar::sample_type * pointer_in);
+    // void clear_pointer();
+    // void release_memory();
     void zero();
     void mix(buffer * mix_from_in);
+    void set(sample_type * pointer_in, const size_type size_in);
+    void set(buffer * buffer_in);
+    void scale(const float scale_in);
 };
 
 class channel {

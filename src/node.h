@@ -38,8 +38,8 @@ class node {
     std::shared_ptr<pulsar::domain> get_domain();
     void activate();
     void run();
-    void reset();
-    bool is_ready();
+    virtual void reset();
+    virtual bool is_ready();
 }; // struct node
 
 class dummy_node : public node {

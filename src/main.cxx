@@ -60,7 +60,7 @@ int main(void)
     node6->audio.add_input("Input");
     node6->audio.add_output("Output");
 
-    jack->audio.get_output("Output")->connect(node2->audio.get_input("Input"));
+    jack->audio.get_output("Output")->connect(node1->audio.get_input("Input"));
 
     node1->audio.get_output("Output")->connect(node2->audio.get_input("Input"));
     node1->audio.get_output("Output")->connect(node3->audio.get_input("Input"));
@@ -73,9 +73,7 @@ int main(void)
     node2->audio.get_output("Output")->connect(node6->audio.get_input("Input"));
     node5->audio.get_output("Output")->connect(node6->audio.get_input("Input"));
 
-    // FIXME this causes everything to freeze and with out it handle_run() for the
-    // jackaudio node runs too soon
-    // jack->audio.get_input("Input")->connect(node6->audio.get_output("Output"));
+    jack->audio.get_input("Input")->connect(node6->audio.get_output("Output"));
 
     domain->activate(NUM_THREADS);
     jack->start();
