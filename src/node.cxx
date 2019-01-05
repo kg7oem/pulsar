@@ -40,26 +40,11 @@ void node::activate()
     handle_activate();
 }
 
-// FIXME placeholder for pure virtual function
-void node::handle_activate()
-{
-
-}
-
 void node::run()
 {
     handle_run();
 
     audio.notify();
-}
-
-// FIXME placeholder for pure virtual function
-void node::handle_run()
-{
-    using namespace std::chrono_literals;
-
-    std::cout << "Running node: " << name << std::endl;
-    std::this_thread::sleep_for(1s);
 }
 
 void node::reset()
@@ -70,6 +55,18 @@ void node::reset()
 bool node::is_ready()
 {
     return audio.is_ready();
+}
+
+dummy_node::dummy_node(const std::string& name_in, std::shared_ptr<pulsar::domain> domain_in)
+: node(name_in, domain_in)
+{ }
+
+void dummy_node::handle_activate()
+{ }
+
+void dummy_node::handle_run()
+{
+
 }
 
 } // namespace pulsar

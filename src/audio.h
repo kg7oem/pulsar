@@ -41,6 +41,7 @@ class buffer {
     pulsar::size_type get_size();
     pulsar::sample_type * get_pointer();
     void set_pointer(pulsar::sample_type * pointer_in);
+    void clear_pointer();
     void release_memory();
     void zero();
     void mix(buffer * mix_from_in);
@@ -90,6 +91,8 @@ struct link {
 };
 
 class component {
+    friend node;
+
     node * parent = nullptr;
     std::map<std::string, audio::input *> sources;
     std::map<std::string, audio::output *> sinks;
@@ -106,8 +109,10 @@ class component {
     pulsar::size_type get_sources_waiting();
     audio::input * add_input(const std::string& name_in);
     audio::input * get_input(const std::string& name_in);
+    std::vector<std::string> get_input_names();
     audio::output * add_output(const std::string& name_in);
     audio::output * get_output(const std::string& name_out);
+    std::vector<std::string> get_output_names();
 };
 
 } // namespace audio

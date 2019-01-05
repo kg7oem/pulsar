@@ -15,9 +15,11 @@
 #include <iostream>
 
 #include "domain.h"
+#include "jackaudio.h"
 #include "node.h"
 
 using namespace std;
+using namespace std::chrono_literals;
 
 #define SAMPLE_RATE 48000
 #define BUFFER_SIZE 1024
@@ -27,29 +29,38 @@ int main(void)
 {
     auto domain = make_shared<pulsar::domain>("main", SAMPLE_RATE, BUFFER_SIZE);
 
-    auto node1 = domain->make_node<pulsar::node>("root");
+    auto jack = domain->make_node<pulsar::jackaudio::node>("root");
+    jack->open("test");
+    jack->audio.add_output("Output");
+    jack->audio.add_input("Input");
+
+    auto node1 = domain->make_node<pulsar::dummy_node>("why not");
+    node1->audio.add_input("Input");
     node1->audio.add_output("Output");
 
-    auto node2 = domain->make_node<pulsar::node>("intermediate 1");
+    auto node2 = domain->make_node<pulsar::dummy_node>("intermediate 1");
     node2->audio.add_input("Input");
     node2->audio.add_output("Output");
 
-    auto node3 = domain->make_node<pulsar::node>("intermediate 2");
+    auto node3 = domain->make_node<pulsar::dummy_node>("intermediate 2");
     node3->audio.add_input("Input");
     node3->audio.add_output("Output");
 
-    auto node4 = domain->make_node<pulsar::node>("intermediate 3");
+    auto node4 = domain->make_node<pulsar::dummy_node>("intermediate 3");
     node4->audio.add_input("Input");
     node4->audio.add_output("Output");
 
-    auto node5 = domain->make_node<pulsar::node>("multiple inputs");
+    auto node5 = domain->make_node<pulsar::dummy_node>("multiple inputs");
     node5->audio.add_input("Input 1");
     node5->audio.add_input("Input 2");
     node5->audio.add_input("Input 3");
     node5->audio.add_output("Output");
 
-    auto node6 = domain->make_node<pulsar::node>("mixed outputs");
+    auto node6 = domain->make_node<pulsar::dummy_node>("mixed outputs");
     node6->audio.add_input("Input");
+    node6->audio.add_output("Output");
+
+    jack->audio.get_output("Output")->connect(node2->audio.get_input("Input"));
 
     node1->audio.get_output("Output")->connect(node2->audio.get_input("Input"));
     node1->audio.get_output("Output")->connect(node3->audio.get_input("Input"));
@@ -62,6 +73,14 @@ int main(void)
     node2->audio.get_output("Output")->connect(node6->audio.get_input("Input"));
     node5->audio.get_output("Output")->connect(node6->audio.get_input("Input"));
 
+    // FIXME this causes everything to freeze and with out it handle_run() for the
+    // jackaudio node runs too soon
+    // jack->audio.get_input("Input")->connect(node6->audio.get_output("Output"));
+
     domain->activate(NUM_THREADS);
-    domain->step();
+    jack->start();
+
+    while(1) {
+        std::this_thread::sleep_for(1s);
+    }
 }

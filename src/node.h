@@ -25,12 +25,10 @@
 namespace pulsar {
 
 class node {
-    std::shared_ptr<pulsar::domain> domain;
-
     protected:
-    // FIXME should be pure virtual
-    virtual void handle_activate();
-    virtual void handle_run();
+    std::shared_ptr<pulsar::domain> domain;
+    virtual void handle_activate() = 0;
+    virtual void handle_run() = 0;
 
     public:
     const std::string name;
@@ -43,5 +41,13 @@ class node {
     void reset();
     bool is_ready();
 }; // struct node
+
+class dummy_node : public node {
+    virtual void handle_activate() override;
+    virtual void handle_run() override;
+
+    public:
+    dummy_node(const std::string& name_in, std::shared_ptr<pulsar::domain> domain_in);
+};
 
 } // namespace pulsar

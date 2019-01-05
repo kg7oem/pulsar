@@ -13,8 +13,10 @@ add_executable(
 
     src/audio.cxx
     src/domain.cxx
+    src/jackaudio.cxx
     src/main.cxx
     src/node.cxx
 )
 
 target_link_libraries(pulsar-dev ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(pulsar-dev jack)

@@ -32,14 +32,16 @@ audio::buffer::~buffer()
 
 void audio::buffer::init(const pulsar::size_type buffer_size_in)
 {
-    assert(own_memory == true);
     assert(pointer == nullptr);
 
     size = buffer_size_in;
-    pointer = static_cast<pulsar::sample_type *>(std::calloc(size, sizeof(pulsar::sample_type)));
 
-    if (pointer == nullptr) {
-        throw std::runtime_error("could not allocate memory for audio buffer");
+    if (own_memory) {
+        pointer = static_cast<pulsar::sample_type *>(std::calloc(size, sizeof(pulsar::sample_type)));
+
+        if (pointer == nullptr) {
+            throw std::runtime_error("could not allocate memory for audio buffer");
+        }
     }
 
     return;
@@ -60,6 +62,19 @@ void audio::buffer::set_pointer(pulsar::sample_type * pointer_in)
 {
     assert(own_memory == false);
     pointer = pointer_in;
+}
+
+void audio::buffer::clear_pointer()
+{
+    set_pointer(nullptr);
+}
+
+void audio::buffer::release_memory()
+{
+    assert(own_memory == true);
+    free(pointer);
+    pointer = nullptr;
+    own_memory = false;
 }
 
 void audio::buffer::zero()
@@ -291,6 +306,17 @@ audio::input * audio::component::get_input(const std::string& name_in)
     return sources[name_in];
 }
 
+std::vector<std::string> audio::component::get_input_names()
+{
+    std::vector<std::string> retval;
+
+    for(auto input : sources) {
+        retval.push_back(input.first);
+    }
+
+    return retval;
+}
+
 audio::output * audio::component::add_output(const std::string& name_in)
 {
     if (sinks.count(name_in) != 0) {
@@ -309,6 +335,17 @@ audio::output * audio::component::get_output(const std::string& name_in)
     }
 
     return sinks[name_in];
+}
+
+std::vector<std::string> audio::component::get_output_names()
+{
+    std::vector<std::string> retval;
+
+    for(auto output : sinks) {
+        retval.push_back(output.first);
+    }
+
+    return retval;
 }
 
 } // namespace pulsar
