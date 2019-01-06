@@ -84,7 +84,7 @@ void audio::buffer::zero()
     std::memset(pointer, 0, size);
 }
 
-void audio::buffer::mix(buffer * mix_from_in)
+void audio::buffer::mix(std::shared_ptr<audio::buffer> mix_from_in)
 {
     if (size != mix_from_in->size) {
         throw std::runtime_error("attempt to mix buffers of different size");
@@ -108,7 +108,7 @@ void audio::buffer::set(pulsar::sample_type * pointer_in, const size_type size_i
     }
 }
 
-void audio::buffer::set(buffer * buffer_in)
+void audio::buffer::set(std::shared_ptr<audio::buffer> buffer_in)
 {
     if (size != buffer_in->size) {
         throw std::runtime_error("attempt to set buffer contents from buffer of different size");
@@ -134,7 +134,8 @@ audio::channel::~channel()
 
 void audio::channel::activate()
 {
-    buffer.init(parent->get_domain()->buffer_size);
+    buffer = std::make_shared<audio::buffer>();
+    buffer->init(parent->get_domain()->buffer_size);
 }
 
 void audio::channel::add_link(link * link_in)
@@ -147,9 +148,9 @@ node * audio::channel::get_parent()
     return parent;
 }
 
-audio::buffer * audio::channel::get_buffer()
+std::shared_ptr<audio::buffer> audio::channel::get_buffer()
 {
-    return &buffer;
+    return buffer;
 }
 
 audio::input::input(const std::string& name_in, node * parent_in)
@@ -193,24 +194,28 @@ pulsar::sample_type * audio::input::get_pointer()
     if (num_links == 0) {
         return parent->get_domain()->get_zero_buffer().get_pointer();
     } else if (num_links == 1) {
-        return links[0]->source->get_buffer()->get_pointer();
+        return links[0]->ready_buffer->get_pointer();
     } else {
         mix_sinks();
-        return buffer.get_pointer();
+        return buffer->get_pointer();
     }
 }
 
 void audio::input::reset()
 {
+    for(auto link : links) {
+        link->reset();
+    }
+
     links_waiting.store(links.size());
 }
 
 void audio::input::mix_sinks()
 {
-    buffer.zero();
+    buffer->zero();
 
     for(auto link : links) {
-        buffer.mix(link->source->get_buffer());
+        buffer->mix(link->ready_buffer);
     }
 }
 
@@ -218,6 +223,13 @@ audio::output::output(const std::string& name_in, node * parent_in)
 : audio::channel(name_in, parent_in)
 {
 
+}
+
+void audio::output::reset()
+{
+    std::cout << "creating new output channel buffer" << std::endl;
+    buffer = std::make_shared<audio::buffer>();
+    buffer->init(parent->get_domain()->buffer_size);
 }
 
 void audio::output::connect(audio::input * sink_in)
@@ -230,7 +242,7 @@ void audio::output::connect(audio::input * sink_in)
 void audio::output::notify()
 {
     for(auto link : links) {
-        link->notify();
+        link->notify(buffer);
     }
 }
 
@@ -240,8 +252,30 @@ audio::link::link(audio::output * sink_in, audio::input * source_in)
 
 }
 
-void audio::link::notify()
+audio::link::lock_type audio::link::make_lock()
 {
+    return lock_type(mutex);
+}
+
+void audio::link::reset()
+{
+    auto lock = make_lock();
+    std::cout << "resetting link" << std::endl;
+    ready_buffer = nullptr;
+}
+
+void audio::link::notify(std::shared_ptr<audio::buffer> ready_buffer_in)
+{
+    auto lock = make_lock();
+
+    if (ready_buffer != nullptr) {
+        throw std::runtime_error("attempt to set link ready when it was already ready");
+    }
+
+    ready_buffer = ready_buffer_in;
+
+    lock.unlock();
+
     source->link_ready(this);
 }
 
@@ -296,6 +330,10 @@ void audio::component::notify()
 void audio::component::reset()
 {
     pulsar::size_type inputs_with_links = 0;
+
+    for(auto output : sinks) {
+        output.second->reset();
+    }
 
     for(auto input : sources) {
         input.second->reset();

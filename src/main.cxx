@@ -23,7 +23,7 @@ using namespace std::chrono_literals;
 
 #define SAMPLE_RATE 48000
 #define BUFFER_SIZE 1024
-#define NUM_THREADS 4
+#define NUM_THREADS 1
 
 int main(void)
 {

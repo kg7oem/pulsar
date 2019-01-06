@@ -16,6 +16,7 @@
 #include <atomic>
 #include <map>
 #include <memory>
+#include <mutex>
 #include <string>
 
 #include "audio.h"
@@ -24,11 +25,18 @@
 
 namespace pulsar {
 
-class node {
+struct node {
+    using mutex_type = std::mutex;
+    using lock_type = std::unique_lock<mutex_type>;
+
+    private:
+    mutex_type mutex;
+
     protected:
     std::shared_ptr<pulsar::domain> domain;
+    lock_type make_lock();
     virtual void handle_activate() = 0;
-    virtual void handle_run() = 0;
+    virtual bool handle_run() = 0;
 
     public:
     const std::string name;
@@ -44,7 +52,7 @@ class node {
 
 class dummy_node : public node {
     virtual void handle_activate() override;
-    virtual void handle_run() override;
+    virtual bool handle_run() override;
 
     public:
     dummy_node(const std::string& name_in, std::shared_ptr<pulsar::domain> domain_in);

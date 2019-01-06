@@ -72,16 +72,14 @@ void domain::step()
         throw std::runtime_error("attempt to step a domain that was not activated");
     }
 
+    std::cout << "starting to step the domain" << std::endl;
+
     auto lock = make_step_done_lock();
     step_done_flag = false;
 
-    remaining_nodes.store(nodes.size());
+    // remaining_nodes.store(nodes.size());
 
-    for(auto node : nodes) {
-        if (node->is_ready()) {
-            add_ready_node(node.get());
-        }
-    }
+    std::cout << "done stepping the domain" << std::endl;
 
     step_done_condition.wait(lock, [this]{ return step_done_flag; });
 }
@@ -113,11 +111,15 @@ void domain::be_thread(domain * domain_in)
         ready_node->run();
         std::cout << "done running node: " << ready_node->name << std::endl;
 
-        if (--domain_in->remaining_nodes == 0) {
-            auto done_lock = domain_in->make_step_done_lock();
-            domain_in->step_done_flag = true;
-            domain_in->step_done_condition.notify_all();
-        }
+        // auto nodes_left = --domain_in->remaining_nodes;
+        // std::cout << "nodes that need to run: " << nodes_left << std::endl;
+
+        // if (nodes_left == 0) {
+        //     std::cout << "indicating that domain step is completed" << std::endl;
+        //     auto done_lock = domain_in->make_step_done_lock();
+        //     domain_in->step_done_flag = true;
+        //     domain_in->step_done_condition.notify_all();
+        // }
     }
 }
 

@@ -16,6 +16,7 @@
 #include <atomic>
 #include <map>
 #include <memory>
+#include <mutex>
 #include <vector>
 
 #include "config.h"
@@ -44,16 +45,16 @@ class buffer {
     // void clear_pointer();
     // void release_memory();
     void zero();
-    void mix(buffer * mix_from_in);
+    void mix(std::shared_ptr<buffer> mix_from_in);
     void set(sample_type * pointer_in, const size_type size_in);
-    void set(buffer * buffer_in);
+    void set(std::shared_ptr<buffer> buffer_in);
     void scale(const float scale_in);
 };
 
 class channel {
     protected:
     node * parent;
-    audio::buffer buffer;
+    std::shared_ptr<audio::buffer> buffer;
     std::vector<link *> links;
 
     channel(const std::string &name_in, node * parent_in);
@@ -62,9 +63,10 @@ class channel {
     const std::string name;
     virtual ~channel();
     void activate();
+    virtual void reset() = 0;
     void add_link(link * link_in);
     node * get_parent();
-    audio::buffer * get_buffer();
+    std::shared_ptr<audio::buffer> get_buffer();
 };
 
 class input : public channel {
@@ -74,23 +76,34 @@ class input : public channel {
     input(const std::string& name_in, node * parent_in);
     pulsar::size_type get_links_waiting();
     pulsar::sample_type * get_pointer();
+    virtual void reset() override;
     void connect(output * sink_in);
     void mix_sinks();
     void link_ready(link * link_in);
-    void reset();
 };
 
 struct output : public channel {
     output(const std::string& name_in, node * parent_in);
+    virtual void reset() override;
     void notify();
     void connect(input * source_in);
 };
 
 struct link {
+    using mutex_type = std::mutex;
+    using lock_type = std::unique_lock<mutex_type>;
+
+    private:
+    mutex_type mutex;
+    lock_type make_lock();
+
+    public:
     output * sink;
     input * source;
+    std::shared_ptr<audio::buffer> ready_buffer = nullptr;
     link(output * sink_in, input * source_in);
-    void notify();
+    void notify(std::shared_ptr<audio::buffer> ready_buffer_in);
+    void reset();
 };
 
 class component {

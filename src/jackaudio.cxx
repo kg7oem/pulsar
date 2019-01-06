@@ -30,6 +30,11 @@ jackaudio::node::~node()
     jack_ports.empty();
 }
 
+node::lock_type jackaudio::node::make_done_lock()
+{
+    return node::lock_type(done_mutex);
+}
+
 void jackaudio::node::reset()
 {
     did_notify = false;
@@ -119,36 +124,52 @@ void jackaudio::node::handle_activate()
     })))) {
         throw std::runtime_error("could not set jackaudio process callback");
     }
+
+    domain->reset();
 }
 
 void jackaudio::node::handle_jack_process(jack_nframes_t nframes_in)
 {
+    std::cout << std::endl << "jackaudio process callback invoked" << std::endl;
+
     if (nframes_in != domain->buffer_size) {
         throw std::runtime_error("jackaudio process request and buffer size were not the same");
     }
-
-    domain->reset();
 
     for(auto name : audio.get_output_names()) {
         auto output = audio.get_output(name);
         auto jack_buffer = get_port_buffer(name);
         output->get_buffer()->set(jack_buffer, nframes_in);
-        std::cout << "going to notify node: " << output->get_parent()->name << std::endl;
         output->notify();
     }
 
     did_notify = true;
-    domain->step();
 
-    for(auto name : audio.get_input_names()) {
-        auto input = audio.get_input(name);
-        auto jack_buffer = get_port_buffer(name);
-        input->get_buffer()->set(jack_buffer, nframes_in);
-    }
+    auto done_lock = make_done_lock();
+    done_cond.wait(done_lock, [this]{ return done_flag; });
 }
 
-void jackaudio::node::handle_run()
-{ }
+bool jackaudio::node::handle_run()
+{
+    std::cout << "running jackaudio node" << std::endl;
+
+    for(auto name : audio.get_input_names()) {
+        auto buffer_size = domain->buffer_size;
+        auto input = audio.get_input(name);
+        auto jack_buffer = get_port_buffer(name);
+        auto channel_buffer = input->get_buffer()->get_pointer();
+
+        for(size_type i = 0; i < buffer_size; i++) {
+            jack_buffer[i] = channel_buffer[i];
+        }
+    }
+
+    auto done_lock = make_done_lock();
+    done_flag = true;
+    done_cond.notify_all();
+
+    return false;
+}
 
 void jackaudio::node::start()
 {

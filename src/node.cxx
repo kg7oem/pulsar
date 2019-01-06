@@ -28,6 +28,11 @@ node::node(const std::string& name_in, std::shared_ptr<pulsar::domain> domain_in
 node::~node()
 { }
 
+node::lock_type node::make_lock()
+{
+    return lock_type(mutex);
+}
+
 std::shared_ptr<domain> node::get_domain()
 {
     return domain;
@@ -42,9 +47,13 @@ void node::activate()
 
 void node::run()
 {
-    handle_run();
+    auto lock = make_lock();
 
-    audio.notify();
+    if(handle_run()) {
+        audio.notify();
+    }
+
+    reset();
 }
 
 void node::reset()
@@ -64,7 +73,7 @@ dummy_node::dummy_node(const std::string& name_in, std::shared_ptr<pulsar::domai
 void dummy_node::handle_activate()
 { }
 
-void dummy_node::handle_run()
+bool dummy_node::handle_run()
 {
     auto output_names = audio.get_output_names();
     auto input_names = audio.get_input_names();
@@ -82,6 +91,8 @@ void dummy_node::handle_run()
 
         output_buffer->scale(1 / num_outputs);
     }
+
+    return true;
 }
 
 } // namespace pulsar

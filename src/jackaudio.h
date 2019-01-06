@@ -35,10 +35,14 @@ class node : public pulsar::node {
     const options_type jack_options = JackNoStartServer;
     std::map<std::string, port_type *> jack_ports;
     std::atomic<bool> did_notify = ATOMIC_VAR_INIT(false);
+    std::condition_variable done_cond;
+    pulsar::node::mutex_type done_mutex;
+    bool done_flag = false;
+    pulsar::node::lock_type make_done_lock();
     port_type * add_port(const std::string& port_name_in, const char * port_type_in, const flags_type flags_in, const size_type buffer_size_in = 0);
     sample_type * get_port_buffer(const std::string& port_name_in);
     virtual void handle_activate() override;
-    virtual void handle_run() override;
+    virtual bool handle_run() override;
     void handle_jack_process(jack_nframes_t nframes_in);
 
     public:
