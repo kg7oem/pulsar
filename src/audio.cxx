@@ -18,6 +18,7 @@
 #include <stdexcept>
 
 #include "audio.h"
+#include "audio.util.h"
 #include "node.h"
 
 namespace pulsar {
@@ -80,8 +81,7 @@ pulsar::sample_type * audio::buffer::get_pointer()
 
 void audio::buffer::zero()
 {
-    assert(pointer != nullptr);
-    std::memset(pointer, 0, size);
+    audio::util::pcm_zero(pointer, size);
 }
 
 void audio::buffer::mix(std::shared_ptr<audio::buffer> mix_from_in)
@@ -90,11 +90,7 @@ void audio::buffer::mix(std::shared_ptr<audio::buffer> mix_from_in)
         throw std::runtime_error("attempt to mix buffers of different size");
     }
 
-    auto src_p = mix_from_in->get_pointer();
-
-    for(size_type i = 0; i < size; i++) {
-        pointer[i] += src_p[i];
-    }
+    audio::util::pcm_mix(mix_from_in->get_pointer(), pointer, size);
 }
 
 void audio::buffer::set(pulsar::sample_type * pointer_in, const size_type size_in)
@@ -103,9 +99,7 @@ void audio::buffer::set(pulsar::sample_type * pointer_in, const size_type size_i
         throw std::runtime_error("attempt to set buffer contents with a size that was too large");
     }
 
-    for(size_type i = 0; i < size_in; i++) {
-        pointer[i] = pointer_in[i];
-    }
+    audio::util::pcm_set(pointer_in, pointer, size_in);
 }
 
 void audio::buffer::set(std::shared_ptr<audio::buffer> buffer_in)
@@ -120,9 +114,7 @@ void audio::buffer::set(std::shared_ptr<audio::buffer> buffer_in)
 
 void audio::buffer::scale(const float scale_in)
 {
-    for(size_type i = 0; i < size; i++) {
-        pointer[i] /= scale_in;
-    }
+    audio::util::pcm_scale(pointer, scale_in, size);
 }
 
 audio::channel::channel(const std::string &name_in, pulsar::node * parent_in)

@@ -12,6 +12,7 @@ add_executable(
     pulsar-dev
 
     src/audio.cxx
+    src/audio.util.cxx
     src/domain.cxx
     src/jackaudio.cxx
     src/main.cxx
