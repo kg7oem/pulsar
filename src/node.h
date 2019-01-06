@@ -25,7 +25,9 @@
 
 namespace pulsar {
 
-struct node {
+namespace node {
+
+struct base {
     using mutex_type = std::mutex;
     using lock_type = std::unique_lock<mutex_type>;
 
@@ -41,8 +43,8 @@ struct node {
     public:
     const std::string name;
     audio::component audio;
-    node(const std::string& name_in, std::shared_ptr<pulsar::domain> domain_in);
-    virtual ~node();
+    base(const std::string& name_in, std::shared_ptr<pulsar::domain> domain_in);
+    virtual ~base();
     std::shared_ptr<pulsar::domain> get_domain();
     void activate();
     void run();
@@ -51,12 +53,14 @@ struct node {
     virtual void handle_ready();
 }; // struct node
 
-class dummy_node : public node {
+class dummy : public base {
     virtual void handle_activate() override;
     virtual void handle_run() override;
 
     public:
-    dummy_node(const std::string& name_in, std::shared_ptr<pulsar::domain> domain_in);
+    dummy(const std::string& name_in, std::shared_ptr<pulsar::domain> domain_in);
 };
+
+} // namespace node
 
 } // namespace pulsar

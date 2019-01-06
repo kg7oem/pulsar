@@ -18,7 +18,7 @@
 namespace pulsar {
 
 jackaudio::node::node(const std::string& name_in, std::shared_ptr<pulsar::domain> domain_in)
-: pulsar::node(name_in, domain_in)
+: node::base(name_in, domain_in)
 { }
 
 jackaudio::node::~node()
@@ -30,7 +30,7 @@ jackaudio::node::~node()
     jack_ports.empty();
 }
 
-node::lock_type jackaudio::node::make_done_lock()
+node::base::lock_type jackaudio::node::make_done_lock()
 {
     return node::lock_type(done_mutex);
 }
@@ -38,7 +38,7 @@ node::lock_type jackaudio::node::make_done_lock()
 void jackaudio::node::reset()
 {
     did_notify = false;
-    pulsar::node::reset();
+    node::base::reset();
 }
 
 bool jackaudio::node::is_ready()
@@ -47,7 +47,7 @@ bool jackaudio::node::is_ready()
         return false;
     }
 
-    return pulsar::node::is_ready();
+    return node::base::is_ready();
 }
 
 void jackaudio::node::open()

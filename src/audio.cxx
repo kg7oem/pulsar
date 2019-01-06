@@ -117,7 +117,7 @@ void audio::buffer::scale(const float scale_in)
     audio::util::pcm_scale(pointer, scale_in, size);
 }
 
-audio::channel::channel(const std::string &name_in, pulsar::node * parent_in)
+audio::channel::channel(const std::string &name_in, node::base * parent_in)
 : parent(parent_in), name(name_in)
 { }
 
@@ -135,7 +135,7 @@ void audio::channel::add_link(link * link_in)
     links.push_back(link_in);
 }
 
-node * audio::channel::get_parent()
+node::base * audio::channel::get_parent()
 {
     return parent;
 }
@@ -145,7 +145,7 @@ std::shared_ptr<audio::buffer> audio::channel::get_buffer()
     return buffer;
 }
 
-audio::input::input(const std::string& name_in, node * parent_in)
+audio::input::input(const std::string& name_in, node::base * parent_in)
 : audio::channel(name_in, parent_in)
 {
 
@@ -211,7 +211,7 @@ void audio::input::mix_sinks()
     }
 }
 
-audio::output::output(const std::string& name_in, node * parent_in)
+audio::output::output(const std::string& name_in, node::base * parent_in)
 : audio::channel(name_in, parent_in)
 {
 
@@ -282,7 +282,7 @@ void audio::link::notify(std::shared_ptr<audio::buffer> ready_buffer_in, const b
     source->link_ready(this);
 }
 
-audio::component::component(node * parent_in)
+audio::component::component(node::base * parent_in)
 : parent(parent_in)
 {
 

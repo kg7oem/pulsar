@@ -24,7 +24,11 @@
 
 namespace pulsar {
 
-struct node;
+namespace node {
+
+struct base;
+
+} // namespace node
 
 namespace audio {
 
@@ -54,11 +58,11 @@ class buffer {
 
 class channel {
     protected:
-    node * parent;
+    node::base * parent;
     std::shared_ptr<audio::buffer> buffer;
     std::vector<link *> links;
 
-    channel(const std::string &name_in, node * parent_in);
+    channel(const std::string &name_in, node::base * parent_in);
 
     public:
     const std::string name;
@@ -66,7 +70,7 @@ class channel {
     void activate();
     virtual void reset() = 0;
     void add_link(link * link_in);
-    node * get_parent();
+    node::base * get_parent();
     std::shared_ptr<audio::buffer> get_buffer();
 };
 
@@ -74,7 +78,7 @@ class input : public channel {
     std::atomic<pulsar::size_type> links_waiting = ATOMIC_VAR_INIT(0);
 
     public:
-    input(const std::string& name_in, node * parent_in);
+    input(const std::string& name_in, node::base * parent_in);
     pulsar::size_type get_links_waiting();
     pulsar::sample_type * get_pointer();
     virtual void reset() override;
@@ -84,7 +88,7 @@ class input : public channel {
 };
 
 struct output : public channel {
-    output(const std::string& name_in, node * parent_in);
+    output(const std::string& name_in, node::base * parent_in);
     virtual void reset() override;
     void notify();
     void connect(input * source_in);
@@ -110,15 +114,15 @@ struct link {
 };
 
 class component {
-    friend node;
+    friend node::base;
 
-    node * parent = nullptr;
+    node::base * parent = nullptr;
     std::map<std::string, audio::input *> sources;
     std::map<std::string, audio::output *> sinks;
     std::atomic<pulsar::size_type> sources_waiting = ATOMIC_VAR_INIT(0);
 
     public:
-    component(node * parent_in);
+    component(node::base * parent_in);
     ~component();
     bool is_ready();
     void activate();

@@ -21,24 +21,24 @@
 
 namespace pulsar {
 
-node::node(const std::string& name_in, std::shared_ptr<pulsar::domain> domain_in)
+node::base::base(const std::string& name_in, std::shared_ptr<pulsar::domain> domain_in)
 : domain(domain_in), name(name_in), audio(this)
 { }
 
-node::~node()
+node::base::~base()
 { }
 
-node::lock_type node::make_lock()
+node::base::lock_type node::base::make_lock()
 {
     return lock_type(mutex);
 }
 
-std::shared_ptr<domain> node::get_domain()
+std::shared_ptr<domain> node::base::get_domain()
 {
     return domain;
 }
 
-void node::activate()
+void node::base::activate()
 {
     audio.activate();
 
@@ -47,41 +47,41 @@ void node::activate()
     reset();
 }
 
-void node::run()
+void node::base::run()
 {
     auto lock = make_lock();
     handle_run();
     reset();
 }
 
-void node::handle_run()
+void node::base::handle_run()
 {
     audio.notify();
 }
 
-void node::handle_ready()
+void node::base::handle_ready()
 {
     domain->add_ready_node(this);
 }
 
-void node::reset()
+void node::base::reset()
 {
     audio.reset();
 }
 
-bool node::is_ready()
+bool node::base::is_ready()
 {
     return audio.is_ready();
 }
 
-dummy_node::dummy_node(const std::string& name_in, std::shared_ptr<pulsar::domain> domain_in)
-: node(name_in, domain_in)
+node::dummy::dummy(const std::string& name_in, std::shared_ptr<pulsar::domain> domain_in)
+: node::base(name_in, domain_in)
 { }
 
-void dummy_node::handle_activate()
+void node::dummy::handle_activate()
 { }
 
-void dummy_node::handle_run()
+void node::dummy::handle_run()
 {
     auto output_names = audio.get_output_names();
     auto input_names = audio.get_input_names();
@@ -100,7 +100,7 @@ void dummy_node::handle_run()
         output_buffer->scale(1 / num_outputs);
     }
 
-    node::handle_run();
+    node::base::handle_run();
 }
 
 } // namespace pulsar

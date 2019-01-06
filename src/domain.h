@@ -25,7 +25,11 @@
 
 namespace pulsar {
 
-class node;
+namespace node {
+
+struct base;
+
+} // namespace node
 
 struct domain : public std::enable_shared_from_this<domain> {
     using mutex_type = std::mutex;
@@ -33,8 +37,8 @@ struct domain : public std::enable_shared_from_this<domain> {
 
     private:
     audio::buffer zero_buffer;
-    std::vector<std::shared_ptr<node>> nodes;
-    std::vector<node *> run_queue;
+    std::vector<std::shared_ptr<node::base>> nodes;
+    std::vector<node::base *> run_queue;
     mutex_type run_queue_mutex;
     std::condition_variable run_queue_condition;
     std::vector<std::thread> threads;
@@ -55,7 +59,7 @@ struct domain : public std::enable_shared_from_this<domain> {
     audio::buffer& get_zero_buffer();
     void activate(const size_type num_threads_in = 1);
     void step();
-    void add_ready_node(node * node_in);
+    void add_ready_node(node::base * node_in);
     template<class T, typename... Args>
     std::shared_ptr<T> make_node(Args... args)
     {

@@ -34,33 +34,32 @@ int main(void)
     jack->audio.add_input("Input");
 
     // auto jack2 = domain->make_node<pulsar::jackaudio::node>("jack2");
-    // jack2->open("jack2");
     // jack2->audio.add_output("Output");
     // jack2->audio.add_input("Input");
 
-    auto node1 = domain->make_node<pulsar::dummy_node>("why not");
+    auto node1 = domain->make_node<pulsar::node::dummy>("why not");
     node1->audio.add_input("Input");
     node1->audio.add_output("Output");
 
-    auto node2 = domain->make_node<pulsar::dummy_node>("intermediate 1");
+    auto node2 = domain->make_node<pulsar::node::dummy>("intermediate 1");
     node2->audio.add_input("Input");
     node2->audio.add_output("Output");
 
-    auto node3 = domain->make_node<pulsar::dummy_node>("intermediate 2");
+    auto node3 = domain->make_node<pulsar::node::dummy>("intermediate 2");
     node3->audio.add_input("Input");
     node3->audio.add_output("Output");
 
-    auto node4 = domain->make_node<pulsar::dummy_node>("intermediate 3");
+    auto node4 = domain->make_node<pulsar::node::dummy>("intermediate 3");
     node4->audio.add_input("Input");
     node4->audio.add_output("Output");
 
-    auto node5 = domain->make_node<pulsar::dummy_node>("multiple inputs");
+    auto node5 = domain->make_node<pulsar::node::dummy>("multiple inputs");
     node5->audio.add_input("Input 1");
     node5->audio.add_input("Input 2");
     node5->audio.add_input("Input 3");
     node5->audio.add_output("Output");
 
-    auto node6 = domain->make_node<pulsar::dummy_node>("mixed outputs");
+    auto node6 = domain->make_node<pulsar::node::dummy>("mixed outputs");
     node6->audio.add_input("Input");
     node6->audio.add_output("Output");
 

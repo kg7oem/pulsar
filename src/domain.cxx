@@ -75,7 +75,7 @@ void domain::step()
     step_done_condition.wait(lock, [this]{ return step_done_flag; });
 }
 
-void domain::add_ready_node(node * node_in)
+void domain::add_ready_node(node::base * node_in)
 {
     auto lock = make_run_queue_lock();
 
