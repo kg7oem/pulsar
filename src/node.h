@@ -36,7 +36,7 @@ struct node {
     std::shared_ptr<pulsar::domain> domain;
     lock_type make_lock();
     virtual void handle_activate() = 0;
-    virtual bool handle_run() = 0;
+    virtual void handle_run();
 
     public:
     const std::string name;
@@ -53,7 +53,7 @@ struct node {
 
 class dummy_node : public node {
     virtual void handle_activate() override;
-    virtual bool handle_run() override;
+    virtual void handle_run() override;
 
     public:
     dummy_node(const std::string& name_in, std::shared_ptr<pulsar::domain> domain_in);

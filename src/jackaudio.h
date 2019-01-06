@@ -42,7 +42,7 @@ class node : public pulsar::node {
     port_type * add_port(const std::string& port_name_in, const char * port_type_in, const flags_type flags_in, const size_type buffer_size_in = 0);
     sample_type * get_port_buffer(const std::string& port_name_in);
     virtual void handle_activate() override;
-    virtual bool handle_run() override;
+    virtual void handle_run() override;
     void handle_jack_process(jack_nframes_t nframes_in);
 
     public:

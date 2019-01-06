@@ -143,19 +143,24 @@ void jackaudio::node::handle_jack_process(jack_nframes_t nframes_in)
 
     did_notify = true;
 
+    auto done_lock = make_done_lock();
+
     if (is_ready()) {
-        return;
+        // if there are not any pending inputs then give control
+        // back to jackaudio ASAP
+        done_flag = true;
+    } else {
+        // otherwise wait for the node to go ready
+        done_flag = false;
+        done_cond.wait(done_lock, [this]{ return done_flag; });
     }
 
-    auto done_lock = make_done_lock();
-    done_flag = false;
-    done_cond.wait(done_lock, [this]{ return done_flag; });
     std::cout << "giving control back to jackaudio" << std::endl;
 }
 
-bool jackaudio::node::handle_run()
+void jackaudio::node::handle_run()
 {
-    return false;
+    throw std::runtime_error("jackaudio node should never run");
 }
 
 void jackaudio::node::handle_ready()

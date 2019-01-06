@@ -50,12 +50,13 @@ void node::activate()
 void node::run()
 {
     auto lock = make_lock();
-
-    if(handle_run()) {
-        audio.notify();
-    }
-
+    handle_run();
     reset();
+}
+
+void node::handle_run()
+{
+    audio.notify();
 }
 
 void node::handle_ready()
@@ -80,7 +81,7 @@ dummy_node::dummy_node(const std::string& name_in, std::shared_ptr<pulsar::domai
 void dummy_node::handle_activate()
 { }
 
-bool dummy_node::handle_run()
+void dummy_node::handle_run()
 {
     auto output_names = audio.get_output_names();
     auto input_names = audio.get_input_names();
@@ -99,7 +100,7 @@ bool dummy_node::handle_run()
         output_buffer->scale(1 / num_outputs);
     }
 
-    return true;
+    node::handle_run();
 }
 
 } // namespace pulsar
