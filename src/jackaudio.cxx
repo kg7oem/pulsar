@@ -50,6 +50,11 @@ bool jackaudio::node::is_ready()
     return pulsar::node::is_ready();
 }
 
+void jackaudio::node::open()
+{
+    open(name);
+}
+
 void jackaudio::node::open(const std::string& jack_name_in)
 {
     jack_client = jack_client_open(jack_name_in.c_str(), jack_options, 0);
@@ -103,7 +108,7 @@ static int wrap_nframes_cb(jackaudio::jack_nframes_t nframes_in, void * arg_in)
 void jackaudio::node::handle_activate()
 {
     if (jack_client == nullptr) {
-        throw std::runtime_error("attempt to activate jackaudio node before it was opened");
+        open();
     }
 
     for(auto name : audio.get_output_names()) {
@@ -124,6 +129,8 @@ void jackaudio::node::handle_activate()
     })))) {
         throw std::runtime_error("could not set jackaudio process callback");
     }
+
+    start();
 }
 
 void jackaudio::node::handle_jack_process(jack_nframes_t nframes_in)

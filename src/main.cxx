@@ -30,7 +30,6 @@ int main(void)
     auto domain = make_shared<pulsar::domain>("main", SAMPLE_RATE, BUFFER_SIZE);
 
     auto jack = domain->make_node<pulsar::jackaudio::node>("jack1");
-    jack->open("jack1");
     jack->audio.add_output("Output");
     jack->audio.add_input("Input");
 
@@ -83,8 +82,6 @@ int main(void)
     // jack2->audio.get_input("Input")->connect(node6->audio.get_output("Output"));
 
     domain->activate(NUM_THREADS);
-    jack->start();
-    // jack2->start();
 
     while(1) {
         std::this_thread::sleep_for(1s);
