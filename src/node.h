@@ -48,6 +48,7 @@ struct node {
     void run();
     virtual void reset();
     virtual bool is_ready();
+    virtual void handle_ready();
 }; // struct node
 
 class dummy_node : public node {

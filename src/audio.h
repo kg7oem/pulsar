@@ -14,6 +14,7 @@
 #pragma once
 
 #include <atomic>
+#include <condition_variable>
 #include <map>
 #include <memory>
 #include <mutex>
@@ -95,14 +96,16 @@ struct link {
 
     private:
     mutex_type mutex;
+    std::condition_variable ready_buffer_condition;
+    std::shared_ptr<audio::buffer> ready_buffer = nullptr;
     lock_type make_lock();
 
     public:
     output * sink;
     input * source;
-    std::shared_ptr<audio::buffer> ready_buffer = nullptr;
     link(output * sink_in, input * source_in);
-    void notify(std::shared_ptr<audio::buffer> ready_buffer_in);
+    std::shared_ptr<audio::buffer> get_ready_buffer();
+    void notify(std::shared_ptr<audio::buffer> ready_buffer_in, const bool blocking_in = true);
     void reset();
 };
 

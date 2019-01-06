@@ -23,16 +23,21 @@ using namespace std::chrono_literals;
 
 #define SAMPLE_RATE 48000
 #define BUFFER_SIZE 1024
-#define NUM_THREADS 1
+#define NUM_THREADS 4
 
 int main(void)
 {
     auto domain = make_shared<pulsar::domain>("main", SAMPLE_RATE, BUFFER_SIZE);
 
-    auto jack = domain->make_node<pulsar::jackaudio::node>("root");
-    jack->open("test");
+    auto jack = domain->make_node<pulsar::jackaudio::node>("jack1");
+    jack->open("jack1");
     jack->audio.add_output("Output");
     jack->audio.add_input("Input");
+
+    // auto jack2 = domain->make_node<pulsar::jackaudio::node>("jack2");
+    // jack2->open("jack2");
+    // jack2->audio.add_output("Output");
+    // jack2->audio.add_input("Input");
 
     auto node1 = domain->make_node<pulsar::dummy_node>("why not");
     node1->audio.add_input("Input");
@@ -61,6 +66,7 @@ int main(void)
     node6->audio.add_output("Output");
 
     jack->audio.get_output("Output")->connect(node1->audio.get_input("Input"));
+    // jack2->audio.get_output("Output")->connect(node1->audio.get_input("Input"));
 
     node1->audio.get_output("Output")->connect(node2->audio.get_input("Input"));
     node1->audio.get_output("Output")->connect(node3->audio.get_input("Input"));
@@ -74,9 +80,11 @@ int main(void)
     node5->audio.get_output("Output")->connect(node6->audio.get_input("Input"));
 
     jack->audio.get_input("Input")->connect(node6->audio.get_output("Output"));
+    // jack2->audio.get_input("Input")->connect(node6->audio.get_output("Output"));
 
     domain->activate(NUM_THREADS);
     jack->start();
+    // jack2->start();
 
     while(1) {
         std::this_thread::sleep_for(1s);

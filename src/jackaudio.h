@@ -50,6 +50,7 @@ class node : public pulsar::node {
     ~node();
     virtual void reset();
     virtual bool is_ready();
+    virtual void handle_ready() override;
     void open(const std::string& jack_name_in);
     void start();
 };

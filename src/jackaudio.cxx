@@ -143,13 +143,24 @@ void jackaudio::node::handle_jack_process(jack_nframes_t nframes_in)
 
     did_notify = true;
 
+    if (is_ready()) {
+        return;
+    }
+
     auto done_lock = make_done_lock();
+    done_flag = false;
     done_cond.wait(done_lock, [this]{ return done_flag; });
+    std::cout << "giving control back to jackaudio" << std::endl;
 }
 
 bool jackaudio::node::handle_run()
 {
-    std::cout << "running jackaudio node" << std::endl;
+    return false;
+}
+
+void jackaudio::node::handle_ready()
+{
+    std::cout << "jackaudio node is now ready" << std::endl;
 
     for(auto name : audio.get_input_names()) {
         auto buffer_size = domain->buffer_size;
@@ -162,11 +173,11 @@ bool jackaudio::node::handle_run()
         }
     }
 
+    reset();
+
     auto done_lock = make_done_lock();
     done_flag = true;
     done_cond.notify_all();
-
-    return false;
 }
 
 void jackaudio::node::start()

@@ -58,6 +58,11 @@ void node::run()
     reset();
 }
 
+void node::handle_ready()
+{
+    domain->add_ready_node(this);
+}
+
 void node::reset()
 {
     audio.reset();

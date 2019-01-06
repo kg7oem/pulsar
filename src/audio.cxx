@@ -194,7 +194,7 @@ pulsar::sample_type * audio::input::get_pointer()
     if (num_links == 0) {
         return parent->get_domain()->get_zero_buffer().get_pointer();
     } else if (num_links == 1) {
-        return links[0]->ready_buffer->get_pointer();
+        return links[0]->get_ready_buffer()->get_pointer();
     } else {
         mix_sinks();
         return buffer->get_pointer();
@@ -215,7 +215,7 @@ void audio::input::mix_sinks()
     buffer->zero();
 
     for(auto link : links) {
-        buffer->mix(link->ready_buffer);
+        buffer->mix(link->get_ready_buffer());
     }
 }
 
@@ -252,6 +252,12 @@ audio::link::link(audio::output * sink_in, audio::input * source_in)
 
 }
 
+std::shared_ptr<audio::buffer> audio::link::get_ready_buffer()
+{
+    auto lock = make_lock();
+    return ready_buffer;
+}
+
 audio::link::lock_type audio::link::make_lock()
 {
     return lock_type(mutex);
@@ -262,14 +268,19 @@ void audio::link::reset()
     auto lock = make_lock();
     std::cout << "resetting link" << std::endl;
     ready_buffer = nullptr;
+    ready_buffer_condition.notify_all();
 }
 
-void audio::link::notify(std::shared_ptr<audio::buffer> ready_buffer_in)
+void audio::link::notify(std::shared_ptr<audio::buffer> ready_buffer_in, const bool blocking_in)
 {
     auto lock = make_lock();
 
     if (ready_buffer != nullptr) {
-        throw std::runtime_error("attempt to set link ready when it was already ready");
+        if (blocking_in) {
+            ready_buffer_condition.wait(lock, [this]{ return ready_buffer == nullptr; });
+        } else {
+            throw std::runtime_error("attempt to set link ready when it was already ready");
+        }
     }
 
     ready_buffer = ready_buffer_in;
@@ -349,7 +360,7 @@ void audio::component::reset()
 void audio::component::source_ready(audio::input *)
 {
     if (--sources_waiting == 0 && parent->is_ready()) {
-        parent->get_domain()->add_ready_node(parent);
+        parent->handle_ready();
     }
 }
 
