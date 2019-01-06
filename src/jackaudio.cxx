@@ -124,8 +124,6 @@ void jackaudio::node::handle_activate()
     })))) {
         throw std::runtime_error("could not set jackaudio process callback");
     }
-
-    domain->reset();
 }
 
 void jackaudio::node::handle_jack_process(jack_nframes_t nframes_in)

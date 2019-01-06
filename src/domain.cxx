@@ -42,13 +42,6 @@ domain::lock_type domain::make_run_queue_lock()
     return lock_type(run_queue_mutex);
 }
 
-void domain::reset()
-{
-    for(auto node : nodes) {
-        node->reset();
-    }
-}
-
 void domain::activate(const size_type num_threads_in)
 {
     if (num_threads_in <= 0) {
@@ -76,8 +69,6 @@ void domain::step()
 
     auto lock = make_step_done_lock();
     step_done_flag = false;
-
-    // remaining_nodes.store(nodes.size());
 
     std::cout << "done stepping the domain" << std::endl;
 
@@ -110,16 +101,6 @@ void domain::be_thread(domain * domain_in)
         std::cout << "running node: " << ready_node->name << std::endl;
         ready_node->run();
         std::cout << "done running node: " << ready_node->name << std::endl;
-
-        // auto nodes_left = --domain_in->remaining_nodes;
-        // std::cout << "nodes that need to run: " << nodes_left << std::endl;
-
-        // if (nodes_left == 0) {
-        //     std::cout << "indicating that domain step is completed" << std::endl;
-        //     auto done_lock = domain_in->make_step_done_lock();
-        //     domain_in->step_done_flag = true;
-        //     domain_in->step_done_condition.notify_all();
-        // }
     }
 }
 

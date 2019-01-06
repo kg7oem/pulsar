@@ -37,7 +37,6 @@ struct domain : public std::enable_shared_from_this<domain> {
     std::vector<node *> run_queue;
     mutex_type run_queue_mutex;
     std::condition_variable run_queue_condition;
-    std::atomic<size_type> remaining_nodes = ATOMIC_VAR_INIT(0);
     std::vector<std::thread> threads;
     std::condition_variable step_done_condition;
     mutex_type step_done_mutex;
@@ -55,7 +54,6 @@ struct domain : public std::enable_shared_from_this<domain> {
     virtual ~domain();
     audio::buffer& get_zero_buffer();
     void activate(const size_type num_threads_in = 1);
-    void reset();
     void step();
     void add_ready_node(node * node_in);
     template<class T, typename... Args>

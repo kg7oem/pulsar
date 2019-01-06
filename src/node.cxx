@@ -43,6 +43,8 @@ void node::activate()
     audio.activate();
 
     handle_activate();
+
+    reset();
 }
 
 void node::run()
