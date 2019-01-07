@@ -93,8 +93,8 @@ void domain::be_thread(domain * domain_in)
             return domain_in->run_queue.size() > 0;
         });
 
-        auto ready_node = domain_in->run_queue.back();
-        domain_in->run_queue.pop_back();
+        auto ready_node = domain_in->run_queue.front();
+        domain_in->run_queue.pop_front();
 
         lock.unlock();
 

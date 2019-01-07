@@ -15,6 +15,7 @@
 
 #include <atomic>
 #include <condition_variable>
+#include <list>
 #include <memory>
 #include <string>
 #include <thread>
@@ -38,7 +39,7 @@ struct domain : public std::enable_shared_from_this<domain> {
     private:
     audio::buffer zero_buffer;
     std::vector<std::shared_ptr<node::base>> nodes;
-    std::vector<node::base *> run_queue;
+    std::list<node::base *> run_queue;
     mutex_type run_queue_mutex;
     std::condition_variable run_queue_condition;
     std::vector<std::thread> threads;
