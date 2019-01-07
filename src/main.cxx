@@ -16,7 +16,7 @@
 
 #include "domain.h"
 #include "jackaudio.h"
-#include "node.h"
+#include "ladspa.h"
 
 using namespace std;
 using namespace std::chrono_literals;
@@ -28,61 +28,7 @@ using namespace std::chrono_literals;
 int main(void)
 {
     auto domain = make_shared<pulsar::domain>("main", SAMPLE_RATE, BUFFER_SIZE);
-
-    auto jack = domain->make_node<pulsar::jackaudio::node>("jack1");
-    jack->audio.add_output("Output");
-    jack->audio.add_input("Input");
-
-    // auto jack2 = domain->make_node<pulsar::jackaudio::node>("jack2");
-    // jack2->audio.add_output("Output");
-    // jack2->audio.add_input("Input");
-
-    auto node1 = domain->make_node<pulsar::node::dummy>("why not");
-    node1->audio.add_input("Input");
-    node1->audio.add_output("Output");
-
-    auto node2 = domain->make_node<pulsar::node::dummy>("intermediate 1");
-    node2->audio.add_input("Input");
-    node2->audio.add_output("Output");
-
-    auto node3 = domain->make_node<pulsar::node::dummy>("intermediate 2");
-    node3->audio.add_input("Input");
-    node3->audio.add_output("Output");
-
-    auto node4 = domain->make_node<pulsar::node::dummy>("intermediate 3");
-    node4->audio.add_input("Input");
-    node4->audio.add_output("Output");
-
-    auto node5 = domain->make_node<pulsar::node::dummy>("multiple inputs");
-    node5->audio.add_input("Input 1");
-    node5->audio.add_input("Input 2");
-    node5->audio.add_input("Input 3");
-    node5->audio.add_output("Output");
-
-    auto node6 = domain->make_node<pulsar::node::dummy>("mixed outputs");
-    node6->audio.add_input("Input");
-    node6->audio.add_output("Output");
-
-    jack->audio.get_output("Output")->connect(node1->audio.get_input("Input"));
-    // jack2->audio.get_output("Output")->connect(node1->audio.get_input("Input"));
-
-    node1->audio.get_output("Output")->connect(node2->audio.get_input("Input"));
-    node1->audio.get_output("Output")->connect(node3->audio.get_input("Input"));
-    node1->audio.get_output("Output")->connect(node4->audio.get_input("Input"));
-
-    node2->audio.get_output("Output")->connect(node5->audio.get_input("Input 1"));
-    node3->audio.get_output("Output")->connect(node5->audio.get_input("Input 2"));
-    node4->audio.get_output("Output")->connect(node5->audio.get_input("Input 3"));
-
-    node2->audio.get_output("Output")->connect(node6->audio.get_input("Input"));
-    node5->audio.get_output("Output")->connect(node6->audio.get_input("Input"));
-
-    jack->audio.get_input("Input")->connect(node6->audio.get_output("Output"));
-    // jack2->audio.get_input("Input")->connect(node6->audio.get_output("Output"));
-
-    domain->activate(NUM_THREADS);
-
-    while(1) {
-        std::this_thread::sleep_for(1s);
-    }
+    auto instance = pulsar::ladspa::make_instance("/usr/lib/ladspa/amp.so", 1048, SAMPLE_RATE);
+    auto node = domain->make_node<pulsar::ladspa::node>("ladspa", instance);
+    auto node2 = domain->make_node<pulsar::ladspa::node>("ladspa2", "/usr/lib/ladspa/amp.so", 1048);
 }
