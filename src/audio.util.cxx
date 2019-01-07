@@ -18,34 +18,34 @@
 
 namespace pulsar {
 
-void audio::util::pcm_zero(sample_type * dest_in, const size_type size_in)
+void audio::util::pcm_zero(sample_type * dest_in, const size_type samples_in)
 {
     assert(dest_in != nullptr);
-    std::memset(dest_in, 0, size_in);
+    std::memset(dest_in, 0, samples_in * sizeof(sample_type));
 }
 
-void audio::util::pcm_scale(sample_type * dest_in, const float scale_in, const size_type size_in)
+void audio::util::pcm_scale(sample_type * dest_in, const float scale_in, const size_type samples_in)
 {
     assert(dest_in != nullptr);
 
-    for(size_type i = 0; i < size_in; i++) {
+    for(size_type i = 0; i < samples_in; i++) {
         dest_in[i] *= scale_in;
     }
 }
 
-void audio::util::pcm_set(sample_type * dest_in, const sample_type * src_in, const size_type size_in)
+void audio::util::pcm_set(sample_type * dest_in, const sample_type * src_in, const size_type samples_in)
 {
     assert(dest_in != nullptr);
     assert(src_in != nullptr);
-    memcpy(dest_in, src_in, size_in);
+    memcpy(dest_in, src_in, samples_in * sizeof(sample_type));
 }
 
-void audio::util::pcm_mix(sample_type * dest_in, const sample_type * src_in, const size_type size_in)
+void audio::util::pcm_mix(sample_type * dest_in, const sample_type * src_in, const size_type samples_in)
 {
     assert(dest_in != nullptr);
     assert(src_in != nullptr);
 
-    for(size_type i = 0; i < size_in; i++) {
+    for(size_type i = 0; i < samples_in; i++) {
         dest_in[i] += src_in[i];
     }
 }
