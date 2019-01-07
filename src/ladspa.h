@@ -71,6 +71,8 @@ class instance : public std::enable_shared_from_this<instance> {
 };
 
 class node : public pulsar::node::base {
+    void setup();
+
     protected:
     std::shared_ptr<ladspa::instance> ladspa = nullptr;
     virtual void handle_activate() override;

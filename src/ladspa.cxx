@@ -162,18 +162,27 @@ void instance::activate()
 node::node(const std::string& name_in, std::shared_ptr<ladspa::instance> instance_in, std::shared_ptr<pulsar::domain> domain_in)
 : pulsar::node::base(name_in, domain_in), ladspa(instance_in)
 {
-
+    setup();
 }
 
 node::node(const std::string& name_in, const std::string& path_in, const id_type id_in, std::shared_ptr<pulsar::domain> domain_in)
 : pulsar::node::base(name_in, domain_in), ladspa(make_instance(path_in, id_in, domain_in->sample_rate))
 {
+    setup();
+}
 
+void node::setup()
+{
+    assert(domain != nullptr);
+    assert(ladspa != nullptr);
+
+    // TODO
+    // add audio input and output channels from LADSPA ports
 }
 
 void node::handle_activate()
 {
-
+    ladspa->activate();
 }
 
 } // namespace ladspa
