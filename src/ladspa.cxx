@@ -306,7 +306,6 @@ void node::handle_activate()
 
 void node::handle_run()
 {
-
     std::cout << "running LADSPA plugin" << std::endl;
 
     for (auto port_name : audio.get_input_names()) {
@@ -319,22 +318,18 @@ void node::handle_run()
         auto buffer = audio.get_output(port_name)->get_pointer();
         auto port_num = ladspa->get_port_num(port_name);
         ladspa->connect(port_num, buffer);
-
     }
 
     ladspa->run(domain->buffer_size);
 
     for (auto port_name : audio.get_input_names()) {
-        auto buffer = audio.get_input(port_name)->get_pointer();
         auto port_num = ladspa->get_port_num(port_name);
-        ladspa->connect(port_num, buffer);
+        ladspa->connect(port_num, nullptr);
     }
 
     for (auto port_name : audio.get_output_names()) {
-        auto buffer = audio.get_output(port_name)->get_pointer();
         auto port_num = ladspa->get_port_num(port_name);
-        ladspa->connect(port_num, buffer);
-
+        ladspa->connect(port_num, nullptr);
     }
 
     std::cout << "done running LADSPA plugin" << std::endl;

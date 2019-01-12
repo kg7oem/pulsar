@@ -28,13 +28,17 @@ using namespace std::chrono_literals;
 int main(void)
 {
     auto domain = make_shared<pulsar::domain>("main", SAMPLE_RATE, BUFFER_SIZE);
-    auto ladspa = domain->make_node<pulsar::ladspa::node>("ladspa", "/usr/lib/ladspa/amp.so", 1048);
+    auto gain_left = domain->make_node<pulsar::ladspa::node>("left", "/usr/lib/ladspa/amp.so", 1048);
+    auto gain_right = domain->make_node<pulsar::ladspa::node>("right", "/usr/lib/ladspa/amp.so", 1048);
     auto jack = domain->make_node<pulsar::jackaudio::node>("pulsar");
 
-    jack->audio.add_output("in_1")->connect(ladspa->audio.get_input("Input"));
-    jack->audio.add_input("out_1")->connect(ladspa->audio.get_output("Output"));
+    jack->audio.add_output("in_left")->connect(gain_left->audio.get_input("Input"));
+    jack->audio.add_output("in_right")->connect(gain_right->audio.get_input("Input"));
 
-    domain->activate();
+    jack->audio.add_input("out_left")->connect(gain_left->audio.get_output("Output"));
+    jack->audio.add_input("out_right")->connect(gain_right->audio.get_output("Output"));
+
+    domain->activate(NUM_THREADS);
 
     while(1) {
         std::this_thread::sleep_for(1s);

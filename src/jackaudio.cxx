@@ -13,6 +13,7 @@
 
 #include <iostream>
 
+#include "audio.util.h"
 #include "jackaudio.h"
 
 namespace pulsar {
@@ -178,11 +179,8 @@ void jackaudio::node::handle_ready()
         auto buffer_size = domain->buffer_size;
         auto input = audio.get_input(name);
         auto jack_buffer = get_port_buffer(name);
-        auto channel_buffer = input->get_buffer()->get_pointer();
-
-        for(size_type i = 0; i < buffer_size; i++) {
-            jack_buffer[i] = channel_buffer[i];
-        }
+        auto channel_buffer = input->get_pointer();
+        audio::util::pcm_set(jack_buffer, channel_buffer, buffer_size);
     }
 
     reset();

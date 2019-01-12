@@ -99,7 +99,7 @@ void audio::buffer::set(pulsar::sample_type * pointer_in, const size_type size_i
         throw std::runtime_error("attempt to set buffer contents with a size that was too large");
     }
 
-    audio::util::pcm_set(pointer_in, pointer, size_in);
+    audio::util::pcm_set(pointer, pointer_in, size_in);
 }
 
 void audio::buffer::set(std::shared_ptr<audio::buffer> buffer_in)
@@ -184,10 +184,13 @@ pulsar::sample_type * audio::input::get_pointer()
     auto num_links = links.size();
 
     if (num_links == 0) {
+        std::cout << "returning pointer to zero buffer" << std::endl;
         return parent->get_domain()->get_zero_buffer().get_pointer();
     } else if (num_links == 1) {
+        std::cout << "returning pointer to link's ready buffer" << std::endl;
         return links[0]->get_ready_buffer()->get_pointer();
     } else {
+        std::cout << "returning pointer to input's mix buffer" << std::endl;
         mix_sinks();
         return buffer->get_pointer();
     }
