@@ -134,7 +134,8 @@ file::~file()
 {
     if (handle != nullptr) {
         if (dlclose(handle)) {
-            throw std::runtime_error("could not dlclose() ladspa plugin handle");
+            std::cout << "could not dlclose() ladspa plugin handle" << std::endl;
+            abort();
         }
 
         handle = nullptr;
