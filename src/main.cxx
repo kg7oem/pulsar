@@ -28,7 +28,15 @@ using namespace std::chrono_literals;
 int main(void)
 {
     auto domain = make_shared<pulsar::domain>("main", SAMPLE_RATE, BUFFER_SIZE);
-    auto instance = pulsar::ladspa::make_instance("/usr/lib/ladspa/amp.so", 1048, SAMPLE_RATE);
-    auto node = domain->make_node<pulsar::ladspa::node>("ladspa", instance);
-    auto node2 = domain->make_node<pulsar::ladspa::node>("ladspa2", "/usr/lib/ladspa/amp.so", 1048);
+    auto ladspa = domain->make_node<pulsar::ladspa::node>("ladspa", "/usr/lib/ladspa/amp.so", 1048);
+    auto jack = domain->make_node<pulsar::jackaudio::node>("pulsar");
+
+    jack->audio.add_output("in_1")->connect(ladspa->audio.get_input("Input"));
+    jack->audio.add_input("out_1")->connect(ladspa->audio.get_output("Output"));
+
+    domain->activate();
+
+    while(1) {
+        std::this_thread::sleep_for(1s);
+    }
 }

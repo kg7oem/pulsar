@@ -89,6 +89,7 @@ class input : public channel {
 
 struct output : public channel {
     output(const std::string& name_in, node::base * parent_in);
+    pulsar::sample_type * get_pointer();
     virtual void reset() override;
     void notify();
     void connect(input * source_in);

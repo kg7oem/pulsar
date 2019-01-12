@@ -217,6 +217,11 @@ audio::output::output(const std::string& name_in, node::base * parent_in)
 
 }
 
+pulsar::sample_type * audio::output::get_pointer()
+{
+    return buffer->get_pointer();
+}
+
 void audio::output::reset()
 {
     std::cout << "creating new output channel buffer" << std::endl;

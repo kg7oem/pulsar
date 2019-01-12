@@ -12,7 +12,9 @@
 // GNU Lesser General Public License for more details.
 
 #include <cassert>
+#include <cmath>
 #include <dlfcn.h>
+#include <iostream>
 
 #include "ladspa.h"
 
@@ -66,6 +68,48 @@ std::shared_ptr<instance> make_instance(const std::string& path_in, const id_typ
 {
     auto file = open(path_in);
     return make_instance(file, id_in, sample_rate_in);
+}
+
+data_type get_control_port_default(const descriptor_type * descriptor_in, const size_type port_num_in)
+{
+    auto port_hints = descriptor_in->PortRangeHints[port_num_in];
+    auto hint_descriptor = port_hints.HintDescriptor;
+
+    if (! LADSPA_IS_HINT_HAS_DEFAULT(hint_descriptor)) {
+        return 0;
+    } else if (LADSPA_IS_HINT_DEFAULT_0(hint_descriptor)) {
+        return 0;
+    } else if (LADSPA_IS_HINT_DEFAULT_1(hint_descriptor)) {
+        return 1;
+    } else if (LADSPA_IS_HINT_DEFAULT_100(hint_descriptor)) {
+        return 100;
+    } else if (LADSPA_IS_HINT_DEFAULT_440(hint_descriptor)) {
+        return 440;
+    } else if (LADSPA_IS_HINT_DEFAULT_MINIMUM(hint_descriptor)) {
+        return port_hints.LowerBound;
+    } else if (LADSPA_IS_HINT_DEFAULT_LOW(hint_descriptor)) {
+        if (LADSPA_IS_HINT_LOGARITHMIC(hint_descriptor)) {
+            return exp(log(port_hints.LowerBound) * 0.75 + log(port_hints.UpperBound) * 0.25);
+        } else {
+            return port_hints.LowerBound * 0.75 + port_hints.UpperBound * 0.25;
+        }
+    } else if (LADSPA_IS_HINT_DEFAULT_MIDDLE(hint_descriptor)) {
+        if (LADSPA_IS_HINT_LOGARITHMIC(hint_descriptor)) {
+            return exp(log(port_hints.LowerBound) * 0.5 + log(port_hints.UpperBound) * 0.5);
+        } else {
+            return (port_hints.LowerBound * 0.5 + port_hints.UpperBound * 0.5);
+        }
+    } else if (LADSPA_IS_HINT_DEFAULT_HIGH(hint_descriptor)) {
+        if (LADSPA_IS_HINT_LOGARITHMIC(hint_descriptor)) {
+            return exp(log(port_hints.LowerBound) * 0.25 + log(port_hints.UpperBound) * 0.75);
+        } else {
+            return port_hints.LowerBound * 0.25 + port_hints.UpperBound * 0.75;
+        }
+    } else if (LADSPA_IS_HINT_DEFAULT_MAXIMUM(hint_descriptor)) {
+        return port_hints.UpperBound;
+    }
+
+    throw std::logic_error("could not find hint for LADSPA port");
 }
 
 file::file(const std::string &path_in)
@@ -148,15 +192,59 @@ instance::instance(std::shared_ptr<ladspa::file> file_in, const descriptor_type 
     if (handle == nullptr) {
         throw std::runtime_error("could not instantiate LADSPA");
     }
+
+    for(size_type i = 0; i < get_port_count(); i++) {
+        std::string name(descriptor->PortNames[i]);
+        port_name_to_num[name] = i;
+    }
+}
+
+const descriptor_type * instance::get_descriptor()
+{
+    return descriptor;
+}
+
+size_type instance::get_port_count()
+{
+    return descriptor->PortCount;
+}
+
+port_descriptor_type instance::get_port_descriptor(const size_type port_num_in)
+{
+    return descriptor->PortDescriptors[port_num_in];
+}
+
+const std::string instance::get_port_name(const size_type port_num_in)
+{
+    return std::string(descriptor->PortNames[port_num_in]);
+}
+
+id_type instance::get_port_num(const std::string& name_in)
+{
+    auto result = port_name_to_num.find(name_in);
+
+    if (result == port_name_to_num.end()) {
+        throw std::runtime_error("could not find port with name " + name_in);
+    }
+
+    return result->second;
 }
 
 void instance::activate()
 {
-    control_buffers.reserve(descriptor->PortCount);
-
     if (descriptor->activate != nullptr) {
         descriptor->activate(handle);
     }
+}
+
+void instance::connect(const size_type port_num_in, data_type * buffer_in)
+{
+    descriptor->connect_port(handle, port_num_in, buffer_in);
+}
+
+void instance::run(const size_type num_samples_in)
+{
+    descriptor->run(handle, num_samples_in);
 }
 
 node::node(const std::string& name_in, std::shared_ptr<ladspa::instance> instance_in, std::shared_ptr<pulsar::domain> domain_in)
@@ -176,13 +264,82 @@ void node::setup()
     assert(domain != nullptr);
     assert(ladspa != nullptr);
 
-    // TODO
-    // add audio input and output channels from LADSPA ports
+    auto port_count = ladspa->get_port_count();
+
+    control_buffers.reserve(port_count);
+
+    for(size_type port_num = 0; port_num < port_count; port_num++) {
+        auto name = ladspa->get_port_name(port_num);
+        auto descriptor = ladspa->get_port_descriptor(port_num);
+
+        if (LADSPA_IS_PORT_AUDIO(descriptor)) {
+            ladspa->connect(port_num, nullptr);
+
+            if (LADSPA_IS_PORT_INPUT(descriptor)) {
+                audio.add_input(name);
+            } else if (LADSPA_IS_PORT_OUTPUT(descriptor)) {
+                audio.add_output(name);
+            } else {
+                throw std::runtime_error("LADSPA port was neither input nor output");
+            }
+        } else if (LADSPA_IS_PORT_CONTROL(descriptor)) {
+            ladspa->connect(port_num, &control_buffers[port_num]);
+
+            if (LADSPA_IS_PORT_OUTPUT(descriptor)) {
+                control_buffers[port_num] = 0;
+            } else if (LADSPA_IS_PORT_INPUT(descriptor)) {
+                control_buffers[port_num] = get_control_port_default(ladspa->get_descriptor(), port_num);
+            } else {
+                throw std::runtime_error("LADSPA port was neither input nor output");
+            }
+
+        } else {
+            throw std::runtime_error("LADSPA port was neither audio nor control");
+        }
+    }
 }
 
 void node::handle_activate()
 {
     ladspa->activate();
+}
+
+void node::handle_run()
+{
+
+    std::cout << "running LADSPA plugin" << std::endl;
+
+    for (auto port_name : audio.get_input_names()) {
+        auto buffer = audio.get_input(port_name)->get_pointer();
+        auto port_num = ladspa->get_port_num(port_name);
+        ladspa->connect(port_num, buffer);
+    }
+
+    for (auto port_name : audio.get_output_names()) {
+        auto buffer = audio.get_output(port_name)->get_pointer();
+        auto port_num = ladspa->get_port_num(port_name);
+        ladspa->connect(port_num, buffer);
+
+    }
+
+    ladspa->run(domain->buffer_size);
+
+    for (auto port_name : audio.get_input_names()) {
+        auto buffer = audio.get_input(port_name)->get_pointer();
+        auto port_num = ladspa->get_port_num(port_name);
+        ladspa->connect(port_num, buffer);
+    }
+
+    for (auto port_name : audio.get_output_names()) {
+        auto buffer = audio.get_output(port_name)->get_pointer();
+        auto port_num = ladspa->get_port_num(port_name);
+        ladspa->connect(port_num, buffer);
+
+    }
+
+    std::cout << "done running LADSPA plugin" << std::endl;
+
+    pulsar::node::base::handle_run();
 }
 
 } // namespace ladspa
