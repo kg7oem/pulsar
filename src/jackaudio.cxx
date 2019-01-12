@@ -184,6 +184,7 @@ void jackaudio::node::handle_ready()
     }
 
     reset();
+    audio.reset();
 
     auto done_lock = make_done_lock();
     done_flag = true;
