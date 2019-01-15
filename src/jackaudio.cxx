@@ -145,8 +145,10 @@ void jackaudio::node::handle_jack_process(jack_nframes_t nframes_in)
     for(auto name : audio.get_output_names()) {
         auto output = audio.get_output(name);
         auto jack_buffer = get_port_buffer(name);
-        output->get_buffer()->set(jack_buffer, nframes_in);
-        output->notify();
+        auto buffer = std::make_shared<audio::buffer>();
+
+        buffer->init(nframes_in, jack_buffer);
+        output->set_buffer(buffer, true);
     }
 
     // if the node is ready now it won't get a chance to be put into the ready
@@ -163,6 +165,11 @@ void jackaudio::node::handle_jack_process(jack_nframes_t nframes_in)
 
     done_flag = false;
     std::cout << "giving control back to jackaudio" << std::endl;
+}
+
+void jackaudio::node::handle_ready()
+{
+    run();
 }
 
 void jackaudio::node::handle_run()
