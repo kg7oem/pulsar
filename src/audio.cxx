@@ -32,13 +32,16 @@ audio::buffer::~buffer()
     }
 }
 
-void audio::buffer::init(const pulsar::size_type buffer_size_in)
+void audio::buffer::init(const pulsar::size_type buffer_size_in, pulsar::sample_type * pointer_in)
 {
     assert(pointer == nullptr);
 
     size = buffer_size_in;
 
-    if (own_memory) {
+    if (pointer_in != nullptr) {
+        pointer = pointer_in;
+    } else {
+        own_memory = true;
         pointer = static_cast<pulsar::sample_type *>(std::calloc(size, sizeof(pulsar::sample_type)));
 
         if (pointer == nullptr) {
@@ -59,25 +62,6 @@ pulsar::sample_type * audio::buffer::get_pointer()
     assert(pointer != nullptr);
     return pointer;
 }
-
-// void audio::buffer::set_pointer(pulsar::sample_type * pointer_in)
-// {
-//     assert(own_memory == false);
-//     pointer = pointer_in;
-// }
-
-// void audio::buffer::clear_pointer()
-// {
-//     set_pointer(nullptr);
-// }
-
-// void audio::buffer::release_memory()
-// {
-//     assert(own_memory == true);
-//     free(pointer);
-//     pointer = nullptr;
-//     own_memory = false;
-// }
 
 void audio::buffer::zero()
 {
@@ -220,9 +204,13 @@ audio::output::output(const std::string& name_in, node::base * parent_in)
 
 }
 
-std::shared_ptr<audio::buffer> audio::output::get_buffer()
+void audio::output::set_buffer(std::shared_ptr<audio::buffer> buffer_in, const bool notify_in)
 {
-    return buffer;
+    buffer = buffer_in;
+
+    if (notify_in) {
+        notify();
+    }
 }
 
 void audio::output::reset()

@@ -39,11 +39,11 @@ struct output;
 class buffer {
     pulsar::size_type size = 0;
     pulsar::sample_type * pointer = nullptr;
-    bool own_memory = true;
+    bool own_memory = false;
 
     public:
     ~buffer();
-    void init(const pulsar::size_type buffer_size_in);
+    void init(const pulsar::size_type buffer_size_in, pulsar::sample_type * pointer_in = nullptr);
     pulsar::size_type get_size();
     pulsar::sample_type * get_pointer();
     // void set_pointer(pulsar::sample_type * pointer_in);
@@ -89,7 +89,7 @@ class input : public channel {
 
 struct output : public channel {
     output(const std::string& name_in, node::base * parent_in);
-    std::shared_ptr<audio::buffer> get_buffer();
+    void set_buffer(std::shared_ptr<audio::buffer> buffer_in, const bool notify_in = false);
     virtual void reset() override;
     void notify();
     void connect(input * source_in);
