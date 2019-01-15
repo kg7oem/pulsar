@@ -44,7 +44,6 @@ class node : public pulsar::node::base {
     void start();
     virtual void handle_activate() override;
     virtual void handle_run() override;
-    virtual void handle_ready() override;
     void handle_jack_process(jack_nframes_t nframes_in);
 
     public:

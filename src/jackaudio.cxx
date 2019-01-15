@@ -167,11 +167,6 @@ void jackaudio::node::handle_jack_process(jack_nframes_t nframes_in)
     std::cout << "giving control back to jackaudio" << std::endl;
 }
 
-void jackaudio::node::handle_ready()
-{
-    run();
-}
-
 void jackaudio::node::handle_run()
 {
     std::cout << "jackaudio node is now running" << std::endl;
