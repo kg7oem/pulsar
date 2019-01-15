@@ -80,7 +80,7 @@ class input : public channel {
     public:
     input(const std::string& name_in, node::base * parent_in);
     pulsar::size_type get_links_waiting();
-    pulsar::sample_type * get_pointer();
+    std::shared_ptr<audio::buffer> get_buffer();
     virtual void reset() override;
     void connect(output * sink_in);
     void mix_sinks();
@@ -89,7 +89,7 @@ class input : public channel {
 
 struct output : public channel {
     output(const std::string& name_in, node::base * parent_in);
-    pulsar::sample_type * get_pointer();
+    std::shared_ptr<audio::buffer> get_buffer();
     virtual void reset() override;
     void notify();
     void connect(input * source_in);

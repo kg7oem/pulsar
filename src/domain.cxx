@@ -21,13 +21,13 @@ namespace pulsar {
 domain::domain(const std::string& name_in, const pulsar::size_type sample_rate_in, const pulsar::size_type buffer_size_in)
 : name(name_in), sample_rate(sample_rate_in), buffer_size(buffer_size_in)
 {
-    zero_buffer.init(buffer_size_in);
+    zero_buffer->init(buffer_size_in);
 }
 
 domain::~domain()
 { }
 
-audio::buffer& domain::get_zero_buffer()
+std::shared_ptr<audio::buffer> domain::get_zero_buffer()
 {
     return zero_buffer;
 }

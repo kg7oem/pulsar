@@ -37,7 +37,7 @@ struct domain : public std::enable_shared_from_this<domain> {
     using lock_type = std::unique_lock<mutex_type>;
 
     private:
-    audio::buffer zero_buffer;
+    std::shared_ptr<audio::buffer> zero_buffer = std::make_shared<audio::buffer>();
     std::vector<std::shared_ptr<node::base>> nodes;
     std::list<node::base *> run_queue;
     mutex_type run_queue_mutex;
@@ -57,7 +57,7 @@ struct domain : public std::enable_shared_from_this<domain> {
     const pulsar::size_type buffer_size;
     domain(const std::string& name_in, const pulsar::size_type sample_rate_in, const pulsar::size_type buffer_size_in);
     virtual ~domain();
-    audio::buffer& get_zero_buffer();
+    std::shared_ptr<audio::buffer> get_zero_buffer();
     void activate(const size_type num_threads_in = 1);
     void step();
     void add_ready_node(node::base * node_in);

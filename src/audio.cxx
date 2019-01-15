@@ -179,20 +179,20 @@ pulsar::size_type audio::input::get_links_waiting()
 // if there is more than one link in the input channel then
 // returns a pointer to the internal buffer after it is used to
 // sum all the buffers from the linked output channels
-pulsar::sample_type * audio::input::get_pointer()
+std::shared_ptr<audio::buffer> audio::input::get_buffer()
 {
     auto num_links = links.size();
 
     if (num_links == 0) {
         std::cout << "returning pointer to zero buffer" << std::endl;
-        return parent->get_domain()->get_zero_buffer().get_pointer();
+        return parent->get_domain()->get_zero_buffer();
     } else if (num_links == 1) {
         std::cout << "returning pointer to link's ready buffer" << std::endl;
-        return links[0]->get_ready_buffer()->get_pointer();
+        return links[0]->get_ready_buffer();
     } else {
         std::cout << "returning pointer to input's mix buffer" << std::endl;
         mix_sinks();
-        return buffer->get_pointer();
+        return buffer;
     }
 }
 
@@ -220,9 +220,9 @@ audio::output::output(const std::string& name_in, node::base * parent_in)
 
 }
 
-pulsar::sample_type * audio::output::get_pointer()
+std::shared_ptr<audio::buffer> audio::output::get_buffer()
 {
-    return buffer->get_pointer();
+    return buffer;
 }
 
 void audio::output::reset()
