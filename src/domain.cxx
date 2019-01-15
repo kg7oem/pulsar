@@ -21,6 +21,8 @@ namespace pulsar {
 domain::domain(const std::string& name_in, const pulsar::size_type sample_rate_in, const pulsar::size_type buffer_size_in)
 : name(name_in), sample_rate(sample_rate_in), buffer_size(buffer_size_in)
 {
+    // FIXME use mprotect() to set the zero_buffer memory as read-only
+    // so it can't be accidently written over
     zero_buffer->init(buffer_size_in);
 }
 
@@ -59,21 +61,22 @@ void domain::activate(const size_type num_threads_in)
     activated = true;
 }
 
-void domain::step()
-{
-    if (! activated) {
-        throw std::runtime_error("attempt to step a domain that was not activated");
-    }
+// FIXME vestigual
+// void domain::step()
+// {
+//     if (! activated) {
+//         throw std::runtime_error("attempt to step a domain that was not activated");
+//     }
 
-    std::cout << "starting to step the domain" << std::endl;
+//     std::cout << "starting to step the domain" << std::endl;
 
-    auto lock = make_step_done_lock();
-    step_done_flag = false;
+//     auto lock = make_step_done_lock();
+//     step_done_flag = false;
 
-    std::cout << "done stepping the domain" << std::endl;
+//     std::cout << "done stepping the domain" << std::endl;
 
-    step_done_condition.wait(lock, [this]{ return step_done_flag; });
-}
+//     step_done_condition.wait(lock, [this]{ return step_done_flag; });
+// }
 
 void domain::add_ready_node(node::base * node_in)
 {

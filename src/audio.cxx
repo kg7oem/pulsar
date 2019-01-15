@@ -54,6 +54,7 @@ void audio::buffer::init(const pulsar::size_type buffer_size_in, pulsar::sample_
 
 pulsar::size_type audio::buffer::get_size()
 {
+    assert(pointer != nullptr);
     return size;
 }
 
@@ -65,11 +66,14 @@ pulsar::sample_type * audio::buffer::get_pointer()
 
 void audio::buffer::zero()
 {
+    assert(pointer != nullptr);
     audio::util::pcm_zero(pointer, size);
 }
 
 void audio::buffer::mix(std::shared_ptr<audio::buffer> mix_from_in)
 {
+    assert(pointer != nullptr);
+
     if (size != mix_from_in->size) {
         throw std::runtime_error("attempt to mix buffers of different size");
     }
@@ -79,6 +83,8 @@ void audio::buffer::mix(std::shared_ptr<audio::buffer> mix_from_in)
 
 void audio::buffer::set(pulsar::sample_type * pointer_in, const size_type size_in)
 {
+    assert(pointer != nullptr);
+
     if (size_in > size) {
         throw std::runtime_error("attempt to set buffer contents with a size that was too large");
     }
@@ -98,6 +104,7 @@ void audio::buffer::set(std::shared_ptr<audio::buffer> buffer_in)
 
 void audio::buffer::scale(const float scale_in)
 {
+    assert(pointer != nullptr);
     audio::util::pcm_scale(pointer, scale_in, size);
 }
 
@@ -108,6 +115,7 @@ audio::channel::channel(const std::string &name_in, node::base * parent_in)
 audio::channel::~channel()
 { }
 
+// FIXME this should call reset() to create the buffer
 void audio::channel::activate()
 {
     buffer = std::make_shared<audio::buffer>();
@@ -126,6 +134,7 @@ node::base * audio::channel::get_parent()
 
 std::shared_ptr<audio::buffer> audio::channel::get_buffer()
 {
+    assert(buffer != nullptr);
     return buffer;
 }
 
@@ -180,6 +189,7 @@ std::shared_ptr<audio::buffer> audio::input::get_buffer()
     }
 }
 
+// FIXME this should overload audio::channel::reset()
 void audio::input::reset()
 {
     for(auto link : links) {
@@ -191,6 +201,10 @@ void audio::input::reset()
 
 void audio::input::mix_sinks()
 {
+    assert(links.size() > 1);
+
+    // FIXME there can't be a buffer that sits here permanently
+    // and is modified - it needs to be replaced in reset()
     buffer->zero();
 
     for(auto link : links) {
@@ -213,6 +227,7 @@ void audio::output::set_buffer(std::shared_ptr<audio::buffer> buffer_in, const b
     }
 }
 
+// FIXME this should go away and just rely on audio::channel::reset()
 void audio::output::reset()
 {
     std::cout << "creating new output channel buffer" << std::endl;
@@ -243,6 +258,7 @@ audio::link::link(audio::output * sink_in, audio::input * source_in)
 std::shared_ptr<audio::buffer> audio::link::get_ready_buffer()
 {
     auto lock = make_lock();
+    assert(ready_buffer != nullptr);
     return ready_buffer;
 }
 

@@ -38,7 +38,6 @@ node::base::lock_type jackaudio::node::make_done_lock()
 
 void jackaudio::node::reset()
 {
-
     node::base::reset();
 }
 

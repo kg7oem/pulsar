@@ -23,7 +23,9 @@ namespace pulsar {
 
 node::base::base(const std::string& name_in, std::shared_ptr<pulsar::domain> domain_in)
 : domain(domain_in), name(name_in), audio(this)
-{ }
+{
+    assert(domain != nullptr);
+}
 
 node::base::~base()
 { }
