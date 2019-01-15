@@ -50,8 +50,6 @@ class node : public pulsar::node::base {
     node(const std::string& name_in, std::shared_ptr<pulsar::domain> domain_in);
     ~node();
     virtual void reset();
-    virtual bool is_ready();
-    virtual void handle_ready() override;
     void open();
     void open(const std::string& jack_name_in);
 };

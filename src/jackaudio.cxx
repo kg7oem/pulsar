@@ -38,17 +38,8 @@ node::base::lock_type jackaudio::node::make_done_lock()
 
 void jackaudio::node::reset()
 {
-    did_notify = false;
+
     node::base::reset();
-}
-
-bool jackaudio::node::is_ready()
-{
-    if (! did_notify.load()) {
-        return false;
-    }
-
-    return node::base::is_ready();
 }
 
 void jackaudio::node::open()
@@ -138,6 +129,15 @@ void jackaudio::node::handle_jack_process(jack_nframes_t nframes_in)
 {
     std::cout << std::endl << "jackaudio process callback invoked" << std::endl;
 
+    auto lock = make_lock();
+    auto done_lock = make_done_lock();
+
+    if (done_flag) {
+        throw std::runtime_error("jackaudio handle_jack_process() went reentrant");
+    }
+
+    done_lock.unlock();
+
     if (nframes_in != domain->buffer_size) {
         throw std::runtime_error("jackaudio process request and buffer size were not the same");
     }
@@ -149,31 +149,25 @@ void jackaudio::node::handle_jack_process(jack_nframes_t nframes_in)
         output->notify();
     }
 
-    did_notify = true;
-
-    auto done_lock = make_done_lock();
-
+    // if the node is ready now it won't get a chance to be put into the ready
+    // node list later
     if (is_ready()) {
-        // if there are not any pending inputs then give control
-        // back to jackaudio ASAP
-        done_flag = true;
-    } else {
-        // otherwise wait for the node to go ready
-        done_flag = false;
-        done_cond.wait(done_lock, [this]{ return done_flag; });
+        handle_ready();
     }
 
+    lock.unlock();
+
+    std::cout << "waiting for jackaudio node to become done" << std::endl;
+    done_lock.lock();
+    done_cond.wait(done_lock, [this]{ return done_flag; });
+
+    done_flag = false;
     std::cout << "giving control back to jackaudio" << std::endl;
 }
 
 void jackaudio::node::handle_run()
 {
-    throw std::runtime_error("jackaudio node should never run");
-}
-
-void jackaudio::node::handle_ready()
-{
-    std::cout << "jackaudio node is now ready" << std::endl;
+    std::cout << "jackaudio node is now running" << std::endl;
 
     for(auto name : audio.get_input_names()) {
         auto buffer_size = domain->buffer_size;
@@ -183,9 +177,7 @@ void jackaudio::node::handle_ready()
         audio::util::pcm_set(jack_buffer, channel_buffer, buffer_size);
     }
 
-    reset();
-    audio.reset();
-
+    std::cout << "notifying jackaudio done_flag condition variable" << std::endl;
     auto done_lock = make_done_lock();
     done_flag = true;
     done_cond.notify_all();
