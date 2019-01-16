@@ -14,9 +14,9 @@
 #include <cassert>
 #include <chrono>
 #include <cstdlib>
-#include <iostream>
 #include <stdexcept>
 
+#include "logging.h"
 #include "node.h"
 
 namespace pulsar {

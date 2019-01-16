@@ -17,6 +17,7 @@
 #include "pulsar/domain.h"
 #include "pulsar/jackaudio.h"
 #include "pulsar/ladspa.h"
+#include "pulsar/logging.h"
 
 using namespace std;
 using namespace std::chrono_literals;
@@ -25,24 +26,31 @@ using namespace std::chrono_literals;
 #define BUFFER_SIZE 1024
 #define NUM_THREADS 4
 
+void init_logging()
+{
+    auto logging = logjam::logengine::get_engine();
+    auto console = make_shared<oemros::log_console>(logjam::loglevel::debug);
+
+    logging->add_destination(console);
+    logging->start();
+}
+
 int main(void)
 {
+    init_logging();
+
+    log_info("pulsar-dev started running");
+
     auto domain = pulsar::domain::make("main", SAMPLE_RATE, BUFFER_SIZE);
     auto gain_left = domain->make_node<pulsar::ladspa::node>("left", "/usr/lib/ladspa/amp.so", 1048);
     auto gain_right = domain->make_node<pulsar::ladspa::node>("right", "/usr/lib/ladspa/amp.so", 1048);
-    auto jack1 = domain->make_node<pulsar::jackaudio::node>("pulsar-1");
-    auto jack2 = domain->make_node<pulsar::jackaudio::node>("pulsar-2");
-    auto jack_loop = domain->make_node<pulsar::jackaudio::node>("pulsar-loop");
+    auto jack = domain->make_node<pulsar::jackaudio::node>("pulsar");
 
-    jack_loop->audio.add_output("in_left")->connect(jack_loop->audio.add_input("out_left"));
-    jack_loop->audio.add_output("in_right")->connect(jack_loop->audio.add_input("out_right"));
+    jack->audio.add_output("in_left")->connect(gain_left->audio.get_input("Input"));
+    jack->audio.add_output("in_right")->connect(gain_right->audio.get_input("Input"));
 
-    jack1->audio.add_output("in_left")->connect(gain_left->audio.get_input("Input"));
-    jack2->audio.add_output("in_right")->connect(gain_right->audio.get_input("Input"));
-
-    // cross up the input and output jackaudio client
-    jack2->audio.add_input("out_left")->connect(gain_left->audio.get_output("Output"));
-    jack1->audio.add_input("out_right")->connect(gain_right->audio.get_output("Output"));
+    jack->audio.add_input("out_left")->connect(gain_left->audio.get_output("Output"));
+    jack->audio.add_input("out_right")->connect(gain_right->audio.get_output("Output"));
 
     domain->activate(NUM_THREADS);
 

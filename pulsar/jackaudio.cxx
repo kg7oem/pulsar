@@ -11,10 +11,9 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
 
-#include <iostream>
-
 #include "audio.util.h"
 #include "jackaudio.h"
+#include "logging.h"
 
 namespace pulsar {
 
@@ -129,7 +128,7 @@ void jackaudio::node::handle_activate()
 // work if it supplies audio only.
 void jackaudio::node::handle_jack_process(jack_nframes_t nframes_in)
 {
-    std::cout << std::endl << "jackaudio process callback invoked" << std::endl;
+    log_debug("jackaudio process callback invoked");
 
     auto lock = make_lock();
     auto done_lock = make_done_lock();
@@ -155,17 +154,17 @@ void jackaudio::node::handle_jack_process(jack_nframes_t nframes_in)
 
     lock.unlock();
 
-    std::cout << "waiting for jackaudio node to become done" << std::endl;
+    log_debug("waiting for jackaudio node to become done");
     done_lock.lock();
     done_cond.wait(done_lock, [this]{ return done_flag; });
 
     done_flag = false;
-    std::cout << "giving control back to jackaudio" << std::endl;
+    log_debug("giving control back to jackaudio");
 }
 
 void jackaudio::node::handle_run()
 {
-    std::cout << "jackaudio node is now running" << std::endl;
+    log_debug("jackaudio node is now running");
 
     for(auto name : audio.get_input_names()) {
         auto buffer_size = domain->buffer_size;
@@ -175,7 +174,7 @@ void jackaudio::node::handle_run()
         audio::util::pcm_set(jack_buffer, channel_buffer->get_pointer(), buffer_size);
     }
 
-    std::cout << "notifying jackaudio done_flag condition variable" << std::endl;
+    log_debug("notifying jackaudio done_flag condition variable");
     auto done_lock = make_done_lock();
     done_flag = true;
     done_cond.notify_all();

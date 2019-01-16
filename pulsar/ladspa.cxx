@@ -14,9 +14,9 @@
 #include <cassert>
 #include <cmath>
 #include <dlfcn.h>
-#include <iostream>
 
 #include "ladspa.h"
+#include "logging.h"
 
 #define DESCRIPTOR_SYMBOL "ladspa_descriptor"
 
@@ -134,7 +134,7 @@ file::~file()
 {
     if (handle != nullptr) {
         if (dlclose(handle)) {
-            std::cout << "could not dlclose() ladspa plugin handle" << std::endl;
+            log_error("could not dlclose() ladspa plugin handle");;
             abort();
         }
 
@@ -307,7 +307,7 @@ void node::handle_activate()
 
 void node::handle_run()
 {
-    std::cout << "running LADSPA plugin" << std::endl;
+    log_debug("running LADSPA plugin");
 
     for (auto port_name : audio.get_input_names()) {
         auto buffer = audio.get_input(port_name)->get_buffer();
@@ -333,7 +333,7 @@ void node::handle_run()
         ladspa->connect(port_num, nullptr);
     }
 
-    std::cout << "done running LADSPA plugin" << std::endl;
+    log_debug("done running LADSPA plugin");
 
     pulsar::node::base::handle_run();
 }

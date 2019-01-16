@@ -12,9 +12,9 @@
 // GNU Lesser General Public License for more details.
 
 #include <cassert>
-#include <iostream>
 
 #include "domain.h"
+#include "logging.h"
 #include "node.h"
 
 namespace pulsar {
@@ -95,7 +95,7 @@ void domain::add_ready_node(node::base * node_in)
 
     auto lock = make_run_queue_lock();
 
-    std::cout << "adding ready node: " << node_in->name << std::endl;
+    log_debug("adding ready node: ", node_in->name);
 
     run_queue.push_back(node_in);
     run_queue_condition.notify_all();
@@ -114,9 +114,9 @@ void domain::be_thread(domain * domain_in)
 
         lock.unlock();
 
-        std::cout << "running node: " << ready_node->name << std::endl;
+        log_debug("running node: ", ready_node->name);
         ready_node->run();
-        std::cout << "done running node: " << ready_node->name << std::endl;
+        log_debug("done running node: ", ready_node->name);
     }
 }
 

@@ -13,7 +13,6 @@
 
 #include <cassert>
 #include <cstring>
-#include <iostream>
 
 #include "audio.util.h"
 
@@ -38,11 +37,6 @@ void audio::util::pcm_set(sample_type * dest_in, const sample_type * src_in, con
 {
     assert(dest_in != nullptr);
     assert(src_in != nullptr);
-    // std::cout << "audio::util::pcm_set(): ";
-    // for(size_type i = 0; i < samples_in; i++) {
-    //     std::cout << src_in[i] << " ";
-    // }
-    // std::cout << std::endl;
     memcpy(dest_in, src_in, samples_in * sizeof(sample_type));
 }
 

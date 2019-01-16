@@ -5,9 +5,12 @@ project(pulsar)
 set(CMAKE_CXX_STANDARD 17)
 
 find_package(Threads)
+find_package(Boost 1.5.8)
 
 add_definitions(-Wfatal-errors -Werror -Wall -Wextra)
 add_definitions(-g)
+
+include_directories(${Boost_INCLUDE_DIRS})
 
 add_library(
     pulsar SHARED
@@ -17,6 +20,8 @@ add_library(
     pulsar/domain.cxx
     pulsar/jackaudio.cxx
     pulsar/ladspa.cxx
+    pulsar/logging.cxx
+    pulsar/logjam.cxx
     pulsar/node.cxx
 )
 
@@ -27,6 +32,7 @@ add_executable(
 )
 
 target_link_libraries(pulsar ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(pulsar ${Boost_LIBRARIES})
 target_link_libraries(pulsar dl)
 target_link_libraries(pulsar jack)
 
