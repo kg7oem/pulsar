@@ -27,7 +27,7 @@ using namespace std::chrono_literals;
 
 int main(void)
 {
-    auto domain = make_shared<pulsar::domain>("main", SAMPLE_RATE, BUFFER_SIZE);
+    auto domain = pulsar::domain::make("main", SAMPLE_RATE, BUFFER_SIZE);
     auto gain_left = domain->make_node<pulsar::ladspa::node>("left", "/usr/lib/ladspa/amp.so", 1048);
     auto gain_right = domain->make_node<pulsar::ladspa::node>("right", "/usr/lib/ladspa/amp.so", 1048);
     auto jack = domain->make_node<pulsar::jackaudio::node>("pulsar");

@@ -55,6 +55,11 @@ struct domain : public std::enable_shared_from_this<domain> {
     const std::string name;
     const pulsar::size_type sample_rate;
     const pulsar::size_type buffer_size;
+    template <typename... Args>
+    static std::shared_ptr<domain> make(Args... args)
+    {
+        return std::make_shared<domain>(args...);
+    }
     domain(const std::string& name_in, const pulsar::size_type sample_rate_in, const pulsar::size_type buffer_size_in);
     virtual ~domain();
     std::shared_ptr<audio::buffer> get_zero_buffer();
