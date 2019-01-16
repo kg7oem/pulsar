@@ -127,7 +127,7 @@ struct logevent {
     const int32_t line = -1;
     const std::string message;
 
-    logevent(const logsource& source_in, const loglevel& level_in, const timestamp& when, const std::thread::id& tid_in, const char* function, const char *file, const int& line, const std::string& message_in);
+    logevent(const std::string& source_in, const loglevel& level_in, const timestamp& when, const std::thread::id& tid_in, const char* function, const char *file, const int& line, const std::string& message_in);
     ~logevent() = default;
 };
 
@@ -227,7 +227,7 @@ void accumulate_log_arg(std::stringstream& sstream, T&& t, Args&&... args) {
 }
 
 template<typename T, typename... Args>
-void send_logevent(const logsource& source, const loglevel& level, const char *function, const char *path, const int& line, T&& t, Args&&... args) {
+void send_logevent(const std::string& source, const loglevel& level, const char *function, const char *path, const int& line, T&& t, Args&&... args) {
     if (logjam::should_log(level)) {
         auto when = std::chrono::system_clock::now();
 
