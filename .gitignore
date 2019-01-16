@@ -1,4 +1,5 @@
 pulsar-dev
+libpulsar*.so
 
 CMakeCache.txt
 CMakeFiles/

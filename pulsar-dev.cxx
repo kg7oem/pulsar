@@ -14,9 +14,9 @@
 #include <memory>
 #include <iostream>
 
-#include "domain.h"
-#include "jackaudio.h"
-#include "ladspa.h"
+#include "pulsar/domain.h"
+#include "pulsar/jackaudio.h"
+#include "pulsar/ladspa.h"
 
 using namespace std;
 using namespace std::chrono_literals;
@@ -31,6 +31,9 @@ int main(void)
     auto gain_left = domain->make_node<pulsar::ladspa::node>("left", "/usr/lib/ladspa/amp.so", 1048);
     auto gain_right = domain->make_node<pulsar::ladspa::node>("right", "/usr/lib/ladspa/amp.so", 1048);
     auto jack = domain->make_node<pulsar::jackaudio::node>("pulsar");
+    auto jack_loop = domain->make_node<pulsar::jackaudio::node>("pulsar-loop");
+
+    jack_loop->audio.add_input("out")->connect(jack_loop->audio.add_output("in"));
 
     jack->audio.add_output("in_left")->connect(gain_left->audio.get_input("Input"));
     jack->audio.add_output("in_right")->connect(gain_right->audio.get_input("Input"));

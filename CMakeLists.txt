@@ -9,18 +9,25 @@ find_package(Threads)
 add_definitions(-Wfatal-errors -Werror -Wall -Wextra)
 add_definitions(-g)
 
+add_library(
+    pulsar SHARED
+
+    pulsar/audio.cxx
+    pulsar/audio.util.cxx
+    pulsar/domain.cxx
+    pulsar/jackaudio.cxx
+    pulsar/ladspa.cxx
+    pulsar/node.cxx
+)
+
 add_executable(
     pulsar-dev
 
-    src/audio.cxx
-    src/audio.util.cxx
-    src/domain.cxx
-    src/jackaudio.cxx
-    src/ladspa.cxx
-    src/main.cxx
-    src/node.cxx
+    pulsar-dev.cxx
 )
 
-target_link_libraries(pulsar-dev ${CMAKE_THREAD_LIBS_INIT})
-target_link_libraries(pulsar-dev dl)
-target_link_libraries(pulsar-dev jack)
+target_link_libraries(pulsar ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(pulsar dl)
+target_link_libraries(pulsar jack)
+
+target_link_libraries(pulsar-dev pulsar)
