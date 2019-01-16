@@ -67,7 +67,7 @@ void domain::activate(const size_type num_threads_in)
         threads.emplace_back(be_thread, this);
     }
 
-    for(auto node : nodes) {
+    for(auto&& node : nodes) {
         node->activate();
     }
 }

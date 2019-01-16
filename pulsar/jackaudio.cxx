@@ -23,7 +23,7 @@ jackaudio::node::node(const std::string& name_in, std::shared_ptr<pulsar::domain
 
 jackaudio::node::~node()
 {
-    for (auto port : jack_ports) {
+    for (auto&& port : jack_ports) {
         jack_port_unregister(jack_client, port.second);
     }
 
@@ -101,12 +101,12 @@ void jackaudio::node::handle_activate()
         open();
     }
 
-    for(auto name : audio.get_output_names()) {
+    for(auto&& name : audio.get_output_names()) {
         auto output = audio.get_output(name);
         add_port(output->name, JACK_DEFAULT_AUDIO_TYPE, JackPortIsInput);
     }
 
-    for(auto name : audio.get_input_names()) {
+    for(auto&& name : audio.get_input_names()) {
         auto input = audio.get_input(name);
         add_port(input->name, JACK_DEFAULT_AUDIO_TYPE, JackPortIsOutput);
     }
@@ -143,7 +143,7 @@ void jackaudio::node::handle_jack_process(jack_nframes_t nframes_in)
         throw std::runtime_error("jackaudio process request and buffer size were not the same");
     }
 
-    for(auto name : audio.get_output_names()) {
+    for(auto&& name : audio.get_output_names()) {
         auto output = audio.get_output(name);
         auto jack_buffer = get_port_buffer(name);
         auto buffer = std::make_shared<audio::buffer>();
@@ -166,7 +166,7 @@ void jackaudio::node::handle_run()
 {
     log_debug("jackaudio node is now running");
 
-    for(auto name : audio.get_input_names()) {
+    for(auto&& name : audio.get_input_names()) {
         auto buffer_size = domain->buffer_size;
         auto input = audio.get_input(name);
         auto jack_buffer = get_port_buffer(name);

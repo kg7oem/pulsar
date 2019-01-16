@@ -125,7 +125,7 @@ file::file(const std::string &path_in)
         throw std::runtime_error("could not get descriptor function for " + path);
     }
 
-    for (auto i : get_descriptors()) {
+    for (auto&& i : get_descriptors()) {
         id_to_descriptor[i->UniqueID] = i;
     }
 }
@@ -175,7 +175,7 @@ const std::vector<std::pair<id_type, std::string>> file::enumerate()
 {
     std::vector<std::pair<id_type, std::string>> retval;
 
-    for (auto descriptor : get_descriptors()) {
+    for (auto&& descriptor : get_descriptors()) {
         retval.emplace_back(descriptor->UniqueID, descriptor->Name);
     }
 
@@ -309,13 +309,13 @@ void node::handle_run()
 {
     log_debug("running LADSPA plugin");
 
-    for (auto port_name : audio.get_input_names()) {
+    for (auto&& port_name : audio.get_input_names()) {
         auto buffer = audio.get_input(port_name)->get_buffer();
         auto port_num = ladspa->get_port_num(port_name);
         ladspa->connect(port_num, buffer->get_pointer());
     }
 
-    for (auto port_name : audio.get_output_names()) {
+    for (auto&& port_name : audio.get_output_names()) {
         auto buffer = audio.get_output(port_name)->get_buffer();
         auto port_num = ladspa->get_port_num(port_name);
         ladspa->connect(port_num, buffer->get_pointer());
@@ -323,12 +323,12 @@ void node::handle_run()
 
     ladspa->run(domain->buffer_size);
 
-    for (auto port_name : audio.get_input_names()) {
+    for (auto&& port_name : audio.get_input_names()) {
         auto port_num = ladspa->get_port_num(port_name);
         ladspa->connect(port_num, nullptr);
     }
 
-    for (auto port_name : audio.get_output_names()) {
+    for (auto&& port_name : audio.get_output_names()) {
         auto port_num = ladspa->get_port_num(port_name);
         ladspa->connect(port_num, nullptr);
     }

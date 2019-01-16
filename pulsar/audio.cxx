@@ -192,7 +192,7 @@ std::shared_ptr<audio::buffer> audio::input::get_buffer()
 // FIXME this should overload audio::channel::reset()
 void audio::input::reset()
 {
-    for(auto link : links) {
+    for(auto&& link : links) {
         link->reset();
     }
 
@@ -207,7 +207,7 @@ void audio::input::mix_sinks()
     // and is modified - it needs to be replaced in reset()
     buffer->zero();
 
-    for(auto link : links) {
+    for(auto&& link : links) {
         buffer->mix(link->get_ready_buffer());
     }
 }
@@ -244,7 +244,7 @@ void audio::output::connect(audio::input * sink_in)
 
 void audio::output::notify()
 {
-    for(auto link : links) {
+    for(auto&& link : links) {
         link->notify(buffer);
     }
 }
@@ -302,11 +302,11 @@ audio::component::component(node::base * parent_in)
 
 audio::component::~component()
 {
-    for (auto i : sources) {
+    for (auto&& i : sources) {
         delete i.second;
     }
 
-    for(auto i : sinks) {
+    for(auto&& i : sinks) {
         delete i.second;
     }
 
@@ -326,18 +326,18 @@ bool audio::component::is_ready()
 
 void audio::component::activate()
 {
-    for (auto input : sources) {
+    for (auto&& input : sources) {
         input.second->activate();
     }
 
-    for(auto output : sinks) {
+    for(auto&& output : sinks) {
         output.second->activate();
     }
 }
 
 void audio::component::notify()
 {
-    for (auto output : sinks) {
+    for (auto&& output : sinks) {
         output.second->notify();
     }
 }
@@ -346,11 +346,11 @@ void audio::component::reset()
 {
     pulsar::size_type inputs_with_links = 0;
 
-    for(auto output : sinks) {
+    for(auto&& output : sinks) {
         output.second->reset();
     }
 
-    for(auto input : sources) {
+    for(auto&& input : sources) {
         input.second->reset();
 
         if (input.second->get_links_waiting() > 0) {
@@ -392,7 +392,7 @@ std::vector<std::string> audio::component::get_input_names()
 {
     std::vector<std::string> retval;
 
-    for(auto input : sources) {
+    for(auto&& input : sources) {
         retval.push_back(input.first);
     }
 
@@ -423,7 +423,7 @@ std::vector<std::string> audio::component::get_output_names()
 {
     std::vector<std::string> retval;
 
-    for(auto output : sinks) {
+    for(auto&& output : sinks) {
         retval.push_back(output.first);
     }
 

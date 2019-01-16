@@ -89,13 +89,13 @@ void node::dummy::handle_run()
     auto input_names = audio.get_input_names();
     auto num_outputs = output_names.size();
 
-    for(auto output_name : output_names) {
+    for(auto&& output_name : output_names) {
         auto output = audio.get_output(output_name);
         auto output_buffer = output->get_buffer();
 
         output_buffer->zero();
 
-        for(auto input_name : input_names) {
+        for(auto&& input_name : input_names) {
             output_buffer->mix(audio.get_input(input_name)->get_buffer());
         }
 
