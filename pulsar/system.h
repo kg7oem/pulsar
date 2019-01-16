@@ -13,6 +13,8 @@
 
 #pragma once
 
+#include <string>
+
 // g++ 6.3.0 as it comes in debian/stretch does not support maybe_unused
 #ifdef __GNUC__
 #define UNUSED __attribute__((unused))
@@ -26,6 +28,8 @@
 namespace pulsar {
 
 namespace system {
+
+const std::string& get_boost_version();
 
 // [[noreturn]] void system_fault__func(const char* file_in, int line_in, const char* function_in, const std::string& message_in);
 // [[noreturn]] void system_panic__func(const char* file_in, int line_in, const char* function_in, const std::string& message_in);

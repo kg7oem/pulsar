@@ -22,6 +22,7 @@ add_library(
     pulsar/ladspa.cxx
     pulsar/logjam.cxx
     pulsar/node.cxx
+    pulsar/system.cxx
 )
 
 add_executable(

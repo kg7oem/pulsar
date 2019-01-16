@@ -18,6 +18,7 @@
 #include "pulsar/jackaudio.h"
 #include "pulsar/ladspa.h"
 #include "pulsar/logging.h"
+#include "pulsar/system.h"
 
 using namespace std;
 using namespace std::chrono_literals;
@@ -39,7 +40,10 @@ int main(void)
 {
     init_logging();
 
-    log_info("pulsar-dev started running");
+    log_info("pulsar-dev started");
+    log_info("Using Boost ", pulsar::system::get_boost_version());
+
+    exit(1);
 
     auto domain = pulsar::domain::make("main", SAMPLE_RATE, BUFFER_SIZE);
     auto gain_left = domain->make_node<pulsar::ladspa::node>("left", "/usr/lib/ladspa/amp.so", 1048);
