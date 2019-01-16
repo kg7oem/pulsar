@@ -30,16 +30,18 @@ int main(void)
     auto domain = pulsar::domain::make("main", SAMPLE_RATE, BUFFER_SIZE);
     auto gain_left = domain->make_node<pulsar::ladspa::node>("left", "/usr/lib/ladspa/amp.so", 1048);
     auto gain_right = domain->make_node<pulsar::ladspa::node>("right", "/usr/lib/ladspa/amp.so", 1048);
-    auto jack = domain->make_node<pulsar::jackaudio::node>("pulsar");
+    auto jack1 = domain->make_node<pulsar::jackaudio::node>("pulsar-1");
+    auto jack2 = domain->make_node<pulsar::jackaudio::node>("pulsar-2");
     auto jack_loop = domain->make_node<pulsar::jackaudio::node>("pulsar-loop");
 
-    jack_loop->audio.add_input("out")->connect(jack_loop->audio.add_output("in"));
+    jack_loop->audio.add_output("in_left")->connect(jack_loop->audio.add_input("out_left"));
+    jack_loop->audio.add_output("in_right")->connect(jack_loop->audio.add_input("out_right"));
 
-    jack->audio.add_output("in_left")->connect(gain_left->audio.get_input("Input"));
-    jack->audio.add_output("in_right")->connect(gain_right->audio.get_input("Input"));
+    jack1->audio.add_output("in_left")->connect(gain_left->audio.get_input("Input"));
+    jack2->audio.add_output("in_right")->connect(gain_right->audio.get_input("Input"));
 
-    jack->audio.add_input("out_left")->connect(gain_left->audio.get_output("Output"));
-    jack->audio.add_input("out_right")->connect(gain_right->audio.get_output("Output"));
+    jack1->audio.add_input("out_left")->connect(gain_left->audio.get_output("Output"));
+    jack2->audio.add_input("out_right")->connect(gain_right->audio.get_output("Output"));
 
     domain->activate(NUM_THREADS);
 
