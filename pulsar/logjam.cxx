@@ -25,10 +25,6 @@ bool should_log(const loglevel& level_in) {
     return logengine::get_engine()->should_log(level_in);
 }
 
-// this lives at file global scope because it didn't work in
-// the original desired scope: inside logengine
-//static std::atomic<loglevel> log_level_min = ATOMIC_VAR_INIT(loglevel::none);
-
 // THREAD this function is thread safe
 const char* level_name(const loglevel& level_in) {
     switch (level_in) {
@@ -194,11 +190,8 @@ logevent::logevent(const std::string& source_in, const loglevel& level_in, const
     assert(level >= loglevel::unknown);
 }
 
-// THREAD this function is thread safe if the user implementation is safe
+// THREAD this function is thread safe
 logengine* logengine::get_engine() {
-    // auto user_engine = handlers::get_engine();
-    // assert(user_engine != nullptr);
-    // return user_engine;
     static logengine engine;
     return &engine;
 }

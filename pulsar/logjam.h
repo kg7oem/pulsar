@@ -25,11 +25,6 @@
 #include <unordered_set>
 #include <vector>
 
-#ifdef LOGJAM_LOGSOURCE_MACRO
-// TODO figure out why name(#name) doesn't work
-#define LOGJAM_LOGSOURCE(name) const logjam::logsource name{#name}
-#endif
-
 namespace logjam {
 
 enum class loglevel {
@@ -46,12 +41,6 @@ enum class loglevel {
 
 struct logevent;
 class logengine;
-
-// functions that the user of the library needs to provide
-struct handlers {
-        static void fatal(const logevent& event_in);
-        // static logengine* get_engine();
-};
 
 class mutex : public std::mutex {
     private:
@@ -165,7 +154,6 @@ class logdest : public baseobj {
 class logengine : public baseobj, shareable {
     using lockfree_queue = boost::lockfree::queue<logevent*>;
 
-    // friend logengine* handlers::get_engine();
     friend loglevel logdest::set_min_level(const loglevel& min_level_in);
     friend loglevel logdest::set_min_level__lockreq(const loglevel& min_level_in);
 
@@ -210,8 +198,8 @@ class logconsole : public logdest, lockable {
         virtual std::string format_event(const logevent& event) const;
 };
 
-// const char* level_name(const loglevel& level_in);
-// loglevel level_from_name(const char* name_in);
+const char* level_name(const loglevel& level_in);
+loglevel level_from_name(const char* name_in);
 bool should_log(const loglevel& level_in);
 
 // TODO how can this be gotten rid of?

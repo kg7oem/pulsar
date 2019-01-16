@@ -20,7 +20,6 @@ add_library(
     pulsar/domain.cxx
     pulsar/jackaudio.cxx
     pulsar/ladspa.cxx
-    pulsar/logging.cxx
     pulsar/logjam.cxx
     pulsar/node.cxx
 )
