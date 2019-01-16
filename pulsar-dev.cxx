@@ -40,8 +40,9 @@ int main(void)
     jack1->audio.add_output("in_left")->connect(gain_left->audio.get_input("Input"));
     jack2->audio.add_output("in_right")->connect(gain_right->audio.get_input("Input"));
 
-    jack1->audio.add_input("out_left")->connect(gain_left->audio.get_output("Output"));
-    jack2->audio.add_input("out_right")->connect(gain_right->audio.get_output("Output"));
+    // cross up the input and output jackaudio client
+    jack2->audio.add_input("out_left")->connect(gain_left->audio.get_output("Output"));
+    jack1->audio.add_input("out_right")->connect(gain_right->audio.get_output("Output"));
 
     domain->activate(NUM_THREADS);
 
