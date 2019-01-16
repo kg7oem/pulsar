@@ -124,6 +124,9 @@ void jackaudio::node::handle_activate()
     start();
 }
 
+// FIXME right now a node with no inputs will never run.
+// This needs to be fixed at the node level so JACK can
+// work if it supplies audio only.
 void jackaudio::node::handle_jack_process(jack_nframes_t nframes_in)
 {
     std::cout << std::endl << "jackaudio process callback invoked" << std::endl;
@@ -148,12 +151,6 @@ void jackaudio::node::handle_jack_process(jack_nframes_t nframes_in)
 
         buffer->init(nframes_in, jack_buffer);
         output->set_buffer(buffer, true);
-    }
-
-    // if the node is ready now it won't get a chance to be put into the ready
-    // node list later
-    if (is_ready()) {
-        handle_ready();
     }
 
     lock.unlock();
