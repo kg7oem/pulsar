@@ -196,9 +196,11 @@ logevent::logevent(const std::string& source_in, const loglevel& level_in, const
 
 // THREAD this function is thread safe if the user implementation is safe
 logengine* logengine::get_engine() {
-    auto user_engine = handlers::get_engine();
-    assert(user_engine != nullptr);
-    return user_engine;
+    // auto user_engine = handlers::get_engine();
+    // assert(user_engine != nullptr);
+    // return user_engine;
+    static logengine engine;
+    return &engine;
 }
 
 void logengine::add_destination(const std::shared_ptr<logdest>& destination_in) {

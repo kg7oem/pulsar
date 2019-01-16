@@ -29,7 +29,7 @@ using namespace std::chrono_literals;
 void init_logging()
 {
     auto logging = logjam::logengine::get_engine();
-    auto console = make_shared<oemros::log_console>(logjam::loglevel::debug);
+    auto console = make_shared<logjam::logconsole>(logjam::loglevel::debug);
 
     logging->add_destination(console);
     logging->start();

@@ -13,36 +13,13 @@
 
 #pragma once
 
-#define LOGJAM_LOGSOURCE_MACRO
-
 #include "logjam.h"
-#include "system.h"
 
-#define log_error(...)   logjam::send_logevent("pulsar", logjam::loglevel::error, __PRETTY_FUNCTION__, __FILE__, __LINE__, __VA_ARGS__)
-#define log_info(...)    logjam::send_logevent("pulsar", logjam::loglevel::info, __PRETTY_FUNCTION__, __FILE__, __LINE__, __VA_ARGS__)
-#define log_verbose(...) logjam::send_logevent("pulsar", logjam::loglevel::verbose, __PRETTY_FUNCTION__, __FILE__, __LINE__, __VA_ARGS__)
-#define log_debug(...)   logjam::send_logevent("pulsar", logjam::loglevel::debug, __PRETTY_FUNCTION__, __FILE__, __LINE__, __VA_ARGS__)
-#define log_trace(...)   logjam::send_logevent("pulsar", logjam::loglevel::trace, __PRETTY_FUNCTION__, __FILE__, __LINE__, __VA_ARGS__)
-#define log_unknown(...) logjam::send_logevent("pulsar", logjam::loglevel::unknown, __PRETTY_FUNCTION__, __FILE__, __LINE__, __VA_ARGS__)
+#define PULSAR_LOG_NAME "pulsar"
 
-namespace oemros {
-
-// TODO this is weird too - is there a way to clean this up?
-struct _log_sources {
-    LOGJAM_LOGSOURCE(oemros);
-    LOGJAM_LOGSOURCE(hamlib);
-};
-
-extern const _log_sources log_sources;
-
-class log_engine : public logjam::logengine {
-    public:
-        log_engine();
-};
-
-class log_console : public logjam::logconsole {
-    public:
-        log_console(const logjam::loglevel& level_in);
-};
-
-}
+#define log_error(...)   logjam::send_logevent(PULSAR_LOG_NAME, logjam::loglevel::error, __PRETTY_FUNCTION__, __FILE__, __LINE__, __VA_ARGS__)
+#define log_info(...)    logjam::send_logevent(PULSAR_LOG_NAME, logjam::loglevel::info, __PRETTY_FUNCTION__, __FILE__, __LINE__, __VA_ARGS__)
+#define log_verbose(...) logjam::send_logevent(PULSAR_LOG_NAME, logjam::loglevel::verbose, __PRETTY_FUNCTION__, __FILE__, __LINE__, __VA_ARGS__)
+#define log_debug(...)   logjam::send_logevent(PULSAR_LOG_NAME, logjam::loglevel::debug, __PRETTY_FUNCTION__, __FILE__, __LINE__, __VA_ARGS__)
+#define log_trace(...)   logjam::send_logevent(PULSAR_LOG_NAME, logjam::loglevel::trace, __PRETTY_FUNCTION__, __FILE__, __LINE__, __VA_ARGS__)
+#define log_unknown(...) logjam::send_logevent(PULSAR_LOG_NAME, logjam::loglevel::unknown, __PRETTY_FUNCTION__, __FILE__, __LINE__, __VA_ARGS__)
