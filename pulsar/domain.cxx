@@ -11,6 +11,7 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
 
+#include <cassert>
 #include <iostream>
 
 #include "domain.h"
@@ -34,10 +35,11 @@ std::shared_ptr<audio::buffer> domain::get_zero_buffer()
     return zero_buffer;
 }
 
-domain::lock_type domain::make_step_done_lock()
-{
-    return lock_type(step_done_mutex);
-}
+// FIXME vestigual
+// domain::lock_type domain::make_step_done_lock()
+// {
+//     return lock_type(step_done_mutex);
+// }
 
 domain::lock_type domain::make_run_queue_lock()
 {
@@ -50,6 +52,17 @@ void domain::activate(const size_type num_threads_in)
         throw std::runtime_error("attempt to activate a domain with invalid number of threads");
     }
 
+    assert(! activated);
+
+    activated = true;
+
+    // FIXME
+    // Activate all the nodes before any threads exist to run them
+    // so a node is not executed from the ready list before it is
+    // activated. Right now if the order is reversed there is a pause
+    // during startup and it causes JACK to log errors but then otherwise
+    // seems to run fine
+
     for(size_type i = 0; i < num_threads_in; i++) {
         threads.emplace_back(be_thread, this);
     }
@@ -57,8 +70,6 @@ void domain::activate(const size_type num_threads_in)
     for(auto node : nodes) {
         node->activate();
     }
-
-    activated = true;
 }
 
 // FIXME vestigual
@@ -80,6 +91,8 @@ void domain::activate(const size_type num_threads_in)
 
 void domain::add_ready_node(node::base * node_in)
 {
+    assert(activated);
+
     auto lock = make_run_queue_lock();
 
     std::cout << "adding ready node: " << node_in->name << std::endl;
