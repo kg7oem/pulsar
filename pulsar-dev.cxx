@@ -85,11 +85,23 @@ int main(void)
     log_info("pulsar-dev initialized");
     log_info("Using Boost ", pulsar::system::get_boost_version());
 
-    pulsar::property::integer param_integer("integer");
-    param_integer.set(10);
+    pulsar::property::generic generic("generic", pulsar::property::value_type::integer);
+    generic.from_str("20");
 
-    log_debug("Value: ", param_integer.get());
-    log_debug("As string: ", param_integer.to_str());
+    pulsar::property::integer integer1("integer from string");
+    integer1.from_str("30");
+
+    pulsar::property::integer integer2("integer native");
+    integer2.set(10);
+
+    // string representation of type
+    log_debug(generic.name, ": ", generic.to_str());
+    // as the native type
+    log_debug(integer1.name, ": ", integer1.get());
+    // string representation
+    log_debug(integer2.name, ": ", integer2.to_str());
+
+    // process_audio();
 
     return 0;
 }
