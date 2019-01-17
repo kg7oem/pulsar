@@ -187,13 +187,7 @@ void jackaudio::node::handle_run()
 
 void jackaudio::node::start()
 {
-    auto buffer_size =  jack_get_buffer_size(jack_client);
-    auto sample_rate = jack_get_sample_rate(jack_client);
-    auto cycle_time_hz = sample_rate / buffer_size;
-    auto cycle_time_ms = 1000 / cycle_time_hz;
-    auto watchdog_timeout = std::chrono::milliseconds(cycle_time_ms * 2);
-
-    watchdog = async::watchdog::make(watchdog_timeout);
+    watchdog = async::watchdog::make(500ms);
 
     if (jack_activate(jack_client)) {
         throw std::runtime_error("could not activate jack client");
