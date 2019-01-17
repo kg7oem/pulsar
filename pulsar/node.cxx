@@ -21,26 +21,28 @@
 
 namespace pulsar {
 
-node::base::base(const std::string& name_in, std::shared_ptr<pulsar::domain> domain_in)
+namespace node {
+
+base::node::node(const std::string& name_in, std::shared_ptr<pulsar::domain> domain_in)
 : domain(domain_in), name(name_in), audio(this)
 {
     assert(domain != nullptr);
 }
 
-node::base::~base()
+base::node::~node()
 { }
 
-node::base::lock_type node::base::make_lock()
+base::node::lock_type base::node::make_lock()
 {
     return lock_type(mutex);
 }
 
-std::shared_ptr<domain> node::base::get_domain()
+std::shared_ptr<domain> base::node::get_domain()
 {
     return domain;
 }
 
-void node::base::activate()
+void base::node::activate()
 {
     audio.activate();
 
@@ -49,35 +51,35 @@ void node::base::activate()
     reset();
 }
 
-void node::base::run()
+void base::node::run()
 {
     auto lock = make_lock();
     handle_run();
     reset();
 }
 
-void node::base::handle_run()
+void base::node::handle_run()
 {
     audio.notify();
 }
 
-void node::base::handle_ready()
+void base::node::handle_ready()
 {
     domain->add_ready_node(this);
 }
 
-void node::base::reset()
+void base::node::reset()
 {
     audio.reset();
 }
 
-bool node::base::is_ready()
+bool base::node::is_ready()
 {
     return audio.is_ready();
 }
 
 node::dummy::dummy(const std::string& name_in, std::shared_ptr<pulsar::domain> domain_in)
-: node::base(name_in, domain_in)
+: base::node(name_in, domain_in)
 { }
 
 void node::dummy::handle_activate()
@@ -102,7 +104,9 @@ void node::dummy::handle_run()
         output_buffer->scale(1 / num_outputs);
     }
 
-    node::base::handle_run();
+    base::node::handle_run();
 }
+
+} // namespace node
 
 } // namespace pulsar

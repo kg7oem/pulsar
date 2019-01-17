@@ -26,7 +26,11 @@ namespace pulsar {
 
 namespace node {
 
-struct base;
+namespace base {
+
+struct node;
+
+} // namespace base
 
 } // namespace node
 
@@ -58,11 +62,11 @@ class buffer {
 
 class channel {
     protected:
-    node::base * parent;
+    node::base::node * parent;
     std::shared_ptr<audio::buffer> buffer;
     std::vector<link *> links;
 
-    channel(const std::string &name_in, node::base * parent_in);
+    channel(const std::string &name_in, node::base::node * parent_in);
 
     public:
     const std::string name;
@@ -70,7 +74,7 @@ class channel {
     void activate();
     virtual void reset() = 0;
     void add_link(link * link_in);
-    node::base * get_parent();
+    node::base::node * get_parent();
     std::shared_ptr<audio::buffer> get_buffer();
 };
 
@@ -78,7 +82,7 @@ class input : public channel {
     std::atomic<pulsar::size_type> links_waiting = ATOMIC_VAR_INIT(0);
 
     public:
-    input(const std::string& name_in, node::base * parent_in);
+    input(const std::string& name_in, node::base::node * parent_in);
     pulsar::size_type get_links_waiting();
     std::shared_ptr<audio::buffer> get_buffer();
     virtual void reset() override;
@@ -88,7 +92,7 @@ class input : public channel {
 };
 
 struct output : public channel {
-    output(const std::string& name_in, node::base * parent_in);
+    output(const std::string& name_in, node::base::node * parent_in);
     void set_buffer(std::shared_ptr<audio::buffer> buffer_in, const bool notify_in = false);
     virtual void reset() override;
     void notify();
@@ -115,15 +119,15 @@ struct link {
 };
 
 class component {
-    friend node::base;
+    friend node::base::node;
 
-    node::base * parent = nullptr;
+    node::base::node * parent = nullptr;
     std::map<std::string, audio::input *> sources;
     std::map<std::string, audio::output *> sinks;
     std::atomic<pulsar::size_type> sources_waiting = ATOMIC_VAR_INIT(0);
 
     public:
-    component(node::base * parent_in);
+    component(node::base::node * parent_in);
     ~component();
     bool is_ready();
     void activate();

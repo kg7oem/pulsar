@@ -89,7 +89,7 @@ void domain::activate(const size_type num_threads_in)
 //     step_done_condition.wait(lock, [this]{ return step_done_flag; });
 // }
 
-void domain::add_ready_node(node::base * node_in)
+void domain::add_ready_node(node::base::node * node_in)
 {
     assert(activated);
 
