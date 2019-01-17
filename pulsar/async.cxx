@@ -18,6 +18,7 @@
 
 #include "async.h"
 #include "logging.h"
+#include "system.h"
 
 #define ASYNC_TICK_INTERVAL 500ms
 
@@ -99,8 +100,7 @@ void base::timer::boost_handler(const boost::system::error_code& error_in)
             return;
         }
 
-        log_debug("there was an error");
-        abort();
+        system_fault("there was an error");
     }
 
     for(auto&& cb : watchers) {
@@ -153,8 +153,7 @@ void watchdog::reset()
 
 void watchdog::run()
 {
-    log_error("watchdog hit timeout");
-    abort();
+    system_fault("watchdog hit timeout");
 }
 
 } // namespace async

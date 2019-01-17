@@ -17,6 +17,7 @@
 
 #include "ladspa.h"
 #include "logging.h"
+#include "system.h"
 
 #define DESCRIPTOR_SYMBOL "ladspa_descriptor"
 
@@ -134,8 +135,7 @@ file::~file()
 {
     if (handle != nullptr) {
         if (dlclose(handle)) {
-            log_error("could not dlclose() ladspa plugin handle");;
-            abort();
+            system_fault("could not dlclose() ladspa plugin handle");
         }
 
         handle = nullptr;

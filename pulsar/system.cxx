@@ -15,6 +15,7 @@
 #include <stdexcept>
 #include <string>
 
+#include "logging.h"
 #include "system.h"
 
 namespace pulsar {
@@ -54,6 +55,12 @@ std::string make_boost_version()
     buf += version;
 
     return buf;
+}
+
+[[noreturn]] void fault(const char* file_in, int line_in, const char* function_in, const std::string& message_in)
+{
+    logjam::send_logevent(PULSAR_LOG_NAME, logjam::loglevel::fatal, function_in, file_in, line_in, message_in);
+    abort();
 }
 
 } // namespace system

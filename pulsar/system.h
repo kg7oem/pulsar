@@ -13,6 +13,7 @@
 
 #pragma once
 
+#include <sstream>
 #include <string>
 
 // g++ 6.3.0 as it comes in debian/stretch does not support maybe_unused
@@ -22,8 +23,7 @@
 #define UNUSED [[ maybe_unused ]]
 #endif
 
-// #define system_fault(...) pulsar::system::fault__func(__FILE__, __LINE__, __PRETTY_FUNCTION__, oemros::vaargs_to_string(__VA_ARGS__))
-// #define system_panic(...) pulsar::system::panic__func(__FILE__, __LINE__, __PRETTY_FUNCTION__, oemros::vaargs_to_string(__VA_ARGS__))
+#define system_fault(...) pulsar::system::fault(__FILE__, __LINE__, __PRETTY_FUNCTION__, pulsar::system::vaargs_to_string(__VA_ARGS__))
 
 namespace pulsar {
 
@@ -31,8 +31,25 @@ namespace system {
 
 const std::string& get_boost_version();
 
-// [[noreturn]] void system_fault__func(const char* file_in, int line_in, const char* function_in, const std::string& message_in);
-// [[noreturn]] void system_panic__func(const char* file_in, int line_in, const char* function_in, const std::string& message_in);
+template <typename T>
+void sstream_accumulate_vaargs(std::stringstream& sstream, T t) {
+    sstream << t;
+}
+
+template <typename T, typename... Args>
+void sstream_accumulate_vaargs(std::stringstream& sstream, T t, Args... args) {
+    sstream_accumulate_vaargs(sstream, t);
+    sstream_accumulate_vaargs(sstream, args...);
+}
+
+template <typename... Args>
+std::string vaargs_to_string(Args... args) {
+    std::stringstream buf;
+    sstream_accumulate_vaargs(buf, args...);
+    return buf.str();
+}
+
+[[noreturn]] void fault(const char* file_in, int line_in, const char* function_in, const std::string& message_in);
 
 } // namespace system
 
