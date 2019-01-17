@@ -17,6 +17,8 @@
 #include "jackaudio.h"
 #include "logging.h"
 
+#define WATCHDOG_TIMEOUT 1500ms
+
 namespace pulsar {
 
 using namespace std::chrono_literals;
@@ -186,7 +188,7 @@ void jackaudio::node::handle_run()
 
 void jackaudio::node::start()
 {
-    watchdog = async::watchdog::make(500ms);
+    watchdog = async::watchdog::make(WATCHDOG_TIMEOUT);
 
     if (jack_activate(jack_client)) {
         throw std::runtime_error("could not activate jack client");
