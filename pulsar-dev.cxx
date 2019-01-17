@@ -20,7 +20,7 @@
 #include "pulsar/jackaudio.h"
 #include "pulsar/ladspa.h"
 #include "pulsar/logging.h"
-#include "pulsar/parameter.h"
+#include "pulsar/property.h"
 #include "pulsar/system.h"
 
 using namespace std;
@@ -85,7 +85,7 @@ int main(void)
     log_info("pulsar-dev initialized");
     log_info("Using Boost ", pulsar::system::get_boost_version());
 
-    pulsar::parameter::integer param_integer("integer");
+    pulsar::property::integer param_integer("integer");
     param_integer.set(10);
 
     log_debug("Value: ", param_integer.get());

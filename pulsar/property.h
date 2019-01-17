@@ -19,7 +19,7 @@
 
 namespace pulsar {
 
-namespace parameter {
+namespace property {
 
 enum class value_type { unknown, size, integer, real, string };
 
@@ -63,6 +63,6 @@ struct string : public generic {
     std::string& get();
 };
 
-} // namespace parameter
+} // namespace property
 
 } // namespace pulsar

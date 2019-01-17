@@ -11,12 +11,12 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
 
-#include "parameter.h"
+#include "property.h"
 #include "system.h"
 
 namespace pulsar {
 
-namespace parameter {
+namespace property {
 
 generic::generic(const std::string& name_in, const value_type& type_in)
 : name(name_in), type(type_in)
