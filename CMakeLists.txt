@@ -3,9 +3,14 @@ cmake_minimum_required(VERSION 3.8.2)
 project(pulsar)
 
 set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_VERBOSE_MAKEFILE OFF)
 
 find_package(Threads)
-find_package(Boost 1.5.8)
+find_package(
+    Boost 1.5.8 COMPONENTS
+
+    system
+)
 
 add_definitions(-Wfatal-errors -Werror -Wall -Wextra)
 add_definitions(-g)
@@ -15,6 +20,7 @@ include_directories(${Boost_INCLUDE_DIRS})
 add_library(
     pulsar SHARED
 
+    pulsar/async.cxx
     pulsar/audio.cxx
     pulsar/audio.util.cxx
     pulsar/domain.cxx

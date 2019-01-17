@@ -11,11 +11,15 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
 
+#include <chrono>
+
 #include "audio.util.h"
 #include "jackaudio.h"
 #include "logging.h"
 
 namespace pulsar {
+
+using namespace std::chrono_literals;
 
 jackaudio::node::node(const std::string& name_in, std::shared_ptr<pulsar::domain> domain_in)
 : node::base(name_in, domain_in)
@@ -97,9 +101,9 @@ static int wrap_nframes_cb(jackaudio::jack_nframes_t nframes_in, void * arg_in)
 
 void jackaudio::node::handle_activate()
 {
-    if (jack_client == nullptr) {
-        open();
-    }
+    assert(jack_client == nullptr);
+
+    open();
 
     for(auto&& name : audio.get_output_names()) {
         auto output = audio.get_output(name);
@@ -160,6 +164,7 @@ void jackaudio::node::handle_jack_process(jack_nframes_t nframes_in)
 
     done_flag = false;
     log_debug("giving control back to jackaudio");
+    watchdog->reset();
 }
 
 void jackaudio::node::handle_run()
@@ -182,9 +187,19 @@ void jackaudio::node::handle_run()
 
 void jackaudio::node::start()
 {
+    auto buffer_size =  jack_get_buffer_size(jack_client);
+    auto sample_rate = jack_get_sample_rate(jack_client);
+    auto cycle_time_hz = sample_rate / buffer_size;
+    auto cycle_time_ms = 1000 / cycle_time_hz;
+    auto watchdog_timeout = std::chrono::milliseconds(cycle_time_ms * 2);
+
+    watchdog = async::watchdog::make(watchdog_timeout);
+
     if (jack_activate(jack_client)) {
         throw std::runtime_error("could not activate jack client");
     }
+
+    watchdog->start();
 }
 
 } // namespace pulsar

@@ -13,7 +13,9 @@
 
 #include <memory>
 #include <iostream>
+#include <unistd.h>
 
+#include "pulsar/async.h"
 #include "pulsar/domain.h"
 #include "pulsar/jackaudio.h"
 #include "pulsar/ladspa.h"
@@ -26,6 +28,7 @@ using namespace std::chrono_literals;
 #define SAMPLE_RATE 48000
 #define BUFFER_SIZE 1024
 #define NUM_THREADS 4
+#define ALARM_TIMEOUT 1
 
 void init_logging()
 {
@@ -36,14 +39,29 @@ void init_logging()
     logging->start();
 }
 
-int main(void)
+void init_pulsar()
+{
+    pulsar::async::init();
+
+    pulsar::async::register_tick_handler([] (void *) {
+        alarm(ALARM_TIMEOUT);
+    });
+
+    alarm(ALARM_TIMEOUT);
+}
+
+void init()
 {
     init_logging();
+    init_pulsar();
+}
 
-    log_info("pulsar-dev started");
+int main(void)
+{
+    init();
+
+    log_info("pulsar-dev initialized");
     log_info("Using Boost ", pulsar::system::get_boost_version());
-
-    exit(1);
 
     auto domain = pulsar::domain::make("main", SAMPLE_RATE, BUFFER_SIZE);
     auto gain_left = domain->make_node<pulsar::ladspa::node>("left", "/usr/lib/ladspa/amp.so", 1048);

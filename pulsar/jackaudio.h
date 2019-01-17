@@ -13,6 +13,7 @@
 
 #pragma once
 
+#include "async.h"
 #include "audio.h"
 #include "node.h"
 
@@ -31,6 +32,7 @@ using port_type = jack_port_t;
 using size_type = unsigned long;
 
 class node : public pulsar::node::base {
+    std::shared_ptr<async::watchdog> watchdog = nullptr;
     client_type * jack_client = nullptr;
     const options_type jack_options = JackNoStartServer;
     std::map<std::string, port_type *> jack_ports;
