@@ -95,7 +95,7 @@ void domain::add_ready_node(node::base * node_in)
 
     auto lock = make_run_queue_lock();
 
-    log_debug("adding ready node: ", node_in->name);
+    log_trace("adding ready node: ", node_in->name);
 
     run_queue.push_back(node_in);
     run_queue_condition.notify_all();
@@ -114,9 +114,9 @@ void domain::be_thread(domain * domain_in)
 
         lock.unlock();
 
-        log_debug("running node: ", ready_node->name);
+        log_trace("running node: ", ready_node->name);
         ready_node->run();
-        log_debug("done running node: ", ready_node->name);
+        log_trace("done running node: ", ready_node->name);
     }
 }
 

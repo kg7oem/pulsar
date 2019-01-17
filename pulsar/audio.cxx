@@ -177,13 +177,13 @@ std::shared_ptr<audio::buffer> audio::input::get_buffer()
     auto num_links = links.size();
 
     if (num_links == 0) {
-        log_debug("returning pointer to zero buffer");
+        log_trace("returning pointer to zero buffer");
         return parent->get_domain()->get_zero_buffer();
     } else if (num_links == 1) {
-        log_debug("returning pointer to link's ready buffer");
+        log_trace("returning pointer to link's ready buffer");
         return links[0]->get_ready_buffer();
     } else {
-        log_debug("returning pointer to input's mix buffer");
+        log_trace("returning pointer to input's mix buffer");
         mix_sinks();
         return buffer;
     }
@@ -230,7 +230,7 @@ void audio::output::set_buffer(std::shared_ptr<audio::buffer> buffer_in, const b
 // FIXME this should go away and just rely on audio::channel::reset()
 void audio::output::reset()
 {
-    log_debug("creating new output channel buffer");
+    log_trace("creating new output channel buffer");
     buffer = std::make_shared<audio::buffer>();
     buffer->init(parent->get_domain()->buffer_size);
 }

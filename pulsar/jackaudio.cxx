@@ -132,7 +132,7 @@ void jackaudio::node::handle_activate()
 // work if it supplies audio only.
 void jackaudio::node::handle_jack_process(jack_nframes_t nframes_in)
 {
-    log_debug("jackaudio process callback invoked");
+    log_trace("jackaudio process callback invoked");
 
     auto lock = make_lock();
     auto done_lock = make_done_lock();
@@ -158,18 +158,18 @@ void jackaudio::node::handle_jack_process(jack_nframes_t nframes_in)
 
     lock.unlock();
 
-    log_debug("waiting for jackaudio node to become done");
+    log_trace("waiting for jackaudio node to become done");
     done_lock.lock();
     done_cond.wait(done_lock, [this]{ return done_flag; });
 
     done_flag = false;
-    log_debug("giving control back to jackaudio");
+    log_trace("giving control back to jackaudio");
     watchdog->reset();
 }
 
 void jackaudio::node::handle_run()
 {
-    log_debug("jackaudio node is now running");
+    log_trace("jackaudio node is now running");
 
     for(auto&& name : audio.get_input_names()) {
         auto buffer_size = domain->buffer_size;
@@ -179,7 +179,6 @@ void jackaudio::node::handle_run()
         audio::util::pcm_set(jack_buffer, channel_buffer->get_pointer(), buffer_size);
     }
 
-    log_debug("notifying jackaudio done_flag condition variable");
     auto done_lock = make_done_lock();
     done_flag = true;
     done_cond.notify_all();
