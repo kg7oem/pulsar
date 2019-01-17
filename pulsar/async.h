@@ -62,7 +62,7 @@ struct timer {
 struct timer : public base::timer, public std::enable_shared_from_this<timer> {
     timer(const duration_type& initial_in, const duration_type& repeat_in = duration_type(0));
     template <typename... Args>
-    static std::shared_ptr<timer> make(Args... args)
+    static std::shared_ptr<timer> make(Args&&... args)
     {
         return std::make_shared<timer>(args...);
     }
@@ -71,7 +71,7 @@ struct timer : public base::timer, public std::enable_shared_from_this<timer> {
 struct watchdog : protected base::timer, public std::enable_shared_from_this<watchdog> {
     watchdog(const duration_type& timeout_in);
     template <typename... Args>
-    static std::shared_ptr<watchdog> make(Args... args)
+    static std::shared_ptr<watchdog> make(Args&&... args)
     {
         return std::make_shared<watchdog>(args...);
     }

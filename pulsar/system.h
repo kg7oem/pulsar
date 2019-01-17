@@ -23,31 +23,13 @@
 #define UNUSED [[ maybe_unused ]]
 #endif
 
-#define system_fault(...) pulsar::system::fault(__FILE__, __LINE__, __PRETTY_FUNCTION__, pulsar::system::vaargs_to_string(__VA_ARGS__))
+#define system_fault(...) pulsar::system::fault(__FILE__, __LINE__, __PRETTY_FUNCTION__, logjam::vaargs_to_string(__VA_ARGS__))
 
 namespace pulsar {
 
 namespace system {
 
 const std::string& get_boost_version();
-
-template <typename T>
-void sstream_accumulate_vaargs(std::stringstream& sstream, T t) {
-    sstream << t;
-}
-
-template <typename T, typename... Args>
-void sstream_accumulate_vaargs(std::stringstream& sstream, T t, Args... args) {
-    sstream_accumulate_vaargs(sstream, t);
-    sstream_accumulate_vaargs(sstream, args...);
-}
-
-template <typename... Args>
-std::string vaargs_to_string(Args... args) {
-    std::stringstream buf;
-    sstream_accumulate_vaargs(buf, args...);
-    return buf.str();
-}
 
 [[noreturn]] void fault(const char* file_in, int line_in, const char* function_in, const std::string& message_in);
 

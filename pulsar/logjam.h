@@ -202,28 +202,32 @@ const char* level_name(const loglevel& level_in);
 loglevel level_from_name(const char* name_in);
 bool should_log(const loglevel& level_in);
 
-// TODO how can this be gotten rid of?
 template <typename T>
-void accumulate_log_arg(std::stringstream& sstream, T&& t) {
+void sstream_accumulate_vaargs(std::stringstream& sstream, T t) {
     sstream << t;
 }
 
 template <typename T, typename... Args>
-void accumulate_log_arg(std::stringstream& sstream, T&& t, Args&&... args) {
-    accumulate_log_arg(sstream, t);
-    accumulate_log_arg(sstream, args...);
+void sstream_accumulate_vaargs(std::stringstream& sstream, T t, Args&&... args) {
+    sstream_accumulate_vaargs(sstream, t);
+    sstream_accumulate_vaargs(sstream, args...);
 }
 
-template<typename T, typename... Args>
-void send_logevent(const std::string& source, const loglevel& level, const char *function, const char *path, const int& line, T&& t, Args&&... args) {
+template <typename... Args>
+std::string vaargs_to_string(Args&&... args) {
+    std::stringstream buf;
+    sstream_accumulate_vaargs(buf, args...);
+    return buf.str();
+}
+
+template<typename... Args>
+void send_logevent(const std::string& source, const loglevel& level, const char *function, const char *path, const int& line, Args&&... args) {
     if (logjam::should_log(level)) {
         auto when = std::chrono::system_clock::now();
 
-        std::stringstream sstream;
-        accumulate_log_arg(sstream, t, args...);
-
         auto tid = std::this_thread::get_id();
-        logevent event(source, level, when, tid, function, path, line, sstream.str());
+        auto message = vaargs_to_string(args...);
+        logevent event(source, level, when, tid, function, path, line, message);
         logengine::get_engine()->deliver(event);
     }
 }

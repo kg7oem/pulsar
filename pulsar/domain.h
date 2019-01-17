@@ -56,7 +56,7 @@ struct domain : public std::enable_shared_from_this<domain> {
     const pulsar::size_type sample_rate;
     const pulsar::size_type buffer_size;
     template <typename... Args>
-    static std::shared_ptr<domain> make(Args... args)
+    static std::shared_ptr<domain> make(Args&&... args)
     {
         return std::make_shared<domain>(args...);
     }
@@ -67,7 +67,7 @@ struct domain : public std::enable_shared_from_this<domain> {
     void step();
     void add_ready_node(node::base * node_in);
     template<class T, typename... Args>
-    std::shared_ptr<T> make_node(Args... args)
+    std::shared_ptr<T> make_node(Args&&... args)
     {
         auto new_node = std::make_shared<T>(args..., this->shared_from_this());
         if (activated) {
