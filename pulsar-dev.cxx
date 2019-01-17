@@ -20,6 +20,7 @@
 #include "pulsar/jackaudio.h"
 #include "pulsar/ladspa.h"
 #include "pulsar/logging.h"
+#include "pulsar/parameter.h"
 #include "pulsar/system.h"
 
 using namespace std;
@@ -30,7 +31,7 @@ using namespace std::chrono_literals;
 #define NUM_THREADS 4
 #define ALARM_TIMEOUT 1
 
-void init_logging()
+static void init_logging()
 {
     auto logging = logjam::logengine::get_engine();
     auto console = make_shared<logjam::logconsole>(logjam::loglevel::debug);
@@ -39,7 +40,7 @@ void init_logging()
     logging->start();
 }
 
-void init_pulsar()
+static void init_pulsar()
 {
     pulsar::async::init();
 
@@ -50,18 +51,14 @@ void init_pulsar()
     alarm(ALARM_TIMEOUT);
 }
 
-void init()
+UNUSED static void init()
 {
     init_logging();
-    init_pulsar();
 }
 
-int main(void)
+UNUSED static void process_audio()
 {
-    init();
-
-    log_info("pulsar-dev initialized");
-    log_info("Using Boost ", pulsar::system::get_boost_version());
+    init_pulsar();
 
     auto domain = pulsar::domain::make("main", SAMPLE_RATE, BUFFER_SIZE);
     auto gain_left = domain->make_node<pulsar::ladspa::node>("left", "/usr/lib/ladspa/amp.so", 1048);
@@ -79,4 +76,20 @@ int main(void)
     while(1) {
         std::this_thread::sleep_for(1s);
     }
+}
+
+int main(void)
+{
+    init();
+
+    log_info("pulsar-dev initialized");
+    log_info("Using Boost ", pulsar::system::get_boost_version());
+
+    pulsar::parameter::integer param_integer("integer");
+    param_integer.set(10);
+
+    log_debug("Value: ", param_integer.get());
+    log_debug("As string: ", param_integer.to_str());
+
+    return 0;
 }

@@ -16,6 +16,8 @@
 #include <sstream>
 #include <string>
 
+#include "logjam.h"
+
 // g++ 6.3.0 as it comes in debian/stretch does not support maybe_unused
 #ifdef __GNUC__
 #define UNUSED __attribute__((unused))

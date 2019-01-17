@@ -18,6 +18,7 @@
 
 #include "logging.h"
 #include "node.h"
+#include "system.h"
 
 namespace pulsar {
 

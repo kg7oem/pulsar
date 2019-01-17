@@ -28,6 +28,7 @@ add_library(
     pulsar/ladspa.cxx
     pulsar/logjam.cxx
     pulsar/node.cxx
+    pulsar/parameter.cxx
     pulsar/system.cxx
 )
 
