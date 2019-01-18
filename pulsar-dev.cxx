@@ -56,6 +56,15 @@ UNUSED static void init()
     init_logging();
 }
 
+pulsar::node::base::node * setup_ladspa(pulsar::node::base::node * node_in)
+{
+    node_in->get_property("plugin:filename").set("/usr/lib/ladspa/amp.so");
+    node_in->get_property("plugin:id").set(1048);
+
+    node_in->setup();
+    return node_in;
+}
+
 UNUSED static void process_audio()
 {
     init_pulsar();
@@ -63,8 +72,8 @@ UNUSED static void process_audio()
     log_info("Will start processing audio");
 
     auto domain = pulsar::domain::make("main", SAMPLE_RATE, BUFFER_SIZE);
-    auto gain_left = domain->make_node<pulsar::ladspa::node>("left", "/usr/lib/ladspa/amp.so", 1048);
-    auto gain_right = domain->make_node<pulsar::ladspa::node>("right", "/usr/lib/ladspa/amp.so", 1048);
+    auto gain_left = setup_ladspa(domain->make_node<pulsar::ladspa::node>("left"));
+    auto gain_right = setup_ladspa(domain->make_node<pulsar::ladspa::node>("right"));
     auto jack = domain->make_node<pulsar::jackaudio::node>("pulsar");
 
     gain_left->get_property("config:Gain").set(1);
@@ -77,6 +86,13 @@ UNUSED static void process_audio()
     jack->audio.add_input("out_right")->connect(gain_right->audio.get_output("Output"));
 
     domain->activate(NUM_THREADS);
+
+    for(auto&& i : gain_left->get_properties()) {
+        auto property = i.second;
+        log_debug("Property: ", property->name, "; value = ", property->get());
+    }
+
+    log_debug("audio processing is running");
 
     while(1) {
         std::this_thread::sleep_for(1s);

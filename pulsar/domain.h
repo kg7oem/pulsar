@@ -42,7 +42,7 @@ struct domain : public std::enable_shared_from_this<domain> {
 
     private:
     std::shared_ptr<audio::buffer> zero_buffer = std::make_shared<audio::buffer>();
-    std::vector<std::shared_ptr<node::base::node>> nodes;
+    std::vector<node::base::node *> nodes;
     std::list<node::base::node *> run_queue;
     mutex_type run_queue_mutex;
     std::condition_variable run_queue_condition;
@@ -71,13 +71,16 @@ struct domain : public std::enable_shared_from_this<domain> {
     void step();
     void add_ready_node(node::base::node * node_in);
     template<class T, typename... Args>
-    std::shared_ptr<T> make_node(Args&&... args)
+    T * make_node(Args&&... args)
     {
-        auto new_node = std::make_shared<T>(args..., this->shared_from_this());
+        auto new_node = new T(args..., this->shared_from_this());
+
         if (activated) {
             new_node->activate();
         }
+
         nodes.push_back(new_node);
+
         return new_node;
     }
 };

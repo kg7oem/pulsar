@@ -248,23 +248,34 @@ void instance::run(const size_type num_samples_in)
     descriptor->run(handle, num_samples_in);
 }
 
-node::node(const std::string& name_in, std::shared_ptr<ladspa::instance> instance_in, std::shared_ptr<pulsar::domain> domain_in)
-: pulsar::node::base::node(name_in, domain_in), ladspa(instance_in)
-{
-    setup();
-}
+// node::node(const std::string& name_in, std::shared_ptr<ladspa::instance> instance_in, std::shared_ptr<pulsar::domain> domain_in)
+// : pulsar::node::base::node(name_in, domain_in), ladspa(instance_in)
+// {
+//     setup();
+// }
 
-node::node(const std::string& name_in, const std::string& path_in, const id_type id_in, std::shared_ptr<pulsar::domain> domain_in)
-: pulsar::node::base::node(name_in, domain_in), ladspa(make_instance(path_in, id_in, domain_in->sample_rate))
+// node::node(const std::string& name_in, const std::string& path_in, const id_type id_in, std::shared_ptr<pulsar::domain> domain_in)
+// : pulsar::node::base::node(name_in, domain_in), ladspa(make_instance(path_in, id_in, domain_in->sample_rate))
+// {
+//     setup();
+// }
+
+node::node(const std::string& name_in, std::shared_ptr<pulsar::domain> domain_in)
+: pulsar::node::base::node(name_in, domain_in)
 {
-    setup();
+    add_property("plugin:filename", property::value_type::string);
+    add_property("plugin:id", property::value_type::size);
 }
 
 void node::setup()
 {
     assert(domain != nullptr);
-    assert(ladspa != nullptr);
+    assert(ladspa == nullptr);
 
+    auto ladspa_file = get_property("plugin:filename").get_string();
+    auto ladspa_id = get_property("plugin:id").get_size();
+
+    ladspa = make_instance(ladspa_file, ladspa_id, domain->sample_rate);
     auto port_count = ladspa->get_port_count();
 
     for(size_type port_num = 0; port_num < port_count; port_num++) {
@@ -303,6 +314,8 @@ void node::setup()
             throw std::runtime_error("LADSPA port was neither audio nor control");
         }
     }
+
+    pulsar::node::base::node::setup();
 }
 
 void node::handle_activate()

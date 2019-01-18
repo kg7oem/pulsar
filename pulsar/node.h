@@ -54,6 +54,7 @@ struct node {
     const std::map<std::string, property::generic *>& get_properties();
     property::generic& get_property(const std::string& name_in);
     property::generic& add_property(const std::string& name_in, const property::value_type& type_in);
+    virtual void setup();
     void activate();
     void run();
     virtual void reset();

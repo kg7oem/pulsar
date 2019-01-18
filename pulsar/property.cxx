@@ -26,10 +26,10 @@ generic::generic(const std::string& name_in, const value_type& type_in)
 {
     switch(type) {
         case value_type::unknown: system_fault("can not specify unknown as a parameter type");
-        case value_type::size: value.size = 0;
-        case value_type::integer: value.integer = 0;
-        case value_type::real: value.real = 0;
-        case value_type::string: new std::string;
+        case value_type::size: value.size = 0; break;
+        case value_type::integer: value.integer = 0; break;
+        case value_type::real: value.real = 0; break;
+        case value_type::string: value.string = new std::string; break;
     }
 }
 
