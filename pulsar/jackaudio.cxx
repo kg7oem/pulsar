@@ -25,7 +25,9 @@ using namespace std::chrono_literals;
 
 jackaudio::node::node(const std::string& name_in, std::shared_ptr<pulsar::domain> domain_in)
 : pulsar::node::base::node(name_in, domain_in)
-{ }
+{
+    add_property("config:client_name", property::value_type::string).set(name_in);
+}
 
 jackaudio::node::~node()
 {
@@ -44,11 +46,6 @@ pulsar::node::base::node::lock_type jackaudio::node::make_done_lock()
 void jackaudio::node::reset()
 {
     pulsar::node::base::node::reset();
-}
-
-void jackaudio::node::open()
-{
-    open(name);
 }
 
 void jackaudio::node::open(const std::string& jack_name_in)
@@ -105,7 +102,11 @@ void jackaudio::node::handle_activate()
 {
     assert(jack_client == nullptr);
 
-    open();
+    auto& client_name_property = get_property("config:client_name");
+    open(client_name_property.get_string());
+
+    auto got_client_name = jack_get_client_name(jack_client);
+    client_name_property.set(got_client_name);
 
     for(auto&& name : audio.get_output_names()) {
         auto output = audio.get_output(name);

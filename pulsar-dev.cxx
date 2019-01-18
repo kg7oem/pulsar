@@ -87,9 +87,11 @@ UNUSED static void process_audio()
 
     domain->activate(NUM_THREADS);
 
+    log_debug("JACK client name: ", jack->get_property("config:client_name").get());
+
     for(auto&& i : gain_left->get_properties()) {
         auto property = i.second;
-        log_debug("Property: ", property->name, "; value = ", property->get());
+        log_debug("LADSPA property: ", property->name, "; value = ", property->get());
     }
 
     log_debug("audio processing is running");

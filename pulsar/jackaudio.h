@@ -44,6 +44,7 @@ class node : public pulsar::node::base::node {
     port_type * add_port(const std::string& port_name_in, const char * port_type_in, const flags_type flags_in, const size_type buffer_size_in = 0);
     sample_type * get_port_buffer(const std::string& port_name_in);
     void start();
+    void open(const std::string& jack_name_in);
     virtual void handle_activate() override;
     virtual void handle_run() override;
     void handle_jack_process(jack_nframes_t nframes_in);
@@ -52,8 +53,6 @@ class node : public pulsar::node::base::node {
     node(const std::string& name_in, std::shared_ptr<pulsar::domain> domain_in);
     ~node();
     virtual void reset();
-    void open();
-    void open(const std::string& jack_name_in);
 };
 
 } // namespace jackaudio
