@@ -61,7 +61,7 @@ pulsar::node::base::node * setup_ladspa(pulsar::node::base::node * node_in)
     node_in->get_property("plugin:filename").set("/usr/lib/ladspa/amp.so");
     node_in->get_property("plugin:id").set(1048);
 
-    node_in->setup();
+    node_in->init();
     return node_in;
 }
 

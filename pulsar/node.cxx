@@ -70,7 +70,7 @@ property::generic& base::node::add_property(const std::string& name_in, const pr
     return *new_property;
 }
 
-void base::node::setup()
+void base::node::init()
 {
 
 }

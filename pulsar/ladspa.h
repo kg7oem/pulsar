@@ -80,7 +80,7 @@ class instance : public std::enable_shared_from_this<instance> {
 };
 
 class node : public pulsar::node::base::node {
-    virtual void setup() override;
+    virtual void init() override;
 
     protected:
     std::shared_ptr<ladspa::instance> ladspa = nullptr;

@@ -268,7 +268,7 @@ node::node(const std::string& name_in, std::shared_ptr<pulsar::domain> domain_in
     add_property("plugin:id", property::value_type::size);
 }
 
-void node::setup()
+void node::init()
 {
     assert(domain != nullptr);
     assert(ladspa == nullptr);
@@ -316,7 +316,7 @@ void node::setup()
         }
     }
 
-    pulsar::node::base::node::setup();
+    pulsar::node::base::node::init();
 }
 
 void node::handle_activate()
