@@ -84,7 +84,6 @@ class node : public pulsar::node::base::node {
 
     protected:
     std::shared_ptr<ladspa::instance> ladspa = nullptr;
-    std::vector<ladspa::data_type> control_buffers;
     virtual void handle_activate() override;
     virtual void handle_run() override;
 

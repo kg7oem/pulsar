@@ -267,8 +267,6 @@ void node::setup()
 
     auto port_count = ladspa->get_port_count();
 
-    control_buffers.reserve(port_count);
-
     for(size_type port_num = 0; port_num < port_count; port_num++) {
         auto name = ladspa->get_port_name(port_num);
         auto descriptor = ladspa->get_port_descriptor(port_num);
@@ -284,12 +282,14 @@ void node::setup()
                 throw std::runtime_error("LADSPA port was neither input nor output");
             }
         } else if (LADSPA_IS_PORT_CONTROL(descriptor)) {
-            ladspa->connect(port_num, &control_buffers[port_num]);
+            auto& control = add_property(name, property::value_type::real);
+            ladspa->connect(port_num, &control.get_real());
 
             if (LADSPA_IS_PORT_OUTPUT(descriptor)) {
-                control_buffers[port_num] = 0;
+                control.set_real(0);
             } else if (LADSPA_IS_PORT_INPUT(descriptor)) {
-                control_buffers[port_num] = get_control_port_default(ladspa->get_descriptor(), port_num);
+                auto value = get_control_port_default(ladspa->get_descriptor(), port_num);
+                control.set_real(value);
             } else {
                 throw std::runtime_error("LADSPA port was neither input nor output");
             }

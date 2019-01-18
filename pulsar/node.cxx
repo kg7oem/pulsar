@@ -43,6 +43,30 @@ std::shared_ptr<domain> base::node::get_domain()
     return domain;
 }
 
+property::generic& base::node::get_property(const std::string& name_in)
+{
+    auto result = properties.find(name_in);
+
+    if (result == properties.end()) {
+        system_fault("no property existed with name: ", name_in);
+    }
+
+    return *result->second;
+}
+
+const std::map<std::string, property::generic *>& base::node::get_properties()
+{
+    return properties;
+}
+
+property::generic& base::node::add_property(const std::string& name_in, const property::value_type& type_in)
+{
+    // FIXME why doesn't emplace work?
+    auto new_property = new property::generic(name_in, type_in);
+    properties[new_property->name] = new_property;
+    return *new_property;
+}
+
 void base::node::activate()
 {
     audio.activate();

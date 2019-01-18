@@ -22,6 +22,7 @@
 #include "audio.h"
 #include "config.h"
 #include "domain.h"
+#include "property.h"
 
 namespace pulsar {
 
@@ -38,6 +39,8 @@ struct node {
 
     protected:
     std::shared_ptr<pulsar::domain> domain;
+    // FIXME pointer because I can't figure out how to make emplace() work
+    std::map<std::string, property::generic *> properties;
     lock_type make_lock();
     virtual void handle_activate() = 0;
     virtual void handle_run();
@@ -48,6 +51,9 @@ struct node {
     node(const std::string& name_in, std::shared_ptr<pulsar::domain> domain_in);
     virtual ~node();
     std::shared_ptr<pulsar::domain> get_domain();
+    const std::map<std::string, property::generic *>& get_properties();
+    property::generic& get_property(const std::string& name_in);
+    property::generic& add_property(const std::string& name_in, const property::value_type& type_in);
     void activate();
     void run();
     virtual void reset();

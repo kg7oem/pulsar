@@ -13,6 +13,7 @@
 
 #include <cstdlib>
 
+#include "logging.h"
 #include "property.h"
 #include "system.h"
 
