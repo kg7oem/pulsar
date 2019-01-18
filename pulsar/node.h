@@ -20,9 +20,9 @@
 #include <string>
 
 #include "audio.h"
-#include "config.h"
 #include "domain.h"
 #include "property.h"
+#include "system.h"
 
 namespace pulsar {
 

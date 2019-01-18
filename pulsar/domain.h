@@ -22,7 +22,7 @@
 #include <vector>
 
 #include "audio.h"
-#include "config.h"
+#include "system.h"
 
 namespace pulsar {
 

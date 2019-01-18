@@ -29,6 +29,12 @@
 
 namespace pulsar {
 
+using size_type = unsigned long;
+using integer_type = int;
+using real_type = float;
+
+using sample_type = real_type;
+
 namespace system {
 
 const std::string& get_boost_version();

@@ -20,7 +20,7 @@
 #include <mutex>
 #include <vector>
 
-#include "config.h"
+#include "system.h"
 
 namespace pulsar {
 

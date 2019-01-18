@@ -17,8 +17,8 @@
 #include <string>
 #include <vector>
 
-#include "config.h"
 #include "node.h"
+#include "system.h"
 
 namespace pulsar {
 
