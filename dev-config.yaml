@@ -1,0 +1,42 @@
+---
+
+templates:
+  gain:
+    class: pulsar::ladspa::node
+    plugin:
+      filename: /usr/lib/ladspa/amp.so
+      id: 1048
+
+domains:
+  main:
+    config:
+      sample_rate: 48000
+      buffer_size: 1024
+
+    nodes:
+      - name: io
+        class: pulsar::jackaudio::node
+        config:
+          client_name: pulsar
+        inputs: [ out_left, out_right ]
+        outputs: [ in_left, in_right ]
+        wires:
+          out_left:
+            - left_gain:Input
+          out_right:
+            - right_gain:Input
+
+      - name: left_gain
+        class: pulsar::ladspa::node
+        plugin:
+          filename: /usr/lib/ladspa/amp.so
+          id: 1048
+        wires:
+          Output:
+            - io:out_left
+
+      - name: right_gain
+        template: gain
+        wires:
+          Output:
+            - io:out_right
