@@ -38,7 +38,7 @@ static void init_logging()
     logging->start();
 }
 
-static void init_pulsar()
+UNUSED static void init_pulsar()
 {
     pulsar::async::init();
 
@@ -84,15 +84,20 @@ UNUSED static void process_audio()
     init_pulsar();
 
     auto config = pulsar::config::file::make("dev-config.yaml");
-    auto domain_name = std::string("main");
-    auto domain_config = config->get_domain(domain_name)["config"];
+    auto domain_info = config->get_domain();
+    auto domain_config = domain_info->get_config();
+
+    assert(domain_config["sample_rate"]);
+    assert(domain_config["buffer_size"]);
+    assert(domain_config["threads"]);
+
     auto domain_sample_rate = domain_config["sample_rate"].as<pulsar::size_type>();
     auto domain_buffer_size = domain_config["buffer_size"].as<pulsar::size_type>();
     auto domain_num_threads = domain_config["threads"].as<pulsar::size_type>();
 
     log_info("Will start processing audio");
 
-    auto domain = pulsar::domain::make(domain_name, domain_sample_rate, domain_buffer_size);
+    auto domain = pulsar::domain::make(domain_info->name, domain_sample_rate, domain_buffer_size);
     auto gain_left = setup_ladspa(domain->make_node<pulsar::ladspa::node>("left"));
     auto gain_right = setup_ladspa(domain->make_node<pulsar::ladspa::node>("right"));
     auto jack = domain->make_node<pulsar::jackaudio::node>("pulsar");

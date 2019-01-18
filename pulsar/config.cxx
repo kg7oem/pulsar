@@ -15,6 +15,7 @@
 
 #include "config.h"
 #include "logging.h"
+#include "system.h"
 
 namespace pulsar {
 
@@ -27,43 +28,54 @@ file::file(const std::string& path_in)
 void file::open()
 {
     yaml_root = YAML::LoadFile(path);
-
-    validate();
+    parse();
 }
 
-void file::validate()
+void file::parse()
 {
-    assert(yaml_root["domains"]);
-    auto domain_root = yaml_root["domains"];
-    assert(domain_root.IsMap());
-
-    for(auto i : domain_root) {
-        validate_domain_entry(i.second);
+    if (yaml_root["domain"] && yaml_root["domains"]) {
+        system_fault("config file must have one domain or one domains section but not both");
+    } else if (! yaml_root["domain"] && ! yaml_root["domains"]) {
+        system_fault("config file must have a domain or a domains section");
     }
 }
 
-void file::validate_domain_entry(const YAML::Node& domain_in)
+std::vector<std::string> file::get_domain_names()
 {
-    assert(domain_in.IsMap());
-    assert(domain_in["config"].IsMap());
-    assert(domain_in["nodes"].IsSequence());
+    std::vector<std::string> retval;
+
+
+    if (yaml_root["domain"]) {
+        retval.push_back("main");
+    } else if (yaml_root["domains"]) {
+        system_fault("can't yet handle a domains section");
+    }
+
+    return retval;
 }
 
-void file::validate_node(const YAML::Node&)
+std::shared_ptr<domain> file::get_domain(const std::string& name_in)
 {
+    if (name_in == "main" && yaml_root["domain"]) {
+        return domain::make(name_in, yaml_root["domain"]);
+    }
 
+    auto domains = yaml_root["domains"];
+    if (! domains[name_in]) {
+        system_fault("could not find a domain named ", name_in);
+    }
+
+    return domain::make(name_in, domains[name_in]);
 }
 
-const YAML::Node file::get_domains()
-{
-    return yaml_root["domains"];
-}
+domain::domain(const std::string name_in, const YAML::Node& yaml_in)
+: yaml_root(yaml_in), name(name_in)
+{ }
 
-const YAML::Node file::get_domain(const std::string& name_in)
+const YAML::Node domain::get_config()
 {
-   auto domains = get_domains();
-   assert(domains[name_in]);
-   return domains[name_in];
+    assert(yaml_root["config"]);
+    return yaml_root["config"];
 }
 
 } // namespace configfile

@@ -20,11 +20,13 @@ namespace pulsar {
 
 namespace config {
 
+struct domain;
+
 class file : public std::enable_shared_from_this<file> {
     private:
     YAML::Node yaml_root;
-    void validate_domain_entry(const YAML::Node& domain_in);
-    void validate_node(const YAML::Node& node_in);
+    void open();
+    void parse();
 
     public:
     const std::string path;
@@ -35,10 +37,23 @@ class file : public std::enable_shared_from_this<file> {
         new_file->open();
         return new_file;
     }
-    void open();
-    void validate();
-    const YAML::Node get_domains();
-    const YAML::Node get_domain(const std::string& name_in);
+    std::vector<std::string> get_domain_names();
+    std::shared_ptr<domain> get_domain(const std::string& name_in = "main");
+};
+
+class domain : public std::enable_shared_from_this<domain> {
+    const YAML::Node yaml_root;
+
+    public:
+    const std::string name;
+    domain(const std::string name_in, const YAML::Node& yaml_in);
+    template <typename... Args>
+    static std::shared_ptr<domain> make(Args&&... args) {
+        auto new_domain = std::make_shared<domain>(args...);
+        return new_domain;
+    }
+
+    const YAML::Node get_config();
 };
 
 } // namespace configfile
