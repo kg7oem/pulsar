@@ -28,6 +28,9 @@ base::node::node(const std::string& name_in, std::shared_ptr<pulsar::domain> dom
 : domain(domain_in), name(name_in), audio(this)
 {
     assert(domain != nullptr);
+
+    add_property("node:name", property::value_type::string).set(name);
+    add_property("node:domain", pulsar::property::value_type::string).set(domain->name);
 }
 
 base::node::~node()

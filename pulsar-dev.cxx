@@ -65,6 +65,22 @@ pulsar::node::base::node * setup_ladspa(pulsar::node::base::node * node_in)
     return node_in;
 }
 
+void log_properties(pulsar::node::base::node * node_in)
+{
+    auto& node_name = node_in->get_property("node:name").get_string();
+
+    log_debug("Properties for node: ", node_name);
+
+    for(auto&& i : node_in->get_properties()) {
+        if (i.first == "node:name") {
+            continue;
+        }
+
+        auto property = i.second;
+        log_debug("property: ", property->name, "; value = '", property->get(), "'");
+    }
+}
+
 UNUSED static void process_audio()
 {
     init_pulsar();
@@ -87,15 +103,9 @@ UNUSED static void process_audio()
 
     domain->activate(NUM_THREADS);
 
-    for(auto&& i : jack->get_properties()) {
-        auto property = i.second;
-        log_debug("JACK property: ", property->name, "; value = ", property->get());
-    }
-
-    for(auto&& i : gain_left->get_properties()) {
-        auto property = i.second;
-        log_debug("LADSPA property: ", property->name, "; value = ", property->get());
-    }
+    log_properties(jack);
+    log_properties(gain_left);
+    log_properties(gain_right);
 
     log_debug("audio processing is running");
 

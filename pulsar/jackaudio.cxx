@@ -27,6 +27,7 @@ using namespace std::chrono_literals;
 jackaudio::node::node(const std::string& name_in, std::shared_ptr<pulsar::domain> domain_in)
 : pulsar::node::base::node(name_in, domain_in)
 {
+    add_property("node:class", property::value_type::string).set("pulsar::jackaudio::node");
     add_property("config:client_name", property::value_type::string).set(name_in);
     add_property("config:sample_rate", property::value_type::size);
 }

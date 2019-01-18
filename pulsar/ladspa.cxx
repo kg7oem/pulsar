@@ -263,6 +263,7 @@ void instance::run(const size_type num_samples_in)
 node::node(const std::string& name_in, std::shared_ptr<pulsar::domain> domain_in)
 : pulsar::node::base::node(name_in, domain_in)
 {
+    add_property("node:class", property::value_type::string).set("pulsar::ladspa::node");
     add_property("plugin:filename", property::value_type::string);
     add_property("plugin:id", property::value_type::size);
 }
