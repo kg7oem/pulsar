@@ -16,6 +16,7 @@
 #include <unistd.h>
 
 #include "pulsar/async.h"
+#include "pulsar/configfile.h"
 #include "pulsar/domain.h"
 #include "pulsar/jackaudio.h"
 #include "pulsar/ladspa.h"
@@ -26,9 +27,6 @@
 using namespace std;
 using namespace std::chrono_literals;
 
-#define SAMPLE_RATE 48000
-#define BUFFER_SIZE 1024
-#define NUM_THREADS 4
 #define ALARM_TIMEOUT 1
 
 static void init_logging()
@@ -85,9 +83,16 @@ UNUSED static void process_audio()
 {
     init_pulsar();
 
+    auto config = pulsar::configfile::file::make("dev-config.yaml");
+    auto domain_name = std::string("main");
+    auto domain_config = config->get_domain(domain_name)["config"];
+    auto domain_sample_rate = domain_config["sample_rate"].as<pulsar::size_type>();
+    auto domain_buffer_size = domain_config["buffer_size"].as<pulsar::size_type>();
+    auto domain_num_threads = domain_config["threads"].as<pulsar::size_type>();
+
     log_info("Will start processing audio");
 
-    auto domain = pulsar::domain::make("main", SAMPLE_RATE, BUFFER_SIZE);
+    auto domain = pulsar::domain::make(domain_name, domain_sample_rate, domain_buffer_size);
     auto gain_left = setup_ladspa(domain->make_node<pulsar::ladspa::node>("left"));
     auto gain_right = setup_ladspa(domain->make_node<pulsar::ladspa::node>("right"));
     auto jack = domain->make_node<pulsar::jackaudio::node>("pulsar");
@@ -101,7 +106,7 @@ UNUSED static void process_audio()
     jack->audio.add_input("out_left")->connect(gain_left->audio.get_output("Output"));
     jack->audio.add_input("out_right")->connect(gain_right->audio.get_output("Output"));
 
-    domain->activate(NUM_THREADS);
+    domain->activate(domain_num_threads);
 
     log_properties(jack);
     log_properties(gain_left);

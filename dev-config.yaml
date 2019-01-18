@@ -12,6 +12,7 @@ domains:
     config:
       sample_rate: 48000
       buffer_size: 1024
+      threads: 4
 
     nodes:
       - name: io
@@ -20,7 +21,7 @@ domains:
           client_name: pulsar
         inputs: [ out_left, out_right ]
         outputs: [ in_left, in_right ]
-        wires:
+        connect:
           out_left:
             - left_gain:Input
           out_right:
@@ -31,12 +32,12 @@ domains:
         plugin:
           filename: /usr/lib/ladspa/amp.so
           id: 1048
-        wires:
+        connect:
           Output:
             - io:out_left
 
       - name: right_gain
         template: gain
-        wires:
+        connect:
           Output:
             - io:out_right
