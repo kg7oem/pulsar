@@ -67,8 +67,8 @@ UNUSED static void process_audio()
     auto gain_right = domain->make_node<pulsar::ladspa::node>("right", "/usr/lib/ladspa/amp.so", 1048);
     auto jack = domain->make_node<pulsar::jackaudio::node>("pulsar");
 
-    gain_left->get_property("Gain").set_real(.5);
-    gain_right->get_property("Gain").set_real(.5);
+    gain_left->get_property("config:Gain").set(1);
+    gain_right->get_property("config:Gain").set(1);
 
     jack->audio.add_output("in_left")->connect(gain_left->audio.get_input("Input"));
     jack->audio.add_output("in_right")->connect(gain_right->audio.get_input("Input"));

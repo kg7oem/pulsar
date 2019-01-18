@@ -41,7 +41,7 @@ generic::~generic()
     }
 }
 
-std::string generic::to_str()
+std::string generic::get()
 {
     switch(type) {
         case value_type::unknown: system_fault("parameter type was not known");
@@ -54,7 +54,35 @@ std::string generic::to_str()
     system_fault("should never get out of switch statement");
 }
 
-void generic::from_str(const std::string& value_in)
+void generic::set(const double& value_in)
+{
+    switch(type) {
+        case value_type::unknown: system_fault("parameter type was not known"); return;
+        case value_type::size: set_size(value_in); return;
+        case value_type::integer: set_integer(value_in); return;
+        case value_type::real: set_real(value_in); return;
+        case value_type::string: system_fault("unsupported for string type");
+    }
+
+    system_fault("should never get out of switch statement");
+}
+
+// void generic::set(const size_type& value_in)
+// {
+//     set_size(value_in);
+// }
+
+// void generic::set(const integer_type& value_in)
+// {
+//     set_integer(value_in);
+// }
+
+// void generic::set(const real_type& value_in)
+// {
+//     set_real(value_in);
+// }
+
+void generic::set(const std::string& value_in)
 {
     auto c_str = value_in.c_str();
 
@@ -141,33 +169,33 @@ std::string& generic::get_string()
     return *value.string;
 }
 
-integer::integer(const std::string& name_in)
-: generic(name_in, value_type::integer)
-{ }
+// integer::integer(const std::string& name_in)
+// : generic(name_in, value_type::integer)
+// { }
 
-integer_type& integer::get()
-{
-    return get_integer();
-}
+// integer_type& integer::get()
+// {
+//     return get_integer();
+// }
 
-void integer::set(const integer_type& value_in)
-{
-    set_integer(value_in);
-}
+// void integer::set(const integer_type& value_in)
+// {
+//     set_integer(value_in);
+// }
 
-string::string(const std::string& name_in)
-: generic(name_in, value_type::string)
-{ }
+// string::string(const std::string& name_in)
+// : generic(name_in, value_type::string)
+// { }
 
-std::string& string::get()
-{
-    return get_string();
-}
+// std::string& string::get()
+// {
+//     return get_string();
+// }
 
-void string::set(const std::string& value_in)
-{
-    set_string(value_in);
-}
+// void string::set(const std::string& value_in)
+// {
+//     set_string(value_in);
+// }
 
 } // namespace parameter
 

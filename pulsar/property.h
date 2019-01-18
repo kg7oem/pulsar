@@ -39,8 +39,10 @@ class generic {
     const value_type type = value_type::unknown;
     generic(const std::string& name_in, const value_type& type_in);
     virtual ~generic();
-    std::string to_str();
-    void from_str(const std::string& value_in);
+    std::string get();
+    // void set(const size_type& value_in);
+    void set(const double& value_in);
+    void set(const std::string& value_in);
     size_type& get_size();
     void set_size(const size_type& size_in);
     integer_type& get_integer();
@@ -51,17 +53,13 @@ class generic {
     void set_string(const std::string& string_in);
 };
 
-struct integer : public generic {
-    integer(const std::string& name_in);
-    void set(const integer_type& value_in);
-    integer_type& get();
-};
+// struct integer : public generic {
+//     integer(const std::string& name_in);
+// };
 
-struct string : public generic {
-    string(const std::string& name_in);
-    void set(const std::string& value_in);
-    std::string& get();
-};
+// struct string : public generic {
+//     string(const std::string& name_in);
+// };
 
 } // namespace property
 

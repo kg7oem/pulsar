@@ -268,32 +268,37 @@ void node::setup()
     auto port_count = ladspa->get_port_count();
 
     for(size_type port_num = 0; port_num < port_count; port_num++) {
-        auto name = ladspa->get_port_name(port_num);
+        auto port_name = ladspa->get_port_name(port_num);
         auto descriptor = ladspa->get_port_descriptor(port_num);
 
         if (LADSPA_IS_PORT_AUDIO(descriptor)) {
             ladspa->connect(port_num, nullptr);
 
             if (LADSPA_IS_PORT_INPUT(descriptor)) {
-                audio.add_input(name);
+                audio.add_input(port_name);
             } else if (LADSPA_IS_PORT_OUTPUT(descriptor)) {
-                audio.add_output(name);
+                audio.add_output(port_name);
             } else {
                 throw std::runtime_error("LADSPA port was neither input nor output");
             }
         } else if (LADSPA_IS_PORT_CONTROL(descriptor)) {
-            auto& control = add_property(name, property::value_type::real);
-            ladspa->connect(port_num, &control.get_real());
+            auto default_value = get_control_port_default(ladspa->get_descriptor(), port_num);
+            std::string property_name;
 
             if (LADSPA_IS_PORT_OUTPUT(descriptor)) {
-                control.set_real(0);
+                property_name = "state:";
             } else if (LADSPA_IS_PORT_INPUT(descriptor)) {
-                auto value = get_control_port_default(ladspa->get_descriptor(), port_num);
-                control.set_real(value);
+                property_name = "config:";
             } else {
                 throw std::runtime_error("LADSPA port was neither input nor output");
             }
 
+            property_name += port_name;
+
+            auto& control = add_property(property_name, property::value_type::real);
+            control.set(default_value);
+
+            ladspa->connect(port_num, &control.get_real());
         } else {
             throw std::runtime_error("LADSPA port was neither audio nor control");
         }
