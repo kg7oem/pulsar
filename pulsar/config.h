@@ -18,7 +18,7 @@
 
 namespace pulsar {
 
-namespace configfile {
+namespace config {
 
 class file : public std::enable_shared_from_this<file> {
     private:

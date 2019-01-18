@@ -20,7 +20,7 @@ add_library(
     pulsar/async.cxx
     pulsar/audio.cxx
     pulsar/audio.util.cxx
-    pulsar/configfile.cxx
+    pulsar/config.cxx
     pulsar/domain.cxx
     pulsar/jackaudio.cxx
     pulsar/ladspa.cxx

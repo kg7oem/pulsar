@@ -13,12 +13,12 @@
 
 #include <cassert>
 
-#include "configfile.h"
+#include "config.h"
 #include "logging.h"
 
 namespace pulsar {
 
-namespace configfile {
+namespace config {
 
 file::file(const std::string& path_in)
 : path(path_in)

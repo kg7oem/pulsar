@@ -16,7 +16,7 @@
 #include <unistd.h>
 
 #include "pulsar/async.h"
-#include "pulsar/configfile.h"
+#include "pulsar/config.h"
 #include "pulsar/domain.h"
 #include "pulsar/jackaudio.h"
 #include "pulsar/ladspa.h"
@@ -83,7 +83,7 @@ UNUSED static void process_audio()
 {
     init_pulsar();
 
-    auto config = pulsar::configfile::file::make("dev-config.yaml");
+    auto config = pulsar::config::file::make("dev-config.yaml");
     auto domain_name = std::string("main");
     auto domain_config = config->get_domain(domain_name)["config"];
     auto domain_sample_rate = domain_config["sample_rate"].as<pulsar::size_type>();
