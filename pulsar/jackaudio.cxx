@@ -16,6 +16,7 @@
 #include "audio.util.h"
 #include "jackaudio.h"
 #include "logging.h"
+#include "system.h"
 
 #define WATCHDOG_TIMEOUT 1500ms
 
@@ -27,6 +28,7 @@ jackaudio::node::node(const std::string& name_in, std::shared_ptr<pulsar::domain
 : pulsar::node::base::node(name_in, domain_in)
 {
     add_property("config:client_name", property::value_type::string).set(name_in);
+    add_property("config:sample_rate", property::value_type::size);
 }
 
 jackaudio::node::~node()
@@ -56,9 +58,15 @@ void jackaudio::node::open(const std::string& jack_name_in)
         throw std::runtime_error("could not open connection to jack server");
     }
 
-    if (jack_get_sample_rate(jack_client) != domain->sample_rate) {
-        throw std::runtime_error("jack sample rate did not match domain sample rate");
+    auto sample_rate = jack_get_sample_rate(jack_client);
+    auto client_name = jack_get_client_name(jack_client);
+
+    if (sample_rate != domain->sample_rate) {
+        system_fault("jack sample rate did not match domain sample rate");
     }
+
+    get_property("config:client_name").set(client_name);
+    get_property("config:sample_rate").set(sample_rate);
 }
 
 jackaudio::port_type * jackaudio::node::add_port(const std::string& port_name_in, const char * port_type_in, const flags_type flags_in, const size_type buffer_size_in)
@@ -102,11 +110,8 @@ void jackaudio::node::handle_activate()
 {
     assert(jack_client == nullptr);
 
-    auto& client_name_property = get_property("config:client_name");
-    open(client_name_property.get_string());
-
-    auto got_client_name = jack_get_client_name(jack_client);
-    client_name_property.set(got_client_name);
+    auto& client_name = get_property("config:client_name").get_string();
+    open(client_name);
 
     for(auto&& name : audio.get_output_names()) {
         auto output = audio.get_output(name);

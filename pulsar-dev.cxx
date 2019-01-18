@@ -87,7 +87,10 @@ UNUSED static void process_audio()
 
     domain->activate(NUM_THREADS);
 
-    log_debug("JACK client name: ", jack->get_property("config:client_name").get());
+    for(auto&& i : jack->get_properties()) {
+        auto property = i.second;
+        log_debug("JACK property: ", property->name, "; value = ", property->get());
+    }
 
     for(auto&& i : gain_left->get_properties()) {
         auto property = i.second;
