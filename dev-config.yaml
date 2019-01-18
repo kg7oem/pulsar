@@ -1,5 +1,20 @@
 ---
 
+modules:
+  jackaudio:
+    # maintain these connections inside the jackaudio server between
+    # the jackaudio clients
+    connect:
+      # these are jackaudio client and port names, not node and channel names
+      inputs:
+        "system:Left": pulsar:in_left
+        "system:Right": pulsar:in_right
+        "system:demod": pulsar:in_demod
+      outputs:
+        "system:Left": pulsar:out_left
+        "system:Right": pulsar:out_right
+        "system:demod": pulsar:out_demod
+
 # define some reusable bits of config with names they
 # are identified by
 templates:
