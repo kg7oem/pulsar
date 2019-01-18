@@ -7,13 +7,13 @@ modules:
     connect:
       # these are jackaudio client and port names, not node and channel names
       inputs:
-        "system:Left": pulsar:in_left
-        "system:Right": pulsar:in_right
-        "system:demod": pulsar:in_demod
+        - [ system:Left, pulsar:in_left ]
+        - [ system:Right, pulsar:in_right ]
+        - [ system:demod, pulsar:in_demod ]
       outputs:
-        "system:Left": pulsar:out_left
-        "system:Right": pulsar:out_right
-        "system:demod": pulsar:out_demod
+        - [ system:Left, pulsar:out_left ]
+        - [ system:Right, pulsar:out_right ]
+        - [ system:demod, pulsar:out_demod ]
 
 # define some reusable bits of config with names they
 # are identified by
@@ -89,22 +89,14 @@ chains:
 
       - name: right_input_gain
         template: gain
-        # if no input and no output channel is specified
-        #  * if there is an equal number of inputs and outputs
-        #    they will be wired together 1:1 in order
-        #  * if there is one output channel it will be connected
-        #    to every input channel
-        #  * if there is multiple output channels and a single input
-        #    channel all the outputs will connect to the single input
-        #  * otherwise a fault is generated
-        connect: right_compressor
+        # connect the only output to all the inputs of the
+        # target node
+        connect: right_compressor:*
 
       - name: right_compressor
         template: compressor
         connect:
-          # if no input channel name is specified in the connection then
-          # a connection is made to every input channel available
-          Audio Out: right_output_gain
+          Audio Out: right_output_gain:*
 
       - name: right_output_gain
         template: gain
