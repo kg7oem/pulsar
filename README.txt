@@ -39,6 +39,11 @@ Planned features
     * Use the library inside your application (threaded) or in another process (IPC)
     * Control the headless program via DBUS or other forms of IPC
   * Change the topology around while audio processing is running
+  * Posix, Windows, and MacOS support
+  * VST2 and VST3 on all supported platforms
+  * Native Pulse Audio sources and sinks
+  * Portaudio support as an alternative to JACK
+  * Resampling for disparate clock domains (safe audio device aggregation)
 
 
 Design
