@@ -53,15 +53,26 @@ static void apply_node_template(YAML::Node& dest_in, const YAML::Node& src_in)
                     // FIXME is that how this is supposed to work?
                     auto new_node = dest_in[key_name];
                     apply_node_template(new_node, src_in[key_name]);
-                    dest_in[key_name] = new_node;
                 }
             } else {
               dest_in[key_name] = i.second;
             }
         }
-
-    } else if (dest_in.IsSequence()) {
-        system_fault("can't handle a sequence in a template yet");
+    } else if (src_in.IsSequence()) {
+        // FIXME does it make sense to try to merge a sequence?
+        // Does not seem so
+        // auto size = src_in.size();
+        // for(size_type i = 0; i < size; i++) {
+        //     if (dest_in[i]) {
+        //         if (src_in[i].IsSequence() || src_in[i].IsMap()) {
+        //             // FIXME is that how this is supposed to work?
+        //             auto new_node = dest_in[i];
+        //             apply_node_template(new_node, src_in[i]);
+        //         }
+        //     } else {
+        //         dest_in[i] = src_in[i];
+        //     }
+        // }
     }
 }
 
