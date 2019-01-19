@@ -54,20 +54,22 @@ class file : public std::enable_shared_from_this<file> {
     }
     std::vector<std::string> get_domain_names();
     std::shared_ptr<domain> get_domain(const std::string& name_in = "main");
+    YAML::Node get_template(const std::string& name_in);
 };
 
 class domain : public std::enable_shared_from_this<domain> {
     const YAML::Node yaml_root;
+    std::shared_ptr<file> parent;
 
     public:
     const std::string name;
-    domain(const std::string name_in, const YAML::Node& yaml_in);
+    domain(const std::string name_in, const YAML::Node& yaml_in, std::shared_ptr<file> parent_in);
     template <typename... Args>
     static std::shared_ptr<domain> make(Args&&... args) {
         auto new_domain = std::make_shared<domain>(args...);
         return new_domain;
     }
-
+    std::shared_ptr<file> get_parent();
     const YAML::Node get_config();
     const YAML::Node get_nodes();
 };

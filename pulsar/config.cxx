@@ -38,10 +38,39 @@ std::shared_ptr<pulsar::domain> make_domain(std::shared_ptr<pulsar::config::doma
     return domain;
 }
 
+static void apply_node_template(YAML::Node& dest_in, const YAML::Node& src_in)
+{
+    if (dest_in.Type() != src_in.Type()) {
+        system_fault("YAML node type difference during template import");
+    }
+
+    if (src_in.IsMap()) {
+        for(auto&& i : src_in) {
+            auto key_name = i.first.as<std::string>();
+            if (dest_in[key_name]) {
+                continue;
+            }
+
+            dest_in[key_name] = i.second;
+        }
+
+    } else if (dest_in.IsSequence()) {
+        system_fault("can't handle a sequence in a template yet");
+    }
+}
+
 std::vector<pulsar::node::base::node *> make_nodes(std::shared_ptr<pulsar::config::domain> config_in, std::shared_ptr<pulsar::domain> domain_in) {
     auto node_map = std::map<std::string, pulsar::node::base::node *>();
 
-    for (auto&& node_yaml : config_in->get_nodes()) {
+    for (YAML::Node node_yaml : config_in->get_nodes()) {
+        auto template_node = node_yaml["template"];
+        if (template_node) {
+            assert(template_node.IsScalar());
+            auto template_name = template_node.as<std::string>();
+            auto template_src = config_in->get_parent()->get_template(template_name);
+            apply_node_template(node_yaml, template_src);
+        }
+
         auto node_name = node_yaml["name"].as<std::string>();
         auto class_name = node_yaml["class"].as<std::string>();
         auto node_config = node_yaml["config"];
@@ -172,7 +201,7 @@ std::vector<std::string> file::get_domain_names()
 std::shared_ptr<domain> file::get_domain(const std::string& name_in)
 {
     if (name_in == "main" && yaml_root["domain"]) {
-        return domain::make(name_in, yaml_root["domain"]);
+        return domain::make(name_in, yaml_root["domain"], this->shared_from_this());
     }
 
     auto domains = yaml_root["domains"];
@@ -180,12 +209,36 @@ std::shared_ptr<domain> file::get_domain(const std::string& name_in)
         system_fault("could not find a domain named ", name_in);
     }
 
-    return domain::make(name_in, domains[name_in]);
+    return domain::make(name_in, domains[name_in], this->shared_from_this());
 }
 
-domain::domain(const std::string name_in, const YAML::Node& yaml_in)
-: yaml_root(yaml_in), name(name_in)
+YAML::Node file::get_template(const std::string& name_in)
+{
+    auto templates_node = yaml_root["templates"];
+    if (! templates_node) {
+        system_fault("there was not a template section in the config file");
+    }
+
+    auto template_node = templates_node[name_in];
+    if (! template_node) {
+        system_fault("there was no node template named ", name_in);
+    }
+
+    if (! template_node.IsMap()) {
+        system_fault("template must be a map: ", name_in);
+    }
+
+    return template_node;
+}
+
+domain::domain(const std::string name_in, const YAML::Node& yaml_in, std::shared_ptr<file> parent_in)
+: yaml_root(yaml_in), parent(parent_in), name(name_in)
 { }
+
+std::shared_ptr<file> domain::get_parent()
+{
+    return parent;
+}
 
 const YAML::Node domain::get_config()
 {

@@ -1,5 +1,12 @@
 ---
 
+templates:
+  gain:
+    class: pulsar::ladspa::node
+    plugin:
+      filename: /usr/lib/ladspa/amp.so
+      id: 1048
+
 domain:
   config:
     sample_rate: 48000
@@ -17,40 +24,28 @@ domain:
         right_in: gain_right1:Input
 
     - name: gain_left1
-      class: pulsar::ladspa::node
-      plugin:
-        filename: /usr/lib/ladspa/amp.so
-        id: 1048
+      template: gain
       config:
         Gain: .5
       connect:
         Output: gain_left2:Input
 
     - name: gain_right1
-      class: pulsar::ladspa::node
-      plugin:
-        filename: /usr/lib/ladspa/amp.so
-        id: 1048
+      template: gain
       config:
         Gain: .5
       connect:
         Output: gain_right2:Input
 
     - name: gain_left2
-      class: pulsar::ladspa::node
-      plugin:
-        filename: /usr/lib/ladspa/amp.so
-        id: 1048
+      template: gain
       config:
         Gain: 2
       connect:
         Output: jack:left_out
 
     - name: gain_right2
-      class: pulsar::ladspa::node
-      plugin:
-        filename: /usr/lib/ladspa/amp.so
-        id: 1048
+      template: gain
       config:
         Gain: 2
       connect:
