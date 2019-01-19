@@ -149,13 +149,29 @@ std::map<std::string, pulsar::node::base::node *> make_nodes(std::shared_ptr<pul
             auto source_channel = i.first.as<std::string>();
             auto target_string = i.second.as<std::string>();
             auto target_split = util::string::split(target_string, ':');
+            auto split_size = target_split.size();
+            std::string sink_node_name, sink_channel_name;
+            node::base::node * sink_node;
 
-            if (target_split.size() != 2) {
-                system_fault("malformed connect target: ", target_string);
+            if (split_size == 2) {
+                sink_node_name = target_split[0];
+                sink_node = node_map[sink_node_name];
+                sink_channel_name = target_split[1];
+            } else if (split_size == 1) {
+                sink_node_name = target_string;
+                sink_node = node_map[sink_node_name];
+                auto sink_node_inputs = sink_node->audio.get_input_names();
+
+                if (sink_node_inputs.size() != 1) {
+                    system_fault("no input channel was specified and target node has more than 1 input");
+                }
+
+                sink_channel_name = sink_node_inputs[0];
+            } else {
+                system_fault("invalid connection string specified: ", target_string);
             }
 
-            auto sink_node_name = target_split[0];
-            auto sink_channel_name = target_split[1];
+            log_debug("sink channel: ", sink_channel_name);
 
             if (node_map.find(node_name) == node_map.end()) {
                 system_fault("could not find source node named ", node_name);
@@ -166,7 +182,6 @@ std::map<std::string, pulsar::node::base::node *> make_nodes(std::shared_ptr<pul
             }
 
             auto source_node = node_map[node_name];
-            auto sink_node = node_map[sink_node_name];
             auto sink_channel = sink_node->audio.get_input(sink_channel_name);
 
             source_node->audio.get_output(source_channel)->connect(sink_channel);

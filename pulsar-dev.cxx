@@ -19,7 +19,8 @@
 using namespace std;
 using namespace std::chrono_literals;
 
-#define ALARM_TIMEOUT 1
+// Give valgrind lots of time
+#define ALARM_TIMEOUT 5
 
 static void init_logging()
 {

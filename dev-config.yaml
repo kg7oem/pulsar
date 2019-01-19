@@ -34,12 +34,12 @@ domain:
     - name: comp_left
       template: compressor
       connect:
-        Audio Output 1: gain_left1:Input
+        Audio Output 1: gain_left1
 
     - name: comp_right
       template: compressor
       connect:
-        Audio Output 1: gain_right1:Input
+        Audio Output 1: gain_right1
 
     - name: gain_left1
       template: gain
@@ -48,14 +48,14 @@ domain:
       config:
         Gain: .5
       connect:
-        Output: gain_left2:Input
+        Output: gain_left2
 
     - name: gain_right1
       template: gain
       config:
         Gain: .5
       connect:
-        Output: gain_right2:Input
+        Output: gain_right2
 
     - name: gain_left2
       template: gain
