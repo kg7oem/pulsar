@@ -15,12 +15,40 @@
 #include <stdexcept>
 #include <string>
 
+#include "async.h"
+#include "jackaudio.h"
+#include "ladspa.h"
 #include "logging.h"
 #include "system.h"
+
+#define ALIVE_TICK_INTERVAL 100ms
 
 namespace pulsar {
 
 namespace system {
+
+using namespace std::chrono_literals;
+
+static std::shared_ptr<async::timer> alive_timer;
+
+void bootstrap()
+{
+    pulsar::jackaudio::init();
+    pulsar::ladspa::init();
+
+    alive_timer = async::timer::make(0s, ALIVE_TICK_INTERVAL);
+    alive_timer->start();
+    pulsar::async::init();
+}
+
+void register_alive_handler(alive_handler_type cb_in, void * arg_in)
+{
+    auto wrapper = [cb_in, arg_in](async::base::timer&) {
+        cb_in(arg_in);
+    };
+
+    alive_timer->watch(wrapper);
+}
 
 std::string make_boost_version();
 

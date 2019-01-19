@@ -30,11 +30,9 @@ using mutex_type = std::mutex;
 using lock_type = std::unique_lock<mutex_type>;
 
 using boost_timer_type = boost::asio::system_timer;
-using tick_handler_type = std::function<void (void *)>;
 using duration_type = std::chrono::milliseconds;
 
 void init(const size_type num_threads_in = 1);
-void register_tick_handler(tick_handler_type cb_in, void * arg_in = nullptr);
 // boost::asio::io_service& get_global_io();
 
 namespace base {

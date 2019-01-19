@@ -37,7 +37,11 @@ using sample_type = real_type;
 
 namespace system {
 
+using alive_handler_type = std::function<void (void *)>;
+
+void bootstrap();
 const std::string& get_boost_version();
+void register_alive_handler(alive_handler_type cb_in, void * arg_in = nullptr);
 
 [[noreturn]] void fault(const char* file_in, int line_in, const char* function_in, const std::string& message_in);
 

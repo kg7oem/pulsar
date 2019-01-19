@@ -20,8 +20,6 @@
 #include "logging.h"
 #include "system.h"
 
-#define ASYNC_TICK_INTERVAL 500ms
-
 namespace pulsar {
 
 namespace async {
@@ -30,21 +28,11 @@ using namespace std::chrono_literals;
 
 static boost::asio::io_service boost_io;
 static std::vector<std::thread> async_threads;
-std::shared_ptr<timer> tick_timer;
 
 // boost::asio::io_service& get_global_io()
 // {
 //     return boost_io;
 // }
-
-void register_tick_handler(tick_handler_type cb_in, void * arg_in)
-{
-    auto wrapper = [cb_in, arg_in](base::timer&) {
-        cb_in(arg_in);
-    };
-
-    tick_timer->watch(wrapper);
-}
 
 static void async_thread()
 {
@@ -52,21 +40,19 @@ static void async_thread()
     throw std::runtime_error("Boost io.run() returned");
 }
 
-void init_tick()
-{
-    assert(tick_timer == nullptr);
+// void init_tick()
+// {
+//     assert(tick_timer == nullptr);
 
-    tick_timer = timer::make(0s, ASYNC_TICK_INTERVAL);
-    tick_timer->start();
-}
+//     tick_timer = timer::make(0s, ASYNC_TICK_INTERVAL);
+//     tick_timer->start();
+// }
 
 void init(const size_type num_threads_in)
 {
     static bool did_init = false;
 
     assert(! did_init);
-
-    init_tick();
 
     did_init = true;
 
