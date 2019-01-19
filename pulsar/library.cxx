@@ -11,6 +11,8 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
 
+#include <mutex>
+
 #include "library.h"
 #include "system.h"
 
@@ -18,10 +20,16 @@ namespace pulsar {
 
 namespace library {
 
-std::map<std::string, node_factory_type> class_to_factory;
+using mutex_type = std::mutex;
+using lock_type = std::unique_lock<mutex_type>;
+
+static mutex_type class_to_factory_mutex;
+static std::map<std::string, node_factory_type> class_to_factory;
 
 void register_node_factory(const std::string& name_in, node_factory_type factory_in)
 {
+    lock_type lock(class_to_factory_mutex);
+
     auto result = class_to_factory.find(name_in);
 
     if (result != class_to_factory.end()) {
@@ -33,6 +41,8 @@ void register_node_factory(const std::string& name_in, node_factory_type factory
 
 node::base::node * make_node(const std::string& class_name_in, const std::string& name_in, std::shared_ptr<domain> domain_in)
 {
+    lock_type lock(class_to_factory_mutex);
+
     auto result = class_to_factory.find(class_name_in);
 
     if (result == class_to_factory.end()) {
