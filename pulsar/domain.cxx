@@ -98,7 +98,7 @@ void domain::add_ready_node(node::base::node * node_in)
     log_trace("adding ready node: ", node_in->name);
 
     run_queue.push_back(node_in);
-    run_queue_condition.notify_all();
+    run_queue_condition.notify_one();
 }
 
 void domain::be_thread(domain * domain_in)
