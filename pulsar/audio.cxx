@@ -386,7 +386,7 @@ audio::input * audio::component::add_input(const std::string& name_in)
 audio::input * audio::component::get_input(const std::string& name_in)
 {
     if (sources.count(name_in) == 0) {
-        throw std::runtime_error("could not find input channel named " + name_in);
+        system_fault("could not find input channel named ", name_in, " for node ", parent->name);
     }
 
     return sources[name_in];
@@ -421,7 +421,7 @@ audio::output * audio::component::add_output(const std::string& name_in)
 audio::output * audio::component::get_output(const std::string& name_in)
 {
     if (sinks.count(name_in) == 0) {
-        throw std::runtime_error("could not find output channel named " + name_in);
+        system_fault("could not find output channel named ", name_in, " for node ", parent->name);
     }
 
     return sinks[name_in];

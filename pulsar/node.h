@@ -28,6 +28,14 @@ namespace pulsar {
 
 namespace node {
 
+namespace base {
+
+struct node;
+
+} // namespace base
+
+void init();
+base::node * make_chain_node(const std::string& name_in, std::shared_ptr<pulsar::domain> domain_in);
 std::string fully_qualify_property_name(const std::string& name_in);
 
 namespace base {
@@ -70,12 +78,12 @@ struct node {
 
 } // namespace base
 
-class dummy : public base::node {
+class chain : public base::node {
+    protected:
     virtual void handle_activate() override;
-    virtual void handle_run() override;
 
     public:
-    dummy(const std::string& name_in, std::shared_ptr<pulsar::domain> domain_in);
+    chain(const std::string& name_in, std::shared_ptr<pulsar::domain> domain_in);
 };
 
 } // namespace node

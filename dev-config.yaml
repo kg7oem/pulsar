@@ -18,11 +18,11 @@ templates:
 
 chains:
   remove_squelch_tail:
-    inputs: in
-    outputs: out
+    inputs: [ out ]
+    outputs: [ in ]
     connect:
-      demod_in:
-        - delay
+      in:
+        - delay:Input
         - gate:Sidechain Input
     nodes:
       - name: delay
@@ -33,13 +33,15 @@ chains:
         config:
           Delay Time (s): .1
           Max Delay (s): .2
-        connect: gate:Audio Input 1
+        connect:
+          Output: gate:Audio Input 1
 
       - name: gate
         class: pulsar::ladspa::node
         plugin:
           filename: /usr/lib/ladspa/ZamGate-ladspa.so
-        connect: remove_squelch_tail:out
+        connect:
+          Audio Output 1: remove_squelch_tail:out
 
 domain:
   config:
@@ -103,6 +105,7 @@ domain:
       connect:
         # Output: jack:mono_out
 
-    # - name: tail_eater
-    #   chain: remove_squelch_tail
-    #   connect: jack:demod_out
+    - name: tail_eater
+      chain: remove_squelch_tail
+      connect:
+        in: jack:demod_out

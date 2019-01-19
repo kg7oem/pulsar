@@ -16,6 +16,7 @@
 #include <cstdlib>
 #include <stdexcept>
 
+#include "library.h"
 #include "logging.h"
 #include "node.h"
 #include "system.h"
@@ -23,6 +24,16 @@
 namespace pulsar {
 
 namespace node {
+
+void init()
+{
+    library::register_node_factory("pulsar::node::chain", make_chain_node);
+}
+
+base::node * make_chain_node(const std::string& name_in, std::shared_ptr<pulsar::domain> domain_in)
+{
+    return domain_in->make_node<chain>(name_in);
+}
 
 base::node::node(const std::string& name_in, std::shared_ptr<pulsar::domain> domain_in)
 : domain(domain_in), name(name_in), audio(this)
@@ -127,34 +138,12 @@ bool base::node::is_ready()
     return audio.is_ready();
 }
 
-node::dummy::dummy(const std::string& name_in, std::shared_ptr<pulsar::domain> domain_in)
+chain::chain(const std::string& name_in, std::shared_ptr<pulsar::domain> domain_in)
 : base::node(name_in, domain_in)
 { }
 
-void node::dummy::handle_activate()
+void chain::handle_activate()
 { }
-
-void node::dummy::handle_run()
-{
-    auto output_names = audio.get_output_names();
-    auto input_names = audio.get_input_names();
-    auto num_outputs = output_names.size();
-
-    for(auto&& output_name : output_names) {
-        auto output = audio.get_output(output_name);
-        auto output_buffer = output->get_buffer();
-
-        output_buffer->zero();
-
-        for(auto&& input_name : input_names) {
-            output_buffer->mix(audio.get_input(input_name)->get_buffer());
-        }
-
-        output_buffer->scale(1 / num_outputs);
-    }
-
-    base::node::handle_run();
-}
 
 } // namespace node
 

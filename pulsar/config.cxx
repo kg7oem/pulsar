@@ -24,6 +24,7 @@ namespace pulsar {
 
 namespace config {
 
+static pulsar::node::base::node * make_node(const YAML::Node& node_yaml_in, std::shared_ptr<pulsar::config::domain> config_in, std::shared_ptr<pulsar::domain> domain_in);
 std::shared_ptr<pulsar::domain> make_domain(std::shared_ptr<pulsar::config::domain> domain_info_in)
 {
     auto domain_config = domain_info_in->get_config();
@@ -76,104 +77,6 @@ static void apply_node_template(YAML::Node& dest_in, const YAML::Node& src_in)
     }
 }
 
-static pulsar::node::base::node * make_class_node(const YAML::Node& node_yaml_in, std::shared_ptr<pulsar::domain> domain_in)
-{
-    auto node_yaml = node_yaml_in;
-    auto node_name_node = node_yaml["name"];
-    auto node_name = node_name_node.as<std::string>();
-    auto class_name_node = node_yaml["class"];
-    auto class_name = class_name_node.as<std::string>();
-
-    auto node_config_node = node_yaml["config"];
-    auto node_plugin_node = node_yaml["plugin"];
-    auto node_inputs_node = node_yaml["inputs"];
-    auto node_outputs_node = node_yaml["outputs"];
-
-    auto new_node = pulsar::library::make_node(class_name, node_name, domain_in);
-
-    if (node_plugin_node) {
-        for(auto&& i : node_plugin_node) {
-            auto config_name = i.first.as<std::string>();
-            auto config_node = i.second;
-            auto property_name = std::string("plugin:") + config_name;
-            new_node->get_property(property_name).set(config_node);
-        }
-    }
-
-    new_node->init();
-
-    if (node_config_node) {
-        for(auto&& i : node_config_node) {
-            auto config_name = i.first.as<std::string>();
-            auto config_node = i.second;
-            auto property_name = std::string("config:") + config_name;
-            new_node->get_property(property_name).set(config_node);
-        }
-    }
-
-    if (node_inputs_node) {
-        for(auto&& i : node_inputs_node) {
-            auto input_name = i.as<std::string>();
-            new_node->audio.add_input(input_name);
-        }
-    }
-
-    if (node_outputs_node) {
-        for(auto&& i : node_outputs_node) {
-            auto output_name = i.as<std::string>();
-            new_node->audio.add_output(output_name);
-        }
-    }
-
-    return new_node;
-}
-
-static pulsar::node::base::node * make_chain_node(const YAML::Node& /* node_yaml_in */, std::shared_ptr<pulsar::config::domain> /* config_in */, std::shared_ptr<pulsar::domain> /* domain_in */)
-{
-    system_fault("can't yet make a chain node");
-}
-
-static pulsar::node::base::node * make_node(const YAML::Node& node_yaml_in, std::shared_ptr<pulsar::config::domain> config_in,std::shared_ptr<pulsar::domain> domain_in)
-{
-    node::base::node * new_node = nullptr;
-    auto node_yaml = node_yaml_in;
-    auto template_node = node_yaml["template"];
-
-    if (template_node) {
-        assert(template_node.IsScalar());
-
-        auto template_name = template_node.as<std::string>();
-        auto template_src = config_in->get_parent()->get_template(template_name);
-        apply_node_template(node_yaml, template_src);
-    }
-
-    // check for the name after applying the template so
-    // the template might provide one
-    auto node_name_node = node_yaml["name"];
-
-    if (! node_name_node) {
-        system_fault("node configuration did not include a name");
-    }
-
-    auto node_name = node_name_node.as<std::string>();
-
-    auto class_name_node = node_yaml["class"];
-    auto chain_name_node = node_yaml["chain"];
-
-    if (class_name_node && chain_name_node) {
-        system_fault("specify class or chain name but not both; node = ", node_name);
-    } else if (class_name_node) {
-        new_node = make_class_node(node_yaml, domain_in);
-    } else if (chain_name_node) {
-        new_node = make_chain_node(node_yaml, config_in, domain_in);
-    } else {
-        system_fault("node did not have a class or chain name set; node = ", node_name);
-    }
-
-    assert(new_node != nullptr);
-    return new_node;
-}
-
 static void connect_nodes(std::map<std::string, node::base::node *>& node_map_in, const YAML::Node& node_yaml_in)
 {
     auto node_yaml = node_yaml_in;
@@ -190,6 +93,11 @@ static void connect_nodes(std::map<std::string, node::base::node *>& node_map_in
     if (connections.IsScalar()) {
         auto output_names = source_node->audio.get_output_names();
         auto sink_node_name = connections.as<std::string>();
+
+        if (node_map_in.find(sink_node_name) == node_map_in.end()) {
+            system_fault("could not find a node named ", sink_node_name);
+        }
+
         auto sink_node = node_map_in[sink_node_name];
         auto input_names = sink_node->audio.get_input_names();
 
@@ -254,6 +162,187 @@ static void connect_nodes(std::map<std::string, node::base::node *>& node_map_in
             }
         }
     }
+}
+
+static pulsar::node::base::node * make_class_node(const YAML::Node& node_yaml_in, std::shared_ptr<pulsar::domain> domain_in)
+{
+    auto node_yaml = node_yaml_in;
+    auto node_name_node = node_yaml["name"];
+    auto node_name = node_name_node.as<std::string>();
+    auto class_name_node = node_yaml["class"];
+    auto class_name = class_name_node.as<std::string>();
+
+    auto node_config_node = node_yaml["config"];
+    auto node_plugin_node = node_yaml["plugin"];
+    auto node_inputs_node = node_yaml["inputs"];
+    auto node_outputs_node = node_yaml["outputs"];
+
+    auto new_node = pulsar::library::make_node(class_name, node_name, domain_in);
+
+    if (node_plugin_node) {
+        for(auto&& i : node_plugin_node) {
+            auto config_name = i.first.as<std::string>();
+            auto config_node = i.second;
+            auto property_name = std::string("plugin:") + config_name;
+            new_node->get_property(property_name).set(config_node);
+        }
+    }
+
+    new_node->init();
+
+    if (node_config_node) {
+        for(auto&& i : node_config_node) {
+            auto config_name = i.first.as<std::string>();
+            auto config_node = i.second;
+            auto property_name = std::string("config:") + config_name;
+            new_node->get_property(property_name).set(config_node);
+        }
+    }
+
+    if (node_inputs_node) {
+        for(auto&& i : node_inputs_node) {
+            auto input_name = i.as<std::string>();
+            new_node->audio.add_input(input_name);
+        }
+    }
+
+    if (node_outputs_node) {
+        for(auto&& i : node_outputs_node) {
+            auto output_name = i.as<std::string>();
+            new_node->audio.add_output(output_name);
+        }
+    }
+
+    return new_node;
+}
+
+static pulsar::node::base::node * make_chain_node(const YAML::Node& node_yaml_in, const YAML::Node& chain_yaml_in, std::shared_ptr<pulsar::config::domain> config_in, std::shared_ptr<pulsar::domain> domain_in)
+{
+    YAML::Node node_yaml = node_yaml_in;
+    std::map<std::string, node::base::node *> chain_nodes;
+
+    auto chain_name = node_yaml_in["chain"].as<std::string>();
+    auto node_name = node_yaml_in["name"].as<std::string>();
+    auto chain_outputs_node = chain_yaml_in["outputs"];
+    auto chain_inputs_node = chain_yaml_in["inputs"];
+    auto connect_node = chain_yaml_in["connect"];
+    auto nodes_node = chain_yaml_in["nodes"];
+
+    if (node_yaml_in["class"]) {
+        system_fault("chain node had a class set on it");
+    }
+
+    if (! nodes_node) {
+        system_fault("chain did not have a nodes section");
+    } else if (! nodes_node.IsSequence()) {
+        system_fault("nodes section in chain was not a sequence");
+    }
+
+    if (! connect_node) {
+        system_fault("chain did not have a connections section");
+    } else if (! connect_node.IsMap()) {
+        system_fault("chain connections section was not a map");
+    }
+
+    if (! chain_outputs_node && ! chain_inputs_node) {
+        system_fault("chain did not have any outputs or inputs");
+    }
+
+    node_yaml["class"] = "pulsar::node::chain";
+
+    auto chain_root_node = make_class_node(node_yaml_in, domain_in);
+
+    for(size_type i = 0; i < chain_outputs_node.size(); i++) {
+        auto output_name = chain_outputs_node[i].as<std::string>();
+        chain_root_node->audio.add_output(output_name);
+    }
+
+    for(size_type i = 0; i < chain_inputs_node.size(); i++) {
+        auto input_name = chain_inputs_node[i].as<std::string>();
+        chain_root_node->audio.add_input(input_name);
+    }
+
+    // store the name of the chain so it can be found and connected
+    // to from inside the chain
+    chain_nodes[chain_name] = chain_root_node;
+
+    for(size_type i = 0; i < nodes_node.size(); i++) {
+        auto new_node = make_node(nodes_node[i], config_in, domain_in);
+
+        if (chain_nodes.find(new_node->name) != chain_nodes.end()) {
+            system_fault("duplicate node name in chain: ", new_node->name);
+        }
+
+        chain_nodes[new_node->name] = new_node;
+    }
+
+    // FIXME this needs to be made common with other places connections
+    // are formed
+    for(auto&& i : connect_node) {
+        UNUSED auto output_name = i.first.as<std::string>();
+        auto target_node = i.second;
+
+        if (target_node.IsSequence()) {
+            for(size_type i = 0; i < target_node.size(); i++) {
+                auto target_string = target_node[i].as<std::string>();
+                auto target_parts = util::string::split(target_string, ':');
+                auto target_node = chain_nodes[target_parts[0]];
+                auto target_input = target_node->audio.get_input(target_parts[1]);
+                chain_root_node->audio.get_output(output_name)->connect(target_input);
+            }
+        } else {
+            system_fault("can only handle a sequence right now");
+        }
+    }
+
+    for(size_type i = 0; i < nodes_node.size(); i++) {
+        connect_nodes(chain_nodes, nodes_node[i]);
+    }
+
+    return chain_root_node;
+}
+
+static pulsar::node::base::node * make_node(const YAML::Node& node_yaml_in, std::shared_ptr<pulsar::config::domain> config_in, std::shared_ptr<pulsar::domain> domain_in)
+{
+    node::base::node * new_node = nullptr;
+    auto node_yaml = node_yaml_in;
+    auto template_node = node_yaml["template"];
+
+    if (template_node) {
+        assert(template_node.IsScalar());
+
+        auto template_name = template_node.as<std::string>();
+        auto template_src = config_in->get_parent()->get_template(template_name);
+        apply_node_template(node_yaml, template_src);
+    }
+
+    // check for the name after applying the template so
+    // the template might provide one
+    auto node_name_node = node_yaml["name"];
+
+    if (! node_name_node) {
+        system_fault("node configuration did not include a name");
+    }
+
+    auto node_name = node_name_node.as<std::string>();
+
+    auto class_name_node = node_yaml["class"];
+    auto chain_name_node = node_yaml["chain"];
+
+    if (class_name_node && chain_name_node) {
+        system_fault("specify class or chain name but not both; node = ", node_name);
+    } else if (class_name_node) {
+        new_node = make_class_node(node_yaml, domain_in);
+    } else if (chain_name_node) {
+        auto chain_name = chain_name_node.as<std::string>();
+        auto chain_node = config_in->get_parent()->get_chain(chain_name);
+        new_node = make_chain_node(node_yaml, chain_node, config_in, domain_in);
+    } else {
+        system_fault("node did not have a class or chain name set; node = ", node_name);
+    }
+
+    assert(new_node != nullptr);
+    return new_node;
 }
 
 std::map<std::string, pulsar::node::base::node *> make_nodes(std::shared_ptr<pulsar::config::domain> config_in, std::shared_ptr<pulsar::domain> domain_in) {
@@ -353,6 +442,32 @@ YAML::Node file::get_template(const std::string& name_in)
     }
 
     return template_node;
+}
+
+const YAML::Node file::get_chains()
+{
+    auto chains_node = yaml_root["chains"];
+
+    if (! chains_node) {
+        system_fault("could not find a chains section");
+    }
+
+    if (! chains_node.IsMap()) {
+        system_fault("chains section was not a map");
+    }
+
+    return chains_node;
+}
+
+const YAML::Node file::get_chain(const std::string& name_in)
+{
+    auto chain_node = get_chains()[name_in];
+
+    if (! chain_node) {
+        system_fault("could not find a chain named ", name_in);
+    }
+
+    return chain_node;
 }
 
 domain::domain(const std::string name_in, const YAML::Node& yaml_in, std::shared_ptr<file> parent_in)

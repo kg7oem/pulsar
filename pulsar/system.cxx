@@ -19,6 +19,7 @@
 #include "jackaudio.h"
 #include "ladspa.h"
 #include "logging.h"
+#include "node.h"
 #include "system.h"
 
 #define ALIVE_TICK_INTERVAL 100ms
@@ -33,11 +34,14 @@ static std::shared_ptr<async::timer> alive_timer;
 
 void bootstrap()
 {
+    pulsar::node::init();
     pulsar::jackaudio::init();
     pulsar::ladspa::init();
 
+    // the timer must exist before async init happens
     alive_timer = async::timer::make(0s, ALIVE_TICK_INTERVAL);
     alive_timer->start();
+
     pulsar::async::init();
 }
 
