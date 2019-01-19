@@ -56,7 +56,7 @@ domain:
       connect:
         left_in: comp_left:*
         right_in: comp_right:*
-        demod_in: tail_eater:in
+        # demod_in: tail_eater:in
 
     - name: comp_left
       template: compressor
@@ -103,6 +103,6 @@ domain:
       connect:
         # Output: jack:mono_out
 
-    - name: tail_eater
-      chain: remove_squelch_tail
-      connect: jack:demod_out
+    # - name: tail_eater
+    #   chain: remove_squelch_tail
+    #   connect: jack:demod_out
