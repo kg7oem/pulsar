@@ -23,6 +23,14 @@ audio equipment unless that equipment is ok being damaged.
 Warnings aside the reliability is pretty good at this point with
 the software routinely running for 12 hours with out an issue.
 
+Limitations
+
+  * Only built and tested on Debian/GNU Linux and Ubuntu
+  * Not all connection forms work
+    * Mixing from multiple outputs to one input
+    * N:N connections from a node's output channels to another
+      node's input channels
+
 
 Implemented features
 
