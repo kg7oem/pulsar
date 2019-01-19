@@ -18,9 +18,24 @@
 
 namespace pulsar {
 
+struct domain;
+
+namespace node {
+
+namespace base {
+
+struct node;
+
+} // namespace base
+
+} // namespace node
+
 namespace config {
 
 struct domain;
+
+std::shared_ptr<pulsar::domain> make_domain(std::shared_ptr<pulsar::config::domain> domain_info_in);
+std::vector<pulsar::node::base::node *> make_nodes(std::shared_ptr<pulsar::config::domain> config_in, std::shared_ptr<pulsar::domain> domain_in);
 
 class file : public std::enable_shared_from_this<file> {
     private:

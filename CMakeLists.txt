@@ -29,6 +29,7 @@ add_library(
     pulsar/node.cxx
     pulsar/property.cxx
     pulsar/system.cxx
+    pulsar/util.cxx
 )
 
 add_executable(

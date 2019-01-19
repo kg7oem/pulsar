@@ -14,12 +14,127 @@
 #include <cassert>
 
 #include "config.h"
+#include "domain.h"
+#include "library.h"
 #include "logging.h"
 #include "system.h"
+#include "util.h"
 
 namespace pulsar {
 
 namespace config {
+
+std::shared_ptr<pulsar::domain> make_domain(std::shared_ptr<pulsar::config::domain> domain_info_in)
+{
+    auto domain_config = domain_info_in->get_config();
+
+    assert(domain_config["sample_rate"]);
+    assert(domain_config["buffer_size"]);
+
+    auto domain_sample_rate = domain_config["sample_rate"].as<pulsar::size_type>();
+    auto domain_buffer_size = domain_config["buffer_size"].as<pulsar::size_type>();
+
+    auto domain = pulsar::domain::make(domain_info_in->name, domain_sample_rate, domain_buffer_size);
+    return domain;
+}
+
+std::vector<pulsar::node::base::node *> make_nodes(std::shared_ptr<pulsar::config::domain> config_in, std::shared_ptr<pulsar::domain> domain_in) {
+    auto node_map = std::map<std::string, pulsar::node::base::node *>();
+
+    for (auto&& node_yaml : config_in->get_nodes()) {
+        auto node_name = node_yaml["name"].as<std::string>();
+        auto class_name = node_yaml["class"].as<std::string>();
+        auto node_config = node_yaml["config"];
+        auto node_plugin = node_yaml["plugin"];
+        auto node_inputs = node_yaml["inputs"];
+        auto node_outputs = node_yaml["outputs"];
+        auto new_node = pulsar::library::make_node(class_name, node_name, domain_in);
+
+        if (node_plugin) {
+            for(auto&& i : node_plugin) {
+                auto config_name = i.first.as<std::string>();
+                auto config_node = i.second;
+                auto property_name = std::string("plugin:") + config_name;
+                new_node->get_property(property_name).set(config_node);
+            }
+        }
+
+        new_node->init();
+
+        if (node_config) {
+            for(auto&& i : node_config) {
+                auto config_name = i.first.as<std::string>();
+                auto config_node = i.second;
+                auto property_name = std::string("config:") + config_name;
+                new_node->get_property(property_name).set(config_node);
+            }
+        }
+
+        if (node_inputs) {
+            for(auto&& i : node_inputs) {
+                auto input_name = i.as<std::string>();
+                new_node->audio.add_input(input_name);
+            }
+        }
+
+        if (node_outputs) {
+            for(auto&& i : node_outputs) {
+                auto output_name = i.as<std::string>();
+                new_node->audio.add_output(output_name);
+            }
+        }
+
+        auto found = node_map.find(node_name);
+        if (found != node_map.end()) {
+            system_fault("duplicate node name: ", node_name);
+        }
+        node_map[node_name] = new_node;
+    }
+
+    for (auto&& node_yaml : config_in->get_nodes()) {
+        auto node_name = node_yaml["name"].as<std::string>();
+        auto connections = node_yaml["connect"];
+
+        if (! connections) {
+            continue;
+        }
+
+        for(auto&& i : connections) {
+            auto source_channel = i.first.as<std::string>();
+            auto target_string = i.second.as<std::string>();
+            auto target_split = util::string::split(target_string, ':');
+
+            if (target_split.size() != 2) {
+                system_fault("malformed connect target: ", target_string);
+            }
+
+            auto sink_node_name = target_split[0];
+            auto sink_channel_name = target_split[1];
+
+            if (node_map.find(node_name) == node_map.end()) {
+                system_fault("could not find source node named ", node_name);
+            }
+
+            if (node_map.find(sink_node_name) == node_map.end()) {
+                system_fault("could not find sink node named ", sink_node_name);
+            }
+
+            auto source_node = node_map[node_name];
+            auto sink_node = node_map[sink_node_name];
+            auto sink_channel = sink_node->audio.get_input(sink_channel_name);
+
+            source_node->audio.get_output(source_channel)->connect(sink_channel);
+        }
+    }
+
+    auto node_list = std::vector<pulsar::node::base::node *>();
+
+    for(auto&& i : node_map) {
+        node_list.push_back(i.second);
+    }
+
+    return node_list;
+}
 
 file::file(const std::string& path_in)
 : path(path_in)
