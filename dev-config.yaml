@@ -25,6 +25,8 @@ domain:
 
     - name: gain_left1
       template: gain
+      plugin:
+        filename: /usr/lib/ladspa/amp.so
       config:
         Gain: .5
       connect:

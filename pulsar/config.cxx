@@ -47,11 +47,17 @@ static void apply_node_template(YAML::Node& dest_in, const YAML::Node& src_in)
     if (src_in.IsMap()) {
         for(auto&& i : src_in) {
             auto key_name = i.first.as<std::string>();
-            if (dest_in[key_name]) {
-                continue;
-            }
 
-            dest_in[key_name] = i.second;
+            if (dest_in[key_name]) {
+                if (src_in[key_name].IsSequence() || src_in[key_name].IsMap()) {
+                    // FIXME is that how this is supposed to work?
+                    auto new_node = dest_in[key_name];
+                    apply_node_template(new_node, src_in[key_name]);
+                    dest_in[key_name] = new_node;
+                }
+            } else {
+              dest_in[key_name] = i.second;
+            }
         }
 
     } else if (dest_in.IsSequence()) {
