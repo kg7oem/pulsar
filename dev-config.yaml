@@ -23,6 +23,11 @@ domain:
         left_in: gain_left1:Input
         right_in: gain_right1:Input
 
+    - name: comp_left
+      class: pulsar::ladspa::node
+      plugin:
+        filename: /usr/lib/ladspa/ZamComp-ladspa.so
+
     - name: gain_left1
       template: gain
       plugin:

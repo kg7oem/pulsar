@@ -160,7 +160,20 @@ std::shared_ptr<instance> file::make_instance(const id_type id_in, const pulsar:
 
 const descriptor_type * file::get_descriptor(const id_type id_in)
 {
-    auto result = id_to_descriptor.find(id_in);
+    auto id = id_in;
+
+    // FIXME does LADSPA say that id 0 will never be used?
+    if (id == 0) {
+        auto type_list = enumerate();
+
+        if (type_list.size() != 1) {
+            system_fault("no LADSPA type id was specified and there was more than one type in the file");
+        }
+
+        id = type_list[0].first;
+    }
+
+    auto result = id_to_descriptor.find(id);
 
     if (result != id_to_descriptor.end()) {
         return result->second;
@@ -276,6 +289,7 @@ node::node(const std::string& name_in, std::shared_ptr<pulsar::domain> domain_in
     add_property("node:class", property::value_type::string).set("pulsar::ladspa::node");
     add_property("plugin:filename", property::value_type::string);
     add_property("plugin:id", property::value_type::size);
+    add_property("plugin:label", property::value_type::string);
 }
 
 void node::init()
@@ -287,6 +301,8 @@ void node::init()
     auto ladspa_id = get_property("plugin:id").get_size();
 
     ladspa = make_instance(ladspa_file, ladspa_id, domain->sample_rate);
+    get_property("plugin:label").set(ladspa->get_descriptor()->Label);
+
     auto port_count = ladspa->get_port_count();
 
     for(size_type port_num = 0; port_num < port_count; port_num++) {
