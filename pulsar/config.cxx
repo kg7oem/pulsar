@@ -182,9 +182,16 @@ std::map<std::string, pulsar::node::base::node *> make_nodes(std::shared_ptr<pul
             }
 
             auto source_node = node_map[node_name];
-            auto sink_channel = sink_node->audio.get_input(sink_channel_name);
 
-            source_node->audio.get_output(source_channel)->connect(sink_channel);
+            if (sink_channel_name == "*") {
+                for (auto&& channel_name : sink_node->audio.get_input_names()) {
+                    auto sink_channel = sink_node->audio.get_input(channel_name);
+                    source_node->audio.get_output(source_channel)->connect(sink_channel);
+                }
+            } else {
+                auto sink_channel = sink_node->audio.get_input(sink_channel_name);
+                source_node->audio.get_output(source_channel)->connect(sink_channel);
+            }
         }
     }
 

@@ -28,8 +28,8 @@ domain:
       inputs: [ left_out, right_out ]
       outputs: [ right_in, left_in ]
       connect:
-        left_in: comp_left:Audio Input 1
-        right_in: comp_right:Audio Input 1
+        left_in: comp_left:*
+        right_in: comp_right:*
 
     - name: comp_left
       template: compressor
