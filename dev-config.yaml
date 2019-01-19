@@ -13,21 +13,45 @@ domain:
       inputs: [ left_out, right_out ]
       outputs: [ right_in, left_in ]
       connect:
-        left_in: gain_left:Input
-        right_in: gain_right:Input
+        left_in: gain_left1:Input
+        right_in: gain_right1:Input
 
-    - name: gain_left
+    - name: gain_left1
       class: pulsar::ladspa::node
       plugin:
         filename: /usr/lib/ladspa/amp.so
         id: 1048
+      config:
+        Gain: .5
+      connect:
+        Output: gain_left2:Input
+
+    - name: gain_right1
+      class: pulsar::ladspa::node
+      plugin:
+        filename: /usr/lib/ladspa/amp.so
+        id: 1048
+      config:
+        Gain: .5
+      connect:
+        Output: gain_right2:Input
+
+    - name: gain_left2
+      class: pulsar::ladspa::node
+      plugin:
+        filename: /usr/lib/ladspa/amp.so
+        id: 1048
+      config:
+        Gain: 2
       connect:
         Output: jack:left_out
 
-    - name: gain_right
+    - name: gain_right2
       class: pulsar::ladspa::node
       plugin:
         filename: /usr/lib/ladspa/amp.so
         id: 1048
+      config:
+        Gain: 2
       connect:
         Output: jack:right_out
