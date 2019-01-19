@@ -13,7 +13,8 @@ templates:
       config:
         Knee: 15
         Threshold: -20
-        Makeup: 6
+        Makeup: 0
+        Sidechain: 1
 
 domain:
   config:
@@ -25,7 +26,7 @@ domain:
       class: pulsar::jackaudio::node
       config:
         client_name: pulsar
-      inputs: [ left_out, right_out ]
+      inputs: [ left_out, right_out, mono_out ]
       outputs: [ right_in, left_in ]
       connect:
         left_in: comp_left:*
@@ -33,13 +34,11 @@ domain:
 
     - name: comp_left
       template: compressor
-      connect:
-        Audio Output 1: gain_left1
+      connect: gain_left1
 
     - name: comp_right
       template: compressor
-      connect:
-        Audio Output 1: gain_right1
+      connect: gain_right1
 
     - name: gain_left1
       template: gain
@@ -47,15 +46,13 @@ domain:
         filename: /usr/lib/ladspa/amp.so
       config:
         Gain: .5
-      connect:
-        Output: gain_left2
+      connect: gain_left2
 
     - name: gain_right1
       template: gain
       config:
         Gain: .5
-      connect:
-        Output: gain_right2
+      connect: gain_right2
 
     - name: gain_left2
       template: gain
@@ -63,6 +60,7 @@ domain:
         Gain: 2
       connect:
         Output: jack:left_out
+        # Output: mono_gain
 
     - name: gain_right2
       template: gain
@@ -70,3 +68,11 @@ domain:
         Gain: 2
       connect:
         Output: jack:right_out
+        # Output: mono_gain
+
+    - name: mono_gain
+      template: gain
+      config:
+        Gain: .5
+      connect:
+        # Output: jack:mono_out

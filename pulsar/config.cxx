@@ -139,59 +139,74 @@ std::map<std::string, pulsar::node::base::node *> make_nodes(std::shared_ptr<pul
 
     for (auto&& node_yaml : config_in->get_nodes()) {
         auto node_name = node_yaml["name"].as<std::string>();
+        auto source_node = node_map[node_name];
         auto connections = node_yaml["connect"];
 
         if (! connections) {
             continue;
         }
 
-        for(auto&& i : connections) {
-            auto source_channel = i.first.as<std::string>();
-            auto target_string = i.second.as<std::string>();
-            auto target_split = util::string::split(target_string, ':');
-            auto split_size = target_split.size();
-            std::string sink_node_name, sink_channel_name;
-            node::base::node * sink_node;
+        // if the number of inputs and outputs is the same
+        // connect them together in order
+        if (connections.IsScalar()) {
+            auto output_names = source_node->audio.get_output_names();
+            auto sink_node_name = connections.as<std::string>();
+            auto sink_node = node_map[sink_node_name];
+            auto input_names = sink_node->audio.get_input_names();
 
-            if (split_size == 2) {
-                sink_node_name = target_split[0];
-                sink_node = node_map[sink_node_name];
-                sink_channel_name = target_split[1];
-            } else if (split_size == 1) {
-                sink_node_name = target_string;
-                sink_node = node_map[sink_node_name];
-                auto sink_node_inputs = sink_node->audio.get_input_names();
+            auto num_outputs = output_names.size();
+            if (input_names.size() != num_outputs) {
+                system_fault("number of inputs and outputs was not the same");
+            }
 
-                if (sink_node_inputs.size() != 1) {
-                    system_fault("no input channel was specified and target node has more than 1 input");
+            for(size_type i = 0; i < num_outputs; i++) {
+                auto sink_channel = sink_node->audio.get_input(input_names[i]);
+                source_node->audio.get_output(output_names[i])->connect(sink_channel);
+            }
+        } else {
+            for(auto&& i : connections) {
+                auto source_channel = i.first.as<std::string>();
+                auto target_node = i.second;
+
+                if (target_node.IsSequence()) {
+                    system_fault("can't handle a sequence yet");
                 }
 
-                sink_channel_name = sink_node_inputs[0];
-            } else {
-                system_fault("invalid connection string specified: ", target_string);
-            }
+                auto target_string = i.second.as<std::string>();
+                auto target_split = util::string::split(target_string, ':');
+                auto split_size = target_split.size();
+                std::string sink_node_name, sink_channel_name;
+                node::base::node * sink_node;
 
-            log_debug("sink channel: ", sink_channel_name);
+                if (split_size == 2) {
+                    sink_node_name = target_split[0];
+                    sink_node = node_map[sink_node_name];
+                    sink_channel_name = target_split[1];
+                } else if (split_size == 1) {
+                    sink_node_name = target_string;
+                    sink_node = node_map[sink_node_name];
+                    auto sink_node_inputs = sink_node->audio.get_input_names();
 
-            if (node_map.find(node_name) == node_map.end()) {
-                system_fault("could not find source node named ", node_name);
-            }
+                    if (sink_node_inputs.size() != 1) {
+                        system_fault("no input channel was specified and target node has more than 1 input");
+                    }
 
-            if (node_map.find(sink_node_name) == node_map.end()) {
-                system_fault("could not find sink node named ", sink_node_name);
-            }
+                    sink_channel_name = sink_node_inputs[0];
+                } else {
+                    system_fault("invalid connection string specified: ", target_string);
+                }
 
-            auto source_node = node_map[node_name];
-
-            if (sink_channel_name == "*") {
-                for (auto&& channel_name : sink_node->audio.get_input_names()) {
-                    auto sink_channel = sink_node->audio.get_input(channel_name);
+                if (sink_channel_name == "*") {
+                    for (auto&& channel_name : sink_node->audio.get_input_names()) {
+                        auto sink_channel = sink_node->audio.get_input(channel_name);
+                        source_node->audio.get_output(source_channel)->connect(sink_channel);
+                    }
+                } else {
+                    auto sink_channel = sink_node->audio.get_input(sink_channel_name);
                     source_node->audio.get_output(source_channel)->connect(sink_channel);
                 }
-            } else {
-                auto sink_channel = sink_node->audio.get_input(sink_channel_name);
-                source_node->audio.get_output(source_channel)->connect(sink_channel);
             }
+
         }
     }
 
