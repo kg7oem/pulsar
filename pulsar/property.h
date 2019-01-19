@@ -15,6 +15,7 @@
 
 #include <string>
 
+#include "config.h"
 #include "system.h"
 
 namespace pulsar {
@@ -43,6 +44,7 @@ class generic {
     // void set(const size_type& value_in);
     void set(const double& value_in);
     void set(const std::string& value_in);
+    void set(const YAML::Node& value_in);
     size_type& get_size();
     void set_size(const size_type& size_in);
     integer_type& get_integer();

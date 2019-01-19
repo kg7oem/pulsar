@@ -5,4 +5,29 @@ domain:
     sample_rate: 48000
     buffer_size: 1024
     threads: 4
-  nodes: [ ]
+  nodes:
+    - name: jack
+      class: pulsar::jackaudio::node
+      config:
+        client_name: pulsar
+      inputs: [ left_out, right_out ]
+      outputs: [ right_in, left_in ]
+      connect:
+        left_in: gain_left:Input
+        right_in: gain_right:Input
+
+    - name: gain_left
+      class: pulsar::ladspa::node
+      plugin:
+        filename: /usr/lib/ladspa/amp.so
+        id: 1048
+      connect:
+        Output: jack:left_out
+
+    - name: gain_right
+      class: pulsar::ladspa::node
+      plugin:
+        filename: /usr/lib/ladspa/amp.so
+        id: 1048
+      connect:
+        Output: jack:right_out

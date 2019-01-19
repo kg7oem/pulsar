@@ -54,6 +54,7 @@ class domain : public std::enable_shared_from_this<domain> {
     }
 
     const YAML::Node get_config();
+    const YAML::Node get_nodes();
 };
 
 } // namespace configfile

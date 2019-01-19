@@ -18,6 +18,7 @@
 #include <vector>
 
 #include "node.h"
+#include "library.h"
 #include "system.h"
 
 namespace pulsar {
@@ -37,6 +38,8 @@ using port_descriptor_type = LADSPA_PortDescriptor;
 struct file;
 struct instance;
 
+pulsar::node::base::node * make_node(const std::string& name_in, std::shared_ptr<domain> domain_in);
+void init();
 std::shared_ptr<file> open(const std::string& path_in);
 handle_type open(const std::string& path_in, const id_type id_in, const size_type sample_rate_in);
 const ladspa::descriptor_type * open(const std::string& path_in, const id_type id_in);

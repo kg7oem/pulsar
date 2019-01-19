@@ -24,6 +24,21 @@ namespace pulsar {
 
 using namespace std::chrono_literals;
 
+namespace jackaudio {
+
+void init()
+{
+    library::register_node_factory("pulsar::jackaudio::node", make_node);
+}
+
+pulsar::node::base::node * make_node(const std::string& name_in, std::shared_ptr<domain> domain_in)
+{
+    return domain_in->make_node<jackaudio::node>(name_in);
+}
+
+} // namespace jackaudio
+
+
 jackaudio::node::node(const std::string& name_in, std::shared_ptr<pulsar::domain> domain_in)
 : pulsar::node::base::node(name_in, domain_in)
 {

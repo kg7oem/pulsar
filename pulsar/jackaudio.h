@@ -15,6 +15,7 @@
 
 #include "async.h"
 #include "audio.h"
+#include "library.h"
 #include "node.h"
 
 namespace pulsar {
@@ -30,6 +31,9 @@ using flags_type = unsigned long;
 using options_type = jack_options_t;
 using port_type = jack_port_t;
 using size_type = unsigned long;
+
+void init();
+pulsar::node::base::node * make_node(const std::string& name_in, std::shared_ptr<domain> domain_in);
 
 class node : public pulsar::node::base::node {
     std::shared_ptr<async::watchdog> watchdog = nullptr;

@@ -78,6 +78,12 @@ const YAML::Node domain::get_config()
     return yaml_root["config"];
 }
 
+const YAML::Node domain::get_nodes()
+{
+    assert(yaml_root["nodes"]);
+    return yaml_root["nodes"];
+}
+
 } // namespace configfile
 
 } // namespace pulsar

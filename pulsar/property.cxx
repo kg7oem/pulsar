@@ -97,6 +97,17 @@ void generic::set(const std::string& value_in)
     system_fault("should never get out of switch statement");
 }
 
+void generic::set(const YAML::Node& value_in)
+{
+    switch(type) {
+        case value_type::unknown: system_fault("parameter type was not known");
+        case value_type::size: value.size = value_in.as<size_type>(); return;
+        case value_type::integer: value.integer = value_in.as<integer_type>(); return;
+        case value_type::real: value.real = value_in.as<real_type>(); return;
+        case value_type::string: *value.string = value_in.as<std::string>(); return;
+    }
+}
+
 size_type& generic::get_size()
 {
     if (type != value_type::size) {

@@ -27,6 +27,16 @@ namespace ladspa {
 
 static std::map<std::string, std::shared_ptr<file>> loaded_files;
 
+pulsar::node::base::node * make_node(const std::string& name_in, std::shared_ptr<domain> domain_in)
+{
+    return domain_in->make_node<ladspa::node>(name_in);
+}
+
+void init()
+{
+    library::register_node_factory("pulsar::ladspa::node", make_node);
+}
+
 std::shared_ptr<file> open(const std::string& path_in)
 {
     auto result = loaded_files.find(path_in);
