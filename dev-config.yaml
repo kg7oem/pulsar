@@ -18,8 +18,8 @@ templates:
 
 chains:
   remove_squelch_tail:
-    inputs: [ out ]
-    outputs: [ in ]
+    inputs: [ in ]
+    outputs: [ out ]
     connect:
       in:
         - delay:Input
@@ -53,6 +53,8 @@ domain:
       class: pulsar::jackaudio::node
       config:
         client_name: pulsar
+      # FIXME should input / output be flipped around for
+      # jack like chains?
       inputs: [ left_out, right_out, mono_out, demod_out ]
       outputs: [ right_in, left_in, demod_in ]
       connect:
