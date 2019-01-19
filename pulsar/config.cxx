@@ -254,16 +254,12 @@ static pulsar::node::base::node * make_chain_node(const YAML::Node& node_yaml_in
 
     for(size_type i = 0; i < chain_outputs_node.size(); i++) {
         auto output_name = chain_outputs_node[i].as<std::string>();
-        // flip inputs and outputs around because it makes more sense
-        // from the config file
-        chain_root_node->audio.add_input(output_name);
+        chain_root_node->audio.add_output(output_name);
     }
 
     for(size_type i = 0; i < chain_inputs_node.size(); i++) {
         auto input_name = chain_inputs_node[i].as<std::string>();
-        // flip inputs and outputs around because it makes more sense
-        // from the config file
-        chain_root_node->audio.add_output(input_name);
+        chain_root_node->audio.add_input(input_name);
     }
 
     // store the name of the chain so it can be found and connected
