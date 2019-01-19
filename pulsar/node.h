@@ -28,9 +28,14 @@ namespace pulsar {
 
 namespace node {
 
+std::string fully_qualify_property_name(const std::string& name_in);
+
 namespace base {
 
 struct node {
+    friend audio::input * audio::component::add_input(const std::string& name_in);
+    friend audio::output * audio::component::add_output(const std::string& name_in);
+
     using mutex_type = std::mutex;
     using lock_type = std::unique_lock<mutex_type>;
 
@@ -54,6 +59,7 @@ struct node {
     std::shared_ptr<pulsar::domain> get_domain();
     const std::map<std::string, property::generic *>& get_properties();
     property::generic& get_property(const std::string& name_in);
+    std::string peek(const std::string& name_in);
     virtual void init();
     void activate();
     void run();

@@ -57,6 +57,22 @@ property::generic& base::node::get_property(const std::string& name_in)
     return *result->second;
 }
 
+std::string fully_qualify_property_name(const std::string& name_in)
+{
+    if (name_in.find(":") == std::string::npos) {
+        return std::string("config:") + name_in;
+    }
+
+    return name_in;
+}
+
+std::string base::node::peek(const std::string& name_in)
+{
+    auto lock = make_lock();
+    auto name = fully_qualify_property_name(name_in);
+    return get_property(name).get();
+}
+
 const std::map<std::string, property::generic *>& base::node::get_properties()
 {
     return properties;

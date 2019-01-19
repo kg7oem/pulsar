@@ -76,7 +76,7 @@ static void apply_node_template(YAML::Node& dest_in, const YAML::Node& src_in)
     }
 }
 
-std::vector<pulsar::node::base::node *> make_nodes(std::shared_ptr<pulsar::config::domain> config_in, std::shared_ptr<pulsar::domain> domain_in) {
+std::map<std::string, pulsar::node::base::node *> make_nodes(std::shared_ptr<pulsar::config::domain> config_in, std::shared_ptr<pulsar::domain> domain_in) {
     auto node_map = std::map<std::string, pulsar::node::base::node *>();
 
     for (YAML::Node node_yaml : config_in->get_nodes()) {
@@ -173,13 +173,7 @@ std::vector<pulsar::node::base::node *> make_nodes(std::shared_ptr<pulsar::confi
         }
     }
 
-    auto node_list = std::vector<pulsar::node::base::node *>();
-
-    for(auto&& i : node_map) {
-        node_list.push_back(i.second);
-    }
-
-    return node_list;
+    return node_map;
 }
 
 file::file(const std::string& path_in)

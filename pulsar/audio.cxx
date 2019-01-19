@@ -376,6 +376,10 @@ audio::input * audio::component::add_input(const std::string& name_in)
 
     auto new_input = new audio::input(name_in, parent);
     sources[new_input->name] = new_input;
+
+    auto property_name = std::string("input:") + name_in;
+    parent->add_property(property_name, property::value_type::string).set("audio");
+
     return new_input;
 }
 
@@ -407,6 +411,10 @@ audio::output * audio::component::add_output(const std::string& name_in)
 
     auto new_output = new audio::output(name_in, parent);
     sinks[new_output->name] = new_output;
+
+    auto property_name = std::string("output:") + name_in;
+    parent->add_property(property_name, property::value_type::string).set("audio");
+
     return new_output;
 }
 

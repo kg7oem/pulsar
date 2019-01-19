@@ -63,26 +63,44 @@ UNUSED void log_properties(pulsar::node::base::node * node_in)
     }
 }
 
+std::string get_compressor_state(pulsar::node::base::node * node_in)
+{
+    std::string buf;
+
+    buf += node_in->name + " ";
+    buf += "reduction: " + node_in->peek("state:Gain Reduction") + " dB; ";
+    buf += "output level: " + node_in->peek("state:Output Level") + " dB";
+
+    return buf;
+}
+
 UNUSED static void process_audio()
 {
-
     log_info("Will start processing audio");
 
     auto config = pulsar::config::file::make("dev-config.yaml");
     auto domain_info = config->get_domain();
     auto domain = pulsar::config::make_domain(domain_info);
     auto domain_num_threads = domain_info->get_config()["threads"].as<pulsar::size_type>();
-    auto node_list = pulsar::config::make_nodes(domain_info, domain);
+    auto node_map = pulsar::config::make_nodes(domain_info, domain);
 
     log_debug("audio processing is being started");
     domain->activate(domain_num_threads);
 
-    for(auto&& node : node_list) {
-        log_properties(node);
+    for(auto&& node : node_map) {
+        log_properties(node.second);
     }
 
+    std::vector<pulsar::node::base::node *> compressor_nodes;
+    compressor_nodes.push_back(node_map["comp_left"]);
+    compressor_nodes.push_back(node_map["comp_right"]);
+
     while(1) {
-        std::this_thread::sleep_for(1s);
+        for(auto&& compressor : compressor_nodes) {
+            log_debug(get_compressor_state(compressor));
+        }
+
+        std::this_thread::sleep_for(50ms);
     }
 }
 

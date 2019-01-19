@@ -6,6 +6,14 @@ templates:
     plugin:
       filename: /usr/lib/ladspa/amp.so
       id: 1048
+  compressor:
+      class: pulsar::ladspa::node
+      plugin:
+        filename: /usr/lib/ladspa/ZamComp-ladspa.so
+      config:
+        Knee: 15
+        Threshold: -20
+        Makeup: 6
 
 domain:
   config:
@@ -20,13 +28,18 @@ domain:
       inputs: [ left_out, right_out ]
       outputs: [ right_in, left_in ]
       connect:
-        left_in: gain_left1:Input
-        right_in: gain_right1:Input
+        left_in: comp_left:Audio Input 1
+        right_in: comp_right:Audio Input 1
 
     - name: comp_left
-      class: pulsar::ladspa::node
-      plugin:
-        filename: /usr/lib/ladspa/ZamComp-ladspa.so
+      template: compressor
+      connect:
+        Audio Output 1: gain_left1:Input
+
+    - name: comp_right
+      template: compressor
+      connect:
+        Audio Output 1: gain_right1:Input
 
     - name: gain_left1
       template: gain
