@@ -44,6 +44,7 @@ struct node {
     lock_type make_lock();
     virtual void handle_activate() = 0;
     virtual void handle_run();
+    property::generic& add_property(const std::string& name_in, const property::value_type& type_in);
 
     public:
     const std::string name;
@@ -53,7 +54,6 @@ struct node {
     std::shared_ptr<pulsar::domain> get_domain();
     const std::map<std::string, property::generic *>& get_properties();
     property::generic& get_property(const std::string& name_in);
-    property::generic& add_property(const std::string& name_in, const property::value_type& type_in);
     virtual void init();
     void activate();
     void run();
