@@ -55,7 +55,7 @@ static void apply_node_template(YAML::Node& dest_in, const YAML::Node& src_in)
                     apply_node_template(new_node, src_in[key_name]);
                 }
             } else {
-              dest_in[key_name] = i.second;
+                dest_in[key_name] = i.second;
             }
         }
     } else if (src_in.IsSequence()) {
@@ -76,34 +76,12 @@ static void apply_node_template(YAML::Node& dest_in, const YAML::Node& src_in)
     }
 }
 
-static pulsar::node::base::node * make_node(const YAML::Node& node_yaml_in, std::shared_ptr<pulsar::config::domain> config_in,std::shared_ptr<pulsar::domain> domain_in)
+static pulsar::node::base::node * make_class_node(const YAML::Node& node_yaml_in, std::shared_ptr<pulsar::domain> domain_in)
 {
     auto node_yaml = node_yaml_in;
-    auto template_node = node_yaml["template"];
-
-    if (template_node) {
-        assert(template_node.IsScalar());
-
-        auto template_name = template_node.as<std::string>();
-        auto template_src = config_in->get_parent()->get_template(template_name);
-        apply_node_template(node_yaml, template_src);
-    }
-
-    // check for the name after applying the template so
-    // the template might provide one
     auto node_name_node = node_yaml["name"];
-
-    if (! node_name_node) {
-        system_fault("node configuration did not include a name");
-    }
-
-    auto class_name_node = node_yaml["class"];
-
-    if (! class_name_node) {
-        system_fault("node configuration did not include a class");
-    }
-
     auto node_name = node_name_node.as<std::string>();
+    auto class_name_node = node_yaml["class"];
     auto class_name = class_name_node.as<std::string>();
 
     auto node_config_node = node_yaml["config"];
@@ -147,6 +125,52 @@ static pulsar::node::base::node * make_node(const YAML::Node& node_yaml_in, std:
         }
     }
 
+    return new_node;
+}
+
+static pulsar::node::base::node * make_chain_node(const YAML::Node& /* node_yaml_in */, std::shared_ptr<pulsar::config::domain> /* config_in */, std::shared_ptr<pulsar::domain> /* domain_in */)
+{
+    system_fault("can't yet make a chain node");
+}
+
+static pulsar::node::base::node * make_node(const YAML::Node& node_yaml_in, std::shared_ptr<pulsar::config::domain> config_in,std::shared_ptr<pulsar::domain> domain_in)
+{
+    node::base::node * new_node = nullptr;
+    auto node_yaml = node_yaml_in;
+    auto template_node = node_yaml["template"];
+
+    if (template_node) {
+        assert(template_node.IsScalar());
+
+        auto template_name = template_node.as<std::string>();
+        auto template_src = config_in->get_parent()->get_template(template_name);
+        apply_node_template(node_yaml, template_src);
+    }
+
+    // check for the name after applying the template so
+    // the template might provide one
+    auto node_name_node = node_yaml["name"];
+
+    if (! node_name_node) {
+        system_fault("node configuration did not include a name");
+    }
+
+    auto node_name = node_name_node.as<std::string>();
+
+    auto class_name_node = node_yaml["class"];
+    auto chain_name_node = node_yaml["chain"];
+
+    if (class_name_node && chain_name_node) {
+        system_fault("specify class or chain name but not both; node = ", node_name);
+    } else if (class_name_node) {
+        new_node = make_class_node(node_yaml, domain_in);
+    } else if (chain_name_node) {
+        new_node = make_chain_node(node_yaml, config_in, domain_in);
+    } else {
+        system_fault("node did not have a class or chain name set; node = ", node_name);
+    }
+
+    assert(new_node != nullptr);
     return new_node;
 }
 
@@ -300,14 +324,26 @@ std::shared_ptr<domain> file::get_domain(const std::string& name_in)
     return domain::make(name_in, domains[name_in], this->shared_from_this());
 }
 
-YAML::Node file::get_template(const std::string& name_in)
+const YAML::Node file::get_templates()
 {
     auto templates_node = yaml_root["templates"];
+
     if (! templates_node) {
         system_fault("there was not a template section in the config file");
     }
 
-    auto template_node = templates_node[name_in];
+    if (! templates_node.IsMap()) {
+        system_fault("template section must be a map");
+    }
+
+    return templates_node;
+}
+
+YAML::Node file::get_template(const std::string& name_in)
+{
+
+    auto template_node = get_templates()[name_in];
+
     if (! template_node) {
         system_fault("there was no node template named ", name_in);
     }
