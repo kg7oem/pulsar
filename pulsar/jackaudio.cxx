@@ -117,7 +117,7 @@ static int wrap_nframes_cb(jackaudio::jack_nframes_t nframes_in, void * arg_in)
     return 0;
 }
 
-void jackaudio::node::handle_activate()
+void jackaudio::node::activate()
 {
     assert(jack_client == nullptr);
 
@@ -144,6 +144,8 @@ void jackaudio::node::handle_activate()
     }
 
     start();
+
+    pulsar::node::base::node::activate();
 }
 
 // FIXME right now a node with no inputs will never run.
@@ -151,7 +153,7 @@ void jackaudio::node::handle_activate()
 // work if it supplies audio only.
 void jackaudio::node::handle_jack_process(jack_nframes_t nframes_in)
 {
-    log_trace("jackaudio process callback invoked");
+    log_trace("********** jackaudio process callback invoked");
 
     auto lock = make_lock();
     auto done_lock = make_done_lock();
@@ -172,7 +174,7 @@ void jackaudio::node::handle_jack_process(jack_nframes_t nframes_in)
         auto buffer = std::make_shared<audio::buffer>();
 
         buffer->init(nframes_in, jack_buffer);
-        output->set_buffer(buffer, true);
+        output->set_buffer(buffer);
     }
 
     lock.unlock();
@@ -182,11 +184,11 @@ void jackaudio::node::handle_jack_process(jack_nframes_t nframes_in)
     done_cond.wait(done_lock, [this]{ return done_flag; });
 
     done_flag = false;
-    log_trace("giving control back to jackaudio");
     watchdog->reset();
+    log_trace("********** giving control back to jackaudio");
 }
 
-void jackaudio::node::handle_run()
+void jackaudio::node::run()
 {
     log_trace("jackaudio node is now running");
 
@@ -201,7 +203,13 @@ void jackaudio::node::handle_run()
     auto done_lock = make_done_lock();
     done_flag = true;
     done_cond.notify_all();
+
+    pulsar::node::base::node::run();
 }
+
+// notifications happened from inside the jackaudio callback
+void jackaudio::node::notify()
+{ }
 
 void jackaudio::node::start()
 {

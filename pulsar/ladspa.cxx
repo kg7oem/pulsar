@@ -345,12 +345,13 @@ void node::init()
     pulsar::node::base::node::init();
 }
 
-void node::handle_activate()
+void node::activate()
 {
     ladspa->activate();
+    pulsar::node::base::node::activate();
 }
 
-void node::handle_run()
+void node::run()
 {
     log_trace("running LADSPA plugin");
 
@@ -380,7 +381,7 @@ void node::handle_run()
 
     log_trace("done running LADSPA plugin");
 
-    pulsar::node::base::node::handle_run();
+    pulsar::node::base::node::run();
 }
 
 } // namespace ladspa

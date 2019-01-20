@@ -106,27 +106,24 @@ property::generic& base::node::add_property(const std::string& name_in, property
 void base::node::activate()
 {
     audio.activate();
-
-    handle_activate();
-
     reset_cycle();
 }
 
 void base::node::init_cycle()
 {
-
+    log_trace("initializing cycle for node ", name);
+    audio.init_cycle();
 }
 
 void base::node::will_run()
 {
-
+    init_cycle();
+    domain->add_ready_node(this);
 }
 
 void base::node::run()
 {
-    auto lock = make_lock();
-    handle_run();
-    reset_cycle();
+
 }
 
 void base::node::did_run()
@@ -136,7 +133,7 @@ void base::node::did_run()
 
 void base::node::notify()
 {
-
+    audio.notify();
 }
 
 void base::node::reset_cycle()
@@ -154,23 +151,19 @@ void base::node::init()
 
 }
 
-void base::node::handle_activate()
-{ }
-
-void base::node::handle_run()
+void base::node::execute()
 {
-    audio.notify();
+    auto lock = make_lock();
+
+    run();
+    did_run();
+    notify();
+    reset_cycle();
 }
 
 void base::node::do_ready()
 {
-    handle_ready();
-}
-
-void base::node::handle_ready()
-{
-    audio.init_cycle();
-    domain->add_ready_node(this);
+    will_run();
 }
 
 bool base::node::is_ready()
@@ -182,8 +175,27 @@ chain::chain(const std::string& name_in, std::shared_ptr<pulsar::domain> domain_
 : base::node(name_in, domain_in)
 { }
 
-void chain::handle_run()
-{ }
+void chain::will_run()
+{
+    auto lock = make_lock();
+
+    // a chain node does not use any CPU since all inputs and outputs
+    // are forwarded but a full cycle still needs to happen so the
+    // ready node queue can be skipped
+    init_cycle();
+    reset_cycle();
+}
+
+void chain::execute()
+{
+    system_fault("chain nodes should never try to execute");
+}
+
+// notifications happen via forwarding
+void chain::notify()
+{
+    system_fault("chain nodes should never try to notify");
+}
 
 } // namespace node
 

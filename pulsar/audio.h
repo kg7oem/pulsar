@@ -114,8 +114,8 @@ class output : public channel {
     virtual void reset_cycle() override;
     void add_forward(output_forward * forward_in);
     std::shared_ptr<audio::buffer> get_buffer();
-    void set_buffer(std::shared_ptr<audio::buffer> buffer_in, const bool notify_in = false);
-    void notify(std::shared_ptr<audio::buffer> buffer_in = nullptr);
+    void set_buffer(std::shared_ptr<audio::buffer> buffer_in);
+    void notify();
     void connect(input * source_in);
     void forward(output * to_in);
 };

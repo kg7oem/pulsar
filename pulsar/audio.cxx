@@ -274,6 +274,7 @@ void audio::output::init_cycle()
 
 void audio::output::reset_cycle()
 {
+    log_trace("reseting audio output buffer for ", parent->name, ":", name);
     buffer = nullptr;
 }
 
@@ -284,25 +285,16 @@ void audio::output::add_forward(UNUSED output_forward * forward_in)
 
 std::shared_ptr<audio::buffer> audio::output::get_buffer()
 {
-    return parent->get_domain()->get_zero_buffer();
-
-    // if (buffer == nullptr) {
-    //     return parent->get_domain()->get_zero_buffer();
-    // }
-
-    // buffer = std::make_shared<audio::buffer>();
-    // buffer->init(parent->get_domain()->buffer_size);
-
-    // return buffer;
+    assert(buffer != nullptr);
+    return buffer;
 }
 
-void audio::output::set_buffer(std::shared_ptr<audio::buffer> buffer_in, const bool notify_in)
+void audio::output::set_buffer(std::shared_ptr<audio::buffer> buffer_in)
 {
-    buffer = buffer_in;
+    assert(buffer_in != nullptr);
 
-    if (notify_in) {
-        notify();
-    }
+    buffer = buffer_in;
+    notify();
 }
 
 void audio::output::connect(audio::input * sink_in)
@@ -319,17 +311,15 @@ void audio::output::forward(output * to_in)
     to_in->add_forward(new_forward);
 }
 
-void audio::output::notify(std::shared_ptr<audio::buffer> buffer_in)
+void audio::output::notify()
 {
-
-    if (buffer_in != nullptr) {
-        buffer = buffer_in;
+    // FIXME make an assert macro for this
+    if (buffer == nullptr) {
+        system_fault("buffer was null for ", parent->name, ":", name);
     }
 
-    assert(buffer != nullptr);
-
     for(auto&& forward : forwards) {
-        forward->to->notify(buffer);
+        forward->to->set_buffer(buffer);
     }
 
     for(auto&& link : links) {
@@ -348,14 +338,14 @@ void audio::link::reset()
     // FIXME does this need a lock? The flag is atomic
     // and locks are needed to wake up a condvar
     auto lock = lock_type(available_mutex);
-    log_trace("resetting link");
+    log_trace("resetting link for ",  sink->get_parent()->name, ":", sink->name, " -> ", source->get_parent()->name, ":", source->name);
     available_flag = true;
     available_condition.notify_all();
 }
 
 void audio::link::notify(std::shared_ptr<audio::buffer> ready_buffer_in, const bool blocking_in)
 {
-    log_trace("got notification for ", sink->get_parent()->name, ":", sink->name);
+    log_trace("got notification for ", source->get_parent()->name, ":", source->name);
 
     auto lock = lock_type(available_mutex);
 

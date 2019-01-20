@@ -74,12 +74,13 @@ struct node {
     * init
     * activate
     *
-    *   init_cycle
-    *   wait_inputs
+    * wait_inputs
     *
-    *   will_run
+    * will_run
+    *   init_cycle
     *   enqueue
     *
+    * execute
     *   run
     *   did_run
     *   notify
@@ -90,7 +91,9 @@ struct node {
     *
     */
 
-    virtual void activate();
+    // needs to be reachable by templated factory methods
+    public: virtual void activate();
+    protected:
     virtual void init_cycle();
     virtual void will_run();
     virtual void run();
@@ -99,10 +102,11 @@ struct node {
     virtual void reset_cycle();
     virtual void deactivate();
 
-    virtual void handle_activate();
+    // virtual void handle_activate();
+    virtual void execute();
     void do_ready();
-    virtual void handle_ready();
-    virtual void handle_run();
+    // virtual void handle_ready();
+    // virtual void handle_run();
     property::generic& add_property(const std::string& name_in, const property::value_type& type_in);
     property::generic& add_property(const std::string& name_in, property::generic * property_in);
 
@@ -123,7 +127,9 @@ struct node {
 
 class chain : public base::node {
     protected:
-    virtual void handle_run() override;
+    virtual void will_run() override;
+    virtual void execute() override;
+    virtual void notify() override;
 
     public:
     chain(const std::string& name_in, std::shared_ptr<pulsar::domain> domain_in);

@@ -115,7 +115,7 @@ void domain::be_thread(domain * domain_in)
         lock.unlock();
 
         log_trace("running node: ", ready_node->name);
-        ready_node->run();
+        ready_node->execute();
         log_trace("done running node: ", ready_node->name);
     }
 }
