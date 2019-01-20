@@ -38,7 +38,7 @@ namespace audio {
 
 struct input;
 struct input_forward;
-struct forward;
+// struct forward;
 struct link;
 struct output;
 struct output_forward;
