@@ -19,13 +19,15 @@
 using namespace std;
 using namespace std::chrono_literals;
 
+#define LOG_LEVEL logjam::loglevel::debug
+
 // Give valgrind lots of time
 #define ALARM_TIMEOUT 5
 
 static void init_logging()
 {
     auto logging = logjam::logengine::get_engine();
-    auto console = make_shared<logjam::logconsole>(logjam::loglevel::debug);
+    auto console = make_shared<logjam::logconsole>(LOG_LEVEL);
 
     logging->add_destination(console);
     logging->start();

@@ -20,6 +20,8 @@ chains:
   remove_squelch_tail:
     inputs: [ in ]
     outputs: [ out ]
+    state:
+      - gate:*
     forward:
       in:
         - delay:Input
@@ -41,9 +43,6 @@ chains:
         plugin:
           filename: /usr/lib/ladspa/ZamGate-ladspa.so
         forward:
-          # This needs to some how wind up being
-          # a part of the chain output but it can't
-          # connect to an output channel.
           Audio Output 1: remove_squelch_tail:out
 
 domain:
@@ -61,7 +60,7 @@ domain:
       connect:
         left_in: comp_left:*
         right_in: comp_right:*
-        # demod_in: tail_eater:in
+        demod_in: tail_eater:in
 
     - name: comp_left
       template: compressor
@@ -111,4 +110,4 @@ domain:
     - name: tail_eater
       chain: remove_squelch_tail
       connect:
-        # out: jack:demod_out
+        out: jack:demod_out

@@ -159,6 +159,10 @@ void audio::input::link_ready(link * link_in, std::shared_ptr<audio::buffer> buf
     if (--links_waiting == 0) {
         parent->audio.source_ready(this);
     }
+
+    for(auto&& forward : forwards) {
+        forward->to->link_ready(link_in, buffer_in);
+    }
 }
 
 pulsar::size_type audio::input::get_links_waiting()
