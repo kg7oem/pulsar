@@ -56,7 +56,6 @@ class node : public pulsar::node::base::node {
     public:
     node(const std::string& name_in, std::shared_ptr<pulsar::domain> domain_in);
     ~node();
-    virtual void reset();
 };
 
 } // namespace jackaudio

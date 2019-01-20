@@ -61,11 +61,6 @@ pulsar::node::base::node::lock_type jackaudio::node::make_done_lock()
     return node::lock_type(done_mutex);
 }
 
-void jackaudio::node::reset()
-{
-    pulsar::node::base::node::reset();
-}
-
 void jackaudio::node::open(const std::string& jack_name_in)
 {
     jack_client = jack_client_open(jack_name_in.c_str(), jack_options, 0);

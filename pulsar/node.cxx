@@ -103,11 +103,6 @@ property::generic& base::node::add_property(const std::string& name_in, property
     return *property_in;
 }
 
-void base::node::init()
-{
-
-}
-
 void base::node::activate()
 {
     audio.activate();
@@ -117,8 +112,15 @@ void base::node::activate()
     reset_cycle();
 }
 
-void base::node::handle_activate()
-{ }
+void base::node::init_cycle()
+{
+
+}
+
+void base::node::will_run()
+{
+
+}
 
 void base::node::run()
 {
@@ -126,6 +128,34 @@ void base::node::run()
     handle_run();
     reset_cycle();
 }
+
+void base::node::did_run()
+{
+
+}
+
+void base::node::notify()
+{
+
+}
+
+void base::node::reset_cycle()
+{
+    audio.reset_cycle();
+}
+
+void base::node::deactivate()
+{
+    system_fault("cant deactivate yet");
+}
+
+void base::node::init()
+{
+
+}
+
+void base::node::handle_activate()
+{ }
 
 void base::node::handle_run()
 {
@@ -141,11 +171,6 @@ void base::node::handle_ready()
 {
     audio.init_cycle();
     domain->add_ready_node(this);
-}
-
-void base::node::reset_cycle()
-{
-    audio.reset_cycle();
 }
 
 bool base::node::is_ready()

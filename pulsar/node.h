@@ -24,28 +24,6 @@
 #include "property.h"
 #include "system.h"
 
-/*
- *
- * Node lifecycle
- *
- * construct
- * activate
- *
- *   init_cycle
- *   wait_inputs
- *
- *   will_run
- *   run
- *   did_run
- *
- *   notify_outputs
- *   reset_cycle
- *
- * deactivate
- * deconstruct
- *
- */
-
 namespace pulsar {
 
 namespace config {
@@ -72,7 +50,10 @@ struct node {
     friend void audio::component::source_ready(audio::input *);
     friend audio::input * audio::component::add_input(const std::string& name_in);
     friend audio::output * audio::component::add_output(const std::string& name_in);
-    friend pulsar::node::base::node * pulsar::config::make_chain_node(const YAML::Node& node_yaml_in, const YAML::Node& chain_yaml_in, std::shared_ptr<pulsar::config::domain> config_in, std::shared_ptr<pulsar::domain> domain_in);
+    friend node * config::make_chain_node(const YAML::Node& node_yaml_in, const YAML::Node& chain_yaml_in, std::shared_ptr<pulsar::config::domain> config_in, std::shared_ptr<pulsar::domain> domain_in);
+    // FIXME only run() is needed but run() is static and friend didn't like that
+    friend pulsar::domain;
+
     using mutex_type = std::mutex;
     using lock_type = std::unique_lock<mutex_type>;
 
@@ -84,6 +65,40 @@ struct node {
     // FIXME pointer because I can't figure out how to make emplace() work
     std::map<std::string, property::generic *> properties;
     lock_type make_lock();
+
+    /*
+    *
+    * Typical node lifecycle
+    *
+    * construct
+    * init
+    * activate
+    *
+    *   init_cycle
+    *   wait_inputs
+    *
+    *   will_run
+    *   enqueue
+    *
+    *   run
+    *   did_run
+    *   notify
+    *   reset_cycle
+    *
+    * deactivate
+    * deconstruct
+    *
+    */
+
+    virtual void activate();
+    virtual void init_cycle();
+    virtual void will_run();
+    virtual void run();
+    virtual void did_run();
+    virtual void notify();
+    virtual void reset_cycle();
+    virtual void deactivate();
+
     virtual void handle_activate();
     void do_ready();
     virtual void handle_ready();
@@ -101,9 +116,6 @@ struct node {
     property::generic& get_property(const std::string& name_in);
     std::string peek(const std::string& name_in);
     virtual void init();
-    void activate();
-    void run();
-    virtual void reset_cycle();
     virtual bool is_ready();
 };
 
