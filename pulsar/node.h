@@ -47,10 +47,10 @@ std::string fully_qualify_property_name(const std::string& name_in);
 namespace base {
 
 struct node {
+    friend void audio::component::source_ready(audio::input *);
     friend audio::input * audio::component::add_input(const std::string& name_in);
     friend audio::output * audio::component::add_output(const std::string& name_in);
     friend pulsar::node::base::node * pulsar::config::make_chain_node(const YAML::Node& node_yaml_in, const YAML::Node& chain_yaml_in, std::shared_ptr<pulsar::config::domain> config_in, std::shared_ptr<pulsar::domain> domain_in);
-
     using mutex_type = std::mutex;
     using lock_type = std::unique_lock<mutex_type>;
 
@@ -62,7 +62,8 @@ struct node {
     // FIXME pointer because I can't figure out how to make emplace() work
     std::map<std::string, property::generic *> properties;
     lock_type make_lock();
-    virtual void handle_activate() = 0;
+    virtual void handle_activate();
+    virtual void handle_ready();
     virtual void handle_run();
     property::generic& add_property(const std::string& name_in, const property::value_type& type_in);
     property::generic& add_property(const std::string& name_in, property::generic * property_in);
@@ -81,15 +82,12 @@ struct node {
     void run();
     virtual void reset();
     virtual bool is_ready();
-    virtual void handle_ready();
 };
 
 } // namespace base
 
 class chain : public base::node {
     protected:
-    virtual void handle_activate() override;
-    virtual void handle_ready() override;
     virtual void handle_run() override;
 
     public:

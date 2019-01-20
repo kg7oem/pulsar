@@ -117,6 +117,9 @@ void base::node::activate()
     reset();
 }
 
+void base::node::handle_activate()
+{ }
+
 void base::node::run()
 {
     auto lock = make_lock();
@@ -147,14 +150,6 @@ bool base::node::is_ready()
 chain::chain(const std::string& name_in, std::shared_ptr<pulsar::domain> domain_in)
 : base::node(name_in, domain_in)
 { }
-
-void chain::handle_activate()
-{ }
-
-void chain::handle_ready()
-{
-    base::node::handle_ready();
-}
 
 void chain::handle_run()
 { }
