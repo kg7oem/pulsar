@@ -18,12 +18,11 @@ templates:
 
 chains:
   remove_squelch_tail:
-    inputs: [ in ]
-    outputs: [ out ]
+    channels: 1
     state:
       - gate:*
     forward:
-      in:
+      in_1:
         - delay:Input
         - gate:Sidechain Input
     nodes:
@@ -43,7 +42,7 @@ chains:
         plugin:
           filename: /usr/lib/ladspa/ZamGate-ladspa.so
         forward:
-          Audio Output 1: remove_squelch_tail:out
+          Audio Output 1: remove_squelch_tail:out_1
 
 domain:
   config:
@@ -60,7 +59,7 @@ domain:
       connect:
         left_in: comp_left:*
         right_in: comp_right:*
-        demod_in: tail_eater:in
+        demod_in: tail_eater:in_1
 
     - name: comp_left
       template: compressor
@@ -103,4 +102,4 @@ domain:
     - name: tail_eater
       chain: remove_squelch_tail
       connect:
-        out: jack:demod_out
+        out_1: jack:demod_out

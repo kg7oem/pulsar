@@ -236,6 +236,7 @@ pulsar::node::base::node * make_chain_node(const YAML::Node& node_yaml_in, const
 
     auto chain_name = node_yaml_in["chain"].as<std::string>();
     auto node_name = node_yaml_in["name"].as<std::string>();
+    auto chain_channels_node = chain_yaml_in["channels"];
     auto chain_outputs_node = chain_yaml_in["outputs"];
     auto chain_inputs_node = chain_yaml_in["inputs"];
     auto forward_node = chain_yaml_in["forward"];
@@ -258,22 +259,55 @@ pulsar::node::base::node * make_chain_node(const YAML::Node& node_yaml_in, const
         system_fault("chain forward section was not a map");
     }
 
-    if (! chain_outputs_node && ! chain_inputs_node) {
+    if (! chain_channels_node && ! chain_outputs_node && ! chain_inputs_node) {
         system_fault("chain did not have any outputs or inputs");
+    }
+
+    if (chain_channels_node && (chain_outputs_node || chain_inputs_node)) {
+        system_fault("chain can have a channels section or input / output sections but not both");
     }
 
     node_yaml["class"] = "pulsar::node::chain";
 
     auto chain_root_node = make_class_node(node_yaml_in, domain_in);
 
-    for(size_type i = 0; i < chain_outputs_node.size(); i++) {
-        auto output_name = chain_outputs_node[i].as<std::string>();
-        chain_root_node->audio.add_output(output_name);
+    if (chain_outputs_node) {
+        if (! chain_outputs_node.IsSequence()) {
+            system_fault("outputs section was not a sequence");
+        }
+
+        for(size_type i = 0; i < chain_outputs_node.size(); i++) {
+            auto output_name = chain_outputs_node[i].as<std::string>();
+            chain_root_node->audio.add_output(output_name);
+        }
     }
 
-    for(size_type i = 0; i < chain_inputs_node.size(); i++) {
-        auto input_name = chain_inputs_node[i].as<std::string>();
-        chain_root_node->audio.add_input(input_name);
+    if (chain_inputs_node) {
+        if (! chain_inputs_node.IsSequence()) {
+            system_fault("inputs section was not a sequence");
+        }
+
+        for(size_type i = 0; i < chain_inputs_node.size(); i++) {
+            auto input_name = chain_inputs_node[i].as<std::string>();
+            chain_root_node->audio.add_input(input_name);
+        }
+    }
+
+    if (chain_channels_node) {
+        if (! chain_channels_node.IsScalar()) {
+            system_fault("channels section was not a scalar");
+        }
+
+        auto num_channels = chain_channels_node.as<size_type>();
+        // channel counting starts at 1
+        for(size_type i = 1; i < num_channels + 1; i++) {
+            auto channel_number = std::to_string(i);
+            auto input_name = "in_" + channel_number;
+            auto output_name = "out_" + channel_number;
+
+            chain_root_node->audio.add_input(input_name);
+            chain_root_node->audio.add_output(output_name);
+        }
     }
 
     // store the name of the chain so it can be found and connected
