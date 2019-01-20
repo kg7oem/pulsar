@@ -155,11 +155,14 @@ void audio::input::link_ready(link * link_in, std::shared_ptr<audio::buffer> buf
 {
     log_trace("in link_ready() for ", parent->name, ":", name);
 
-    // FIXME this is not thread safe - it needs locking
-    // or maybe this could be an atomic queue?
-    link_buffers[link_in] = buffer_in;
+    size_type now_waiting;
 
-    auto now_waiting = --links_waiting;
+    {
+        auto lock = lock_type(link_buffers_mutex);
+        link_buffers[link_in] = buffer_in;
+    }
+
+    now_waiting = --links_waiting;
 
     log_trace("waiting buffers: ", now_waiting, "; node: ", get_parent()->name);
 
@@ -203,7 +206,7 @@ std::shared_ptr<audio::buffer> audio::input::get_buffer()
         return parent->get_domain()->get_zero_buffer();
     } else if (num_links == 1) {
         log_trace("returning pointer to link's ready buffer for ", input_name);
-        // return links[0]->get_ready_buffer();
+        auto lock = lock_type(link_buffers_mutex);
         return link_buffers.begin()->second;
     } else {
         log_trace("returning pointer to input's mix buffer for", input_name);
@@ -214,7 +217,10 @@ std::shared_ptr<audio::buffer> audio::input::get_buffer()
 // FIXME this should overload audio::channel::reset()
 void audio::input::reset()
 {
-    link_buffers.empty();
+    {
+        auto lock = lock_type(link_buffers_mutex);
+        link_buffers.empty();
+    }
 
     for(auto&& link : links) {
         link->reset();

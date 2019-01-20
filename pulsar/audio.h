@@ -80,10 +80,14 @@ class channel {
 };
 
 class input : public channel {
+    using mutex_type = std::mutex;
+    using lock_type = std::unique_lock<std::mutex>;
+
     std::atomic<pulsar::size_type> links_waiting = ATOMIC_VAR_INIT(0);
     std::atomic<size_type> num_forwards_to_us = ATOMIC_VAR_INIT(0);
     std::vector<input_forward *> forwards;
     std::map<link *, std::shared_ptr<audio::buffer>> link_buffers;
+    mutex_type link_buffers_mutex;
 
     public:
     input(const std::string& name_in, node::base::node * parent_in);
