@@ -122,6 +122,12 @@ void audio::channel::activate()
     // buffer->init(parent->get_domain()->buffer_size);
 }
 
+void audio::channel::init_cycle()
+{ }
+
+void audio::channel::reset_cycle()
+{ }
+
 void audio::channel::add_link(link * link_in)
 {
     links.push_back(link_in);
@@ -136,6 +142,23 @@ audio::input::input(const std::string& name_in, node::base::node * parent_in)
 : audio::channel(name_in, parent_in)
 {
 
+}
+
+void audio::input::reset_cycle()
+{
+    {
+        auto lock = lock_type(link_buffers_mutex);
+        link_buffers.empty();
+    }
+
+    for(auto&& link : links) {
+        link->reset();
+    }
+
+    auto waiting_things = links.size() + num_forwards_to_us;
+    log_trace("resetting audio input ", parent->name, ":", name, "; waiting things: ", waiting_things);
+
+    links_waiting.store(waiting_things);
 }
 
 void audio::input::connect(audio::output * source_in) {
@@ -154,6 +177,9 @@ void audio::input::forward(input * to_in)
 void audio::input::link_ready(link * link_in, std::shared_ptr<audio::buffer> buffer_in)
 {
     log_trace("in link_ready() for ", parent->name, ":", name);
+
+    assert(link_in != nullptr);
+    assert(buffer_in != nullptr);
 
     size_type now_waiting;
 
@@ -207,29 +233,13 @@ std::shared_ptr<audio::buffer> audio::input::get_buffer()
     } else if (num_links == 1) {
         log_trace("returning pointer to link's ready buffer for ", input_name);
         auto lock = lock_type(link_buffers_mutex);
+        assert(link_buffers.begin() != link_buffers.end());
+        assert(link_buffers.begin()->second != nullptr);
         return link_buffers.begin()->second;
     } else {
         log_trace("returning pointer to input's mix buffer for", input_name);
         return mix_sinks();
     }
-}
-
-// FIXME this should overload audio::channel::reset()
-void audio::input::reset()
-{
-    {
-        auto lock = lock_type(link_buffers_mutex);
-        link_buffers.empty();
-    }
-
-    for(auto&& link : links) {
-        link->reset();
-    }
-
-    auto waiting_things = links.size() + num_forwards_to_us;
-    log_trace("resetting audio input ", parent->name, ":", name, "; waiting things: ", waiting_things);
-
-    links_waiting.store(waiting_things);
 }
 
 std::shared_ptr<audio::buffer> audio::input::mix_sinks()
@@ -252,6 +262,21 @@ audio::output::output(const std::string& name_in, node::base::node * parent_in)
 
 }
 
+void audio::output::init_cycle()
+{
+    log_trace("creating output buffer for ", parent->name, ":", name);
+
+    buffer = std::make_shared<audio::buffer>();
+    buffer->init(parent->get_domain()->buffer_size);
+
+    audio::channel::init_cycle();
+}
+
+void audio::output::reset_cycle()
+{
+    buffer = nullptr;
+}
+
 void audio::output::add_forward(UNUSED output_forward * forward_in)
 {
     // forwards.push_back(forward_in);
@@ -259,8 +284,16 @@ void audio::output::add_forward(UNUSED output_forward * forward_in)
 
 std::shared_ptr<audio::buffer> audio::output::get_buffer()
 {
-    assert(buffer != nullptr);
-    return buffer;
+    return parent->get_domain()->get_zero_buffer();
+
+    // if (buffer == nullptr) {
+    //     return parent->get_domain()->get_zero_buffer();
+    // }
+
+    // buffer = std::make_shared<audio::buffer>();
+    // buffer->init(parent->get_domain()->buffer_size);
+
+    // return buffer;
 }
 
 void audio::output::set_buffer(std::shared_ptr<audio::buffer> buffer_in, const bool notify_in)
@@ -270,13 +303,6 @@ void audio::output::set_buffer(std::shared_ptr<audio::buffer> buffer_in, const b
     if (notify_in) {
         notify();
     }
-}
-
-// FIXME this should go away and just rely on audio::channel::reset()
-void audio::output::reset()
-{
-    buffer = std::make_shared<audio::buffer>();
-    buffer->init(parent->get_domain()->buffer_size);
 }
 
 void audio::output::connect(audio::input * sink_in)
@@ -295,18 +321,19 @@ void audio::output::forward(output * to_in)
 
 void audio::output::notify(std::shared_ptr<audio::buffer> buffer_in)
 {
-    std::shared_ptr<audio::buffer> notify_buffer = buffer;
 
     if (buffer_in != nullptr) {
-        notify_buffer = buffer_in;
+        buffer = buffer_in;
     }
 
+    assert(buffer != nullptr);
+
     for(auto&& forward : forwards) {
-        forward->to->notify(notify_buffer);
+        forward->to->notify(buffer);
     }
 
     for(auto&& link : links) {
-        link->notify(notify_buffer);
+        link->notify(buffer);
     }
 }
 
@@ -328,6 +355,8 @@ void audio::link::reset()
 
 void audio::link::notify(std::shared_ptr<audio::buffer> ready_buffer_in, const bool blocking_in)
 {
+    log_trace("got notification for ", sink->get_parent()->name, ":", sink->name);
+
     auto lock = lock_type(available_mutex);
 
     if (! available_flag) {
@@ -374,6 +403,36 @@ audio::component::~component()
     sinks.clear();
 }
 
+void audio::component::init_cycle()
+{
+    for(auto&& output : sinks) {
+        output.second->init_cycle();
+    }
+
+    for(auto&& input : sources) {
+        input.second->init_cycle();
+    }
+}
+
+void audio::component::reset_cycle()
+{
+    pulsar::size_type inputs_with_links = 0;
+
+    for(auto&& output : sinks) {
+        output.second->reset_cycle();
+    }
+
+    for(auto&& input : sources) {
+        input.second->reset_cycle();
+
+        if (input.second->get_links_waiting() > 0) {
+            inputs_with_links++;
+        }
+    }
+
+    sources_waiting.store(inputs_with_links);
+}
+
 pulsar::size_type audio::component::get_sources_waiting()
 {
     return sources_waiting.load();
@@ -386,12 +445,12 @@ bool audio::component::is_ready()
 
 void audio::component::activate()
 {
-    for (auto&& input : sources) {
-        input.second->activate();
+    for (auto&& output : sinks) {
+        output.second->activate();
     }
 
-    for(auto&& output : sinks) {
-        output.second->activate();
+    for(auto&& input : sources) {
+        input.second->activate();
     }
 }
 
@@ -402,29 +461,10 @@ void audio::component::notify()
     }
 }
 
-void audio::component::reset()
-{
-    pulsar::size_type inputs_with_links = 0;
-
-    for(auto&& output : sinks) {
-        output.second->reset();
-    }
-
-    for(auto&& input : sources) {
-        input.second->reset();
-
-        if (input.second->get_links_waiting() > 0) {
-            inputs_with_links++;
-        }
-    }
-
-    sources_waiting.store(inputs_with_links);
-}
-
 void audio::component::source_ready(audio::input *)
 {
     if (--sources_waiting == 0 && parent->is_ready()) {
-        parent->handle_ready();
+        parent->do_ready();
     }
 }
 

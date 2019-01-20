@@ -74,7 +74,8 @@ class channel {
     const std::string name;
     virtual ~channel();
     void activate();
-    virtual void reset() = 0;
+    virtual void init_cycle();
+    virtual void reset_cycle();
     void add_link(link * link_in);
     node::base::node * get_parent();
 };
@@ -90,12 +91,13 @@ class input : public channel {
     mutex_type link_buffers_mutex;
 
     public:
+    // virtual void init_cycle() override;
+    virtual void reset_cycle() override;
     input(const std::string& name_in, node::base::node * parent_in);
     // virtual void add_link(link * link_in) override;
     pulsar::size_type get_links_waiting();
     void add_forward(input_forward * forward_in);
     std::shared_ptr<audio::buffer> get_buffer();
-    virtual void reset() override;
     void connect(output * sink_in);
     void forward(input * to_in);
     std::shared_ptr<audio::buffer> mix_sinks();
@@ -108,11 +110,12 @@ class output : public channel {
 
     public:
     output(const std::string& name_in, node::base::node * parent_in);
+    virtual void init_cycle() override;
+    virtual void reset_cycle() override;
     void add_forward(output_forward * forward_in);
     std::shared_ptr<audio::buffer> get_buffer();
     void set_buffer(std::shared_ptr<audio::buffer> buffer_in, const bool notify_in = false);
-    virtual void reset() override;
-    void notify(std::shared_ptr<audio::buffer> = nullptr);
+    void notify(std::shared_ptr<audio::buffer> buffer_in = nullptr);
     void connect(input * source_in);
     void forward(output * to_in);
 };
@@ -160,7 +163,8 @@ class component {
     bool is_ready();
     void activate();
     void notify();
-    void reset();
+    void init_cycle();
+    void reset_cycle();
     void source_ready(audio::input * ready_source_in);
     pulsar::size_type get_sources_waiting();
     audio::input * add_input(const std::string& name_in);

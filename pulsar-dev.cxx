@@ -19,7 +19,7 @@
 using namespace std;
 using namespace std::chrono_literals;
 
-#define LOG_LEVEL logjam::loglevel::debug
+#define LOG_LEVEL logjam::loglevel::trace
 
 // Give valgrind lots of time
 #define ALARM_TIMEOUT 5

@@ -24,6 +24,28 @@
 #include "property.h"
 #include "system.h"
 
+/*
+ *
+ * Node lifecycle
+ *
+ * construct
+ * activate
+ *
+ *   init_cycle
+ *   wait_inputs
+ *
+ *   will_run
+ *   run
+ *   did_run
+ *
+ *   notify_outputs
+ *   reset_cycle
+ *
+ * deactivate
+ * deconstruct
+ *
+ */
+
 namespace pulsar {
 
 namespace config {
@@ -63,6 +85,7 @@ struct node {
     std::map<std::string, property::generic *> properties;
     lock_type make_lock();
     virtual void handle_activate();
+    void do_ready();
     virtual void handle_ready();
     virtual void handle_run();
     property::generic& add_property(const std::string& name_in, const property::value_type& type_in);
@@ -80,7 +103,7 @@ struct node {
     virtual void init();
     void activate();
     void run();
-    virtual void reset();
+    virtual void reset_cycle();
     virtual bool is_ready();
 };
 

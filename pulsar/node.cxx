@@ -114,7 +114,7 @@ void base::node::activate()
 
     handle_activate();
 
-    reset();
+    reset_cycle();
 }
 
 void base::node::handle_activate()
@@ -124,7 +124,7 @@ void base::node::run()
 {
     auto lock = make_lock();
     handle_run();
-    reset();
+    reset_cycle();
 }
 
 void base::node::handle_run()
@@ -132,14 +132,20 @@ void base::node::handle_run()
     audio.notify();
 }
 
+void base::node::do_ready()
+{
+    handle_ready();
+}
+
 void base::node::handle_ready()
 {
+    audio.init_cycle();
     domain->add_ready_node(this);
 }
 
-void base::node::reset()
+void base::node::reset_cycle()
 {
-    audio.reset();
+    audio.reset_cycle();
 }
 
 bool base::node::is_ready()
