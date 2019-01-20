@@ -150,6 +150,12 @@ void audio::input::connect(audio::output * source_in) {
     source_in->add_link(new_link);
 }
 
+void audio::input::forward(input * to_in)
+{
+    auto new_forward = new audio::input_forward(this, to_in);
+    forwards.push_back(new_forward);
+}
+
 void audio::input::link_ready(link *)
 {
     if (--links_waiting == 0) {
@@ -242,10 +248,26 @@ void audio::output::connect(audio::input * sink_in)
     sink_in->add_link(new_link);
 }
 
-void audio::output::notify()
+void audio::output::forward(output * to_in)
 {
+    auto new_forward = new audio::output_forward(this, to_in);
+    forwards.push_back(new_forward);
+}
+
+void audio::output::notify(std::shared_ptr<audio::buffer> buffer_in)
+{
+    std::shared_ptr<audio::buffer> notify_buffer = buffer;
+
+    if (buffer_in != nullptr) {
+        notify_buffer = buffer_in;
+    }
+
+    for(auto&& forward : forwards) {
+        forward->to->notify(notify_buffer);
+    }
+
     for(auto&& link : links) {
-        link->notify(buffer);
+        link->notify(notify_buffer);
     }
 }
 
@@ -293,6 +315,14 @@ void audio::link::notify(std::shared_ptr<audio::buffer> ready_buffer_in, const b
 
     source->link_ready(this);
 }
+
+audio::input_forward::input_forward(input * from_in, input * to_in)
+: from(from_in), to(to_in)
+{ }
+
+audio::output_forward::output_forward(output * from_in, output * to_in)
+: from(from_in), to(to_in)
+{ }
 
 audio::component::component(node::base::node * parent_in)
 : parent(parent_in)

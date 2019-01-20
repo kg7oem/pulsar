@@ -37,8 +37,10 @@ struct node;
 namespace audio {
 
 struct input;
+struct input_forward;
 struct link;
 struct output;
+struct output_forward;
 
 class buffer {
     pulsar::size_type size = 0;
@@ -80,6 +82,7 @@ class channel {
 
 class input : public channel {
     std::atomic<pulsar::size_type> links_waiting = ATOMIC_VAR_INIT(0);
+    std::vector<input_forward *> forwards;
 
     public:
     input(const std::string& name_in, node::base::node * parent_in);
@@ -87,16 +90,21 @@ class input : public channel {
     std::shared_ptr<audio::buffer> get_buffer();
     virtual void reset() override;
     void connect(output * sink_in);
+    void forward(input * to_in);
     void mix_sinks();
     void link_ready(link * link_in);
 };
 
-struct output : public channel {
+class output : public channel {
+    std::vector<output_forward *> forwards;
+
+    public:
     output(const std::string& name_in, node::base::node * parent_in);
     void set_buffer(std::shared_ptr<audio::buffer> buffer_in, const bool notify_in = false);
     virtual void reset() override;
-    void notify();
+    void notify(std::shared_ptr<audio::buffer> = nullptr);
     void connect(input * source_in);
+    void forward(output * to_in);
 };
 
 struct link {
@@ -116,6 +124,18 @@ struct link {
     std::shared_ptr<audio::buffer> get_ready_buffer();
     void notify(std::shared_ptr<audio::buffer> ready_buffer_in, const bool blocking_in = true);
     void reset();
+};
+
+struct input_forward {
+    input * from;
+    input * to;
+    input_forward(input * from_in, input * to_in);
+};
+
+struct output_forward {
+    output * from;
+    output * to;
+    output_forward(output * from_in, output * to_in);
 };
 
 class component {
