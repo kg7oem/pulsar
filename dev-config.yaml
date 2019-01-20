@@ -18,9 +18,11 @@ templates:
 
 chains:
   remove_squelch_tail:
-    inputs: [ out ]
-    outputs: [ in ]
+    inputs: [ in ]
+    outputs: [ out ]
     connect:
+      # this can't connect because it's an input to input connection
+      # the same problem exists in the chain output
       in:
         - delay:Input
         - gate:Sidechain Input
@@ -41,6 +43,9 @@ chains:
         plugin:
           filename: /usr/lib/ladspa/ZamGate-ladspa.so
         connect:
+          # This needs to some how wind up being
+          # a part of the chain output but it can't
+          # connect to an output channel.
           Audio Output 1: remove_squelch_tail:out
 
 domain:
