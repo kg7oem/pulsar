@@ -229,7 +229,7 @@ static pulsar::node::base::node * make_class_node(const YAML::Node& node_yaml_in
     return new_node;
 }
 
-static pulsar::node::base::node * make_chain_node(const YAML::Node& node_yaml_in, const YAML::Node& chain_yaml_in, std::shared_ptr<pulsar::config::domain> config_in, std::shared_ptr<pulsar::domain> domain_in)
+pulsar::node::base::node * make_chain_node(const YAML::Node& node_yaml_in, const YAML::Node& chain_yaml_in, std::shared_ptr<pulsar::config::domain> config_in, std::shared_ptr<pulsar::domain> domain_in)
 {
     YAML::Node node_yaml = node_yaml_in;
     std::map<std::string, node::base::node *> chain_nodes;
@@ -240,6 +240,7 @@ static pulsar::node::base::node * make_chain_node(const YAML::Node& node_yaml_in
     auto chain_inputs_node = chain_yaml_in["inputs"];
     auto forward_node = chain_yaml_in["forward"];
     auto nodes_node = chain_yaml_in["nodes"];
+    auto state_node = chain_yaml_in["state"];
 
     if (node_yaml_in["class"]) {
         system_fault("chain node had a class set on it");
@@ -305,6 +306,39 @@ static pulsar::node::base::node * make_chain_node(const YAML::Node& node_yaml_in
             }
         } else {
             system_fault("can only handle a sequence right now");
+        }
+    }
+
+    if (state_node) {
+        if (! state_node.IsSequence()) {
+            system_fault("state section was not a sequence");
+        }
+
+        for(size_type i = 0; i < state_node.size(); i++) {
+            auto target_string = state_node[i].as<std::string>();
+            auto target_parts = util::string::split(target_string, ':');
+            assert(target_parts.size() == 2);
+            auto target_node_name = target_parts[0];
+            auto target_property_name = target_parts[1];
+            auto target_node = chain_nodes[target_node_name];
+
+            if (target_property_name != "*") {
+                target_property_name = "state:" + target_property_name;
+                auto&& property = target_node->get_property(target_property_name);
+                chain_root_node->add_property(target_property_name, &property);
+            } else {
+                for(auto&& i : target_node->get_properties()) {
+                    auto property_name = i.first;
+                    auto property_parts = util::string::split(property_name, ':');
+                    auto prefix = property_parts[0];
+
+                    if (prefix != "state") {
+                        continue;
+                    }
+
+                    chain_root_node->add_property(property_name, i.second);
+                }
+            }
         }
     }
 

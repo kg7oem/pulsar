@@ -97,6 +97,12 @@ property::generic& base::node::add_property(const std::string& name_in, const pr
     return *new_property;
 }
 
+property::generic& base::node::add_property(const std::string& name_in, property::generic * property_in)
+{
+    properties[name_in] = property_in;
+    return *property_in;
+}
+
 void base::node::init()
 {
 

@@ -95,8 +95,7 @@ UNUSED static void process_audio()
     }
 
     std::vector<pulsar::node::base::node *> compressor_nodes;
-    compressor_nodes.push_back(node_map["comp_left"]);
-    compressor_nodes.push_back(node_map["comp_right"]);
+    compressor_nodes.push_back(node_map["tail_eater"]);
 
     while(1) {
         for(auto&& compressor : compressor_nodes) {
