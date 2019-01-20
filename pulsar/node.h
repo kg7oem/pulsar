@@ -90,6 +90,7 @@ class chain : public base::node {
     protected:
     virtual void handle_activate() override;
     virtual void handle_ready() override;
+    virtual void handle_run() override;
 
     public:
     chain(const std::string& name_in, std::shared_ptr<pulsar::domain> domain_in);

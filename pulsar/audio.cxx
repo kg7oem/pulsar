@@ -195,17 +195,18 @@ void audio::input::add_forward(UNUSED input_forward * forward_in)
 // sum all the buffers from the linked output channels
 std::shared_ptr<audio::buffer> audio::input::get_buffer()
 {
-    auto num_links = links.size();
+    auto num_links = links.size() + num_forwards_to_us;
+    auto input_name = parent->name + ":" + name;
 
     if (num_links == 0) {
-        log_trace("returning pointer to zero buffer");
+        log_trace("returning pointer to zero buffer for ", input_name);
         return parent->get_domain()->get_zero_buffer();
     } else if (num_links == 1) {
-        log_trace("returning pointer to link's ready buffer");
+        log_trace("returning pointer to link's ready buffer for ", input_name);
         // return links[0]->get_ready_buffer();
         return link_buffers.begin()->second;
     } else {
-        log_trace("returning pointer to input's mix buffer");
+        log_trace("returning pointer to input's mix buffer for", input_name);
         return mix_sinks();
     }
 }
