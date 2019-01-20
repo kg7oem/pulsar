@@ -111,4 +111,4 @@ domain:
     - name: tail_eater
       chain: remove_squelch_tail
       connect:
-        out: jack:demod_out
+        # out: jack:demod_out

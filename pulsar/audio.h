@@ -65,7 +65,6 @@ class buffer {
 class channel {
     protected:
     node::base::node * parent;
-    std::shared_ptr<audio::buffer> buffer;
     std::vector<link *> links;
 
     channel(const std::string &name_in, node::base::node * parent_in);
@@ -75,31 +74,34 @@ class channel {
     virtual ~channel();
     void activate();
     virtual void reset() = 0;
-    void add_link(link * link_in);
+    virtual void add_link(link * link_in);
     node::base::node * get_parent();
-    std::shared_ptr<audio::buffer> get_buffer();
 };
 
 class input : public channel {
     std::atomic<pulsar::size_type> links_waiting = ATOMIC_VAR_INIT(0);
     std::vector<input_forward *> forwards;
+    std::map<link *, std::shared_ptr<audio::buffer>> link_buffers;
 
     public:
     input(const std::string& name_in, node::base::node * parent_in);
+    // virtual void add_link(link * link_in) override;
     pulsar::size_type get_links_waiting();
     std::shared_ptr<audio::buffer> get_buffer();
     virtual void reset() override;
     void connect(output * sink_in);
     void forward(input * to_in);
-    void mix_sinks();
-    void link_ready(link * link_in);
+    std::shared_ptr<audio::buffer> mix_sinks();
+    void link_ready(link * link_in, std::shared_ptr<audio::buffer> buffer_in);
 };
 
 class output : public channel {
     std::vector<output_forward *> forwards;
+    std::shared_ptr<audio::buffer> buffer;
 
     public:
     output(const std::string& name_in, node::base::node * parent_in);
+    std::shared_ptr<audio::buffer> get_buffer();
     void set_buffer(std::shared_ptr<audio::buffer> buffer_in, const bool notify_in = false);
     virtual void reset() override;
     void notify(std::shared_ptr<audio::buffer> = nullptr);
@@ -114,6 +116,7 @@ struct link {
     private:
     mutex_type mutex;
     std::condition_variable ready_buffer_condition;
+    // TODO remove
     std::shared_ptr<audio::buffer> ready_buffer = nullptr;
     lock_type make_lock();
 
@@ -121,6 +124,7 @@ struct link {
     output * sink;
     input * source;
     link(output * sink_in, input * source_in);
+    // TODO remove
     std::shared_ptr<audio::buffer> get_ready_buffer();
     void notify(std::shared_ptr<audio::buffer> ready_buffer_in, const bool blocking_in = true);
     void reset();

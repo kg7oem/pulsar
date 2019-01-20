@@ -118,8 +118,8 @@ audio::channel::~channel()
 // FIXME this should call reset() to create the buffer
 void audio::channel::activate()
 {
-    buffer = std::make_shared<audio::buffer>();
-    buffer->init(parent->get_domain()->buffer_size);
+    // buffer = std::make_shared<audio::buffer>();
+    // buffer->init(parent->get_domain()->buffer_size);
 }
 
 void audio::channel::add_link(link * link_in)
@@ -130,12 +130,6 @@ void audio::channel::add_link(link * link_in)
 node::base::node * audio::channel::get_parent()
 {
     return parent;
-}
-
-std::shared_ptr<audio::buffer> audio::channel::get_buffer()
-{
-    assert(buffer != nullptr);
-    return buffer;
 }
 
 audio::input::input(const std::string& name_in, node::base::node * parent_in)
@@ -156,8 +150,12 @@ void audio::input::forward(input * to_in)
     forwards.push_back(new_forward);
 }
 
-void audio::input::link_ready(link *)
+void audio::input::link_ready(link * link_in, std::shared_ptr<audio::buffer> buffer_in)
 {
+    // FIXME this is not thread safe - it needs locking
+    // or maybe this could be an atomic queue?
+    link_buffers[link_in] = buffer_in;
+
     if (--links_waiting == 0) {
         parent->audio.source_ready(this);
     }
@@ -187,17 +185,19 @@ std::shared_ptr<audio::buffer> audio::input::get_buffer()
         return parent->get_domain()->get_zero_buffer();
     } else if (num_links == 1) {
         log_trace("returning pointer to link's ready buffer");
-        return links[0]->get_ready_buffer();
+        // return links[0]->get_ready_buffer();
+        return link_buffers.begin()->second;
     } else {
         log_trace("returning pointer to input's mix buffer");
-        mix_sinks();
-        return buffer;
+        return mix_sinks();
     }
 }
 
 // FIXME this should overload audio::channel::reset()
 void audio::input::reset()
 {
+    link_buffers.empty();
+
     for(auto&& link : links) {
         link->reset();
     }
@@ -205,23 +205,30 @@ void audio::input::reset()
     links_waiting.store(links.size());
 }
 
-void audio::input::mix_sinks()
+std::shared_ptr<audio::buffer> audio::input::mix_sinks()
 {
     assert(links.size() > 1);
 
-    // FIXME there can't be a buffer that sits here permanently
-    // and is modified - it needs to be replaced in reset()
-    buffer->zero();
+    auto mix_buffer = std::make_shared<audio::buffer>();
+    mix_buffer->init(parent->get_domain()->buffer_size);
 
     for(auto&& link : links) {
-        buffer->mix(link->get_ready_buffer());
+        mix_buffer->mix(link->get_ready_buffer());
     }
+
+    return mix_buffer;
 }
 
 audio::output::output(const std::string& name_in, node::base::node * parent_in)
 : audio::channel(name_in, parent_in)
 {
 
+}
+
+std::shared_ptr<audio::buffer> audio::output::get_buffer()
+{
+    assert(buffer != nullptr);
+    return buffer;
 }
 
 void audio::output::set_buffer(std::shared_ptr<audio::buffer> buffer_in, const bool notify_in)
@@ -277,6 +284,7 @@ audio::link::link(audio::output * sink_in, audio::input * source_in)
 
 }
 
+// TODO remove
 std::shared_ptr<audio::buffer> audio::link::get_ready_buffer()
 {
     auto lock = make_lock();
@@ -313,7 +321,7 @@ void audio::link::notify(std::shared_ptr<audio::buffer> ready_buffer_in, const b
 
     lock.unlock();
 
-    source->link_ready(this);
+    source->link_ready(this, ready_buffer);
 }
 
 audio::input_forward::input_forward(input * from_in, input * to_in)
