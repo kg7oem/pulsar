@@ -91,15 +91,16 @@ UNUSED static void process_audio()
     domain->activate(domain_num_threads);
 
     for(UNUSED auto&& node : node_map) {
-        // log_properties(node.second);
+        log_properties(node.second);
     }
 
     std::vector<pulsar::node::base::node *> compressor_nodes;
-    compressor_nodes.push_back(node_map["tail_eater"]);
+    compressor_nodes.push_back(node_map["comp_right"]);
+    compressor_nodes.push_back(node_map["comp_left"]);
 
     while(1) {
         for(UNUSED auto&& compressor : compressor_nodes) {
-            // log_debug(get_compressor_state(compressor));
+            log_debug(get_compressor_state(compressor));
         }
 
         std::this_thread::sleep_for(50ms);
