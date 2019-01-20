@@ -228,13 +228,13 @@ void audio::input::reset()
 
 std::shared_ptr<audio::buffer> audio::input::mix_sinks()
 {
-    assert(links.size() > 1);
+    assert(links.size() + num_forwards_to_us > 1);
 
     auto mix_buffer = std::make_shared<audio::buffer>();
     mix_buffer->init(parent->get_domain()->buffer_size);
 
-    for(auto&& link : links) {
-        mix_buffer->mix(link->get_ready_buffer());
+    for(auto&& buffer : link_buffers) {
+        mix_buffer->mix(buffer.second);
     }
 
     return mix_buffer;
@@ -310,45 +310,34 @@ audio::link::link(audio::output * sink_in, audio::input * source_in)
 
 }
 
-// TODO remove
-std::shared_ptr<audio::buffer> audio::link::get_ready_buffer()
-{
-    auto lock = make_lock();
-    assert(ready_buffer != nullptr);
-    return ready_buffer;
-}
-
-audio::link::lock_type audio::link::make_lock()
-{
-    return lock_type(mutex);
-}
-
 void audio::link::reset()
 {
-    auto lock = make_lock();
+    // FIXME does this need a lock? The flag is atomic
+    // and locks are needed to wake up a condvar
+    auto lock = lock_type(available_mutex);
     log_trace("resetting link");
-    ready_buffer = nullptr;
-    ready_buffer_condition.notify_all();
+    available_flag = true;
+    available_condition.notify_all();
 }
 
 void audio::link::notify(std::shared_ptr<audio::buffer> ready_buffer_in, const bool blocking_in)
 {
-    auto lock = make_lock();
+    auto lock = lock_type(available_mutex);
 
-    if (ready_buffer != nullptr) {
+    if (! available_flag) {
         if (blocking_in) {
             log_debug("node ", source->get_parent()->name, ":", source->name, " is blocked notifying ", sink->get_parent()->name, ":", sink->name);
-            ready_buffer_condition.wait(lock, [this]{ return ready_buffer == nullptr; });
+            available_condition.wait(lock, [this]{ return available_flag.load(); });
         } else {
             throw std::runtime_error("attempt to set link ready when it was already ready");
         }
     }
 
-    ready_buffer = ready_buffer_in;
+    available_flag = false;
 
     lock.unlock();
 
-    source->link_ready(this, ready_buffer);
+    source->link_ready(this, ready_buffer_in);
 }
 
 audio::input_forward::input_forward(input * from_in, input * to_in)

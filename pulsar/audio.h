@@ -118,18 +118,14 @@ struct link {
     using lock_type = std::unique_lock<mutex_type>;
 
     private:
-    mutex_type mutex;
-    std::condition_variable ready_buffer_condition;
-    // TODO remove
-    std::shared_ptr<audio::buffer> ready_buffer = nullptr;
-    lock_type make_lock();
+    mutex_type available_mutex;
+    std::condition_variable available_condition;
+    std::atomic<bool> available_flag = ATOMIC_VAR_INIT(true);
 
     public:
     output * sink;
     input * source;
     link(output * sink_in, input * source_in);
-    // TODO remove
-    std::shared_ptr<audio::buffer> get_ready_buffer();
     void notify(std::shared_ptr<audio::buffer> ready_buffer_in, const bool blocking_in = true);
     void reset();
 };
