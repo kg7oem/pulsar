@@ -148,6 +148,11 @@ chain::chain(const std::string& name_in, std::shared_ptr<pulsar::domain> domain_
 : base::node(name_in, domain_in)
 { }
 
+void chain::handle_ready()
+{
+    // base::node::handle_ready();
+}
+
 void chain::handle_activate()
 { }
 

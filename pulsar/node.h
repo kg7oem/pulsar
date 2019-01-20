@@ -89,6 +89,7 @@ struct node {
 class chain : public base::node {
     protected:
     virtual void handle_activate() override;
+    virtual void handle_ready() override;
 
     public:
     chain(const std::string& name_in, std::shared_ptr<pulsar::domain> domain_in);

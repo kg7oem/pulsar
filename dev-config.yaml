@@ -49,7 +49,7 @@ domain:
   config:
     sample_rate: 48000
     buffer_size: 1024
-    threads: 4
+    threads: 1
   nodes:
     - name: jack
       class: pulsar::jackaudio::node
@@ -58,54 +58,54 @@ domain:
       inputs: [ left_out, right_out, mono_out, demod_out ]
       outputs: [ right_in, left_in, demod_in ]
       connect:
-        left_in: comp_left:*
-        right_in: comp_right:*
+        # left_in: comp_left:*
+        # right_in: comp_right:*
         demod_in: tail_eater:in
 
-    - name: comp_left
-      template: compressor
-      connect: gain_left1
+    # - name: comp_left
+    #   template: compressor
+    #   connect: gain_left1
 
-    - name: comp_right
-      template: compressor
-      connect: gain_right1
+    # - name: comp_right
+    #   template: compressor
+    #   connect: gain_right1
 
-    - name: gain_left1
-      template: gain
-      plugin:
-        filename: /usr/lib/ladspa/amp.so
-      config:
-        Gain: .5
-      connect: gain_left2
+    # - name: gain_left1
+    #   template: gain
+    #   plugin:
+    #     filename: /usr/lib/ladspa/amp.so
+    #   config:
+    #     Gain: .5
+    #   connect: gain_left2
 
-    - name: gain_right1
-      template: gain
-      config:
-        Gain: .5
-      connect: gain_right2
+    # - name: gain_right1
+    #   template: gain
+    #   config:
+    #     Gain: .5
+    #   connect: gain_right2
 
-    - name: gain_left2
-      template: gain
-      config:
-        Gain: 2
-      connect:
-        Output: jack:left_out
-        # Output: mono_gain
+    # - name: gain_left2
+    #   template: gain
+    #   config:
+    #     Gain: 2
+    #   connect:
+    #     Output: jack:left_out
+    #     # Output: mono_gain
 
-    - name: gain_right2
-      template: gain
-      config:
-        Gain: 2
-      connect:
-        Output: jack:right_out
-        # Output: mono_gain
+    # - name: gain_right2
+    #   template: gain
+    #   config:
+    #     Gain: 2
+    #   connect:
+    #     Output: jack:right_out
+    #     # Output: mono_gain
 
-    - name: mono_gain
-      template: gain
-      config:
-        Gain: .5
-      connect:
-        # Output: jack:mono_out
+    # - name: mono_gain
+    #   template: gain
+    #   config:
+    #     Gain: .5
+    #   connect:
+    #     # Output: jack:mono_out
 
     - name: tail_eater
       chain: remove_squelch_tail

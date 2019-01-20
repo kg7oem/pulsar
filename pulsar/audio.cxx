@@ -148,19 +148,27 @@ void audio::input::forward(input * to_in)
 {
     auto new_forward = new audio::input_forward(this, to_in);
     forwards.push_back(new_forward);
+    to_in->add_forward(new_forward);
 }
 
 void audio::input::link_ready(link * link_in, std::shared_ptr<audio::buffer> buffer_in)
 {
+    log_trace("in link_ready() for ", parent->name, ":", name);
+
     // FIXME this is not thread safe - it needs locking
     // or maybe this could be an atomic queue?
     link_buffers[link_in] = buffer_in;
 
-    if (--links_waiting == 0) {
+    auto now_waiting = --links_waiting;
+
+    log_trace("waiting buffers: ", now_waiting, "; node: ", get_parent()->name);
+
+    if (now_waiting == 0) {
         parent->audio.source_ready(this);
     }
 
     for(auto&& forward : forwards) {
+        log_trace("node ", parent->name, " forwarding to ", forward->to->get_parent()->name, ":", forward->to->name);
         forward->to->link_ready(link_in, buffer_in);
     }
 }
@@ -168,6 +176,11 @@ void audio::input::link_ready(link * link_in, std::shared_ptr<audio::buffer> buf
 pulsar::size_type audio::input::get_links_waiting()
 {
     return links_waiting.load();
+}
+
+void audio::input::add_forward(UNUSED input_forward * forward_in)
+{
+    num_forwards_to_us++;
 }
 
 // if there are no links in the input channel then this
@@ -206,7 +219,10 @@ void audio::input::reset()
         link->reset();
     }
 
-    links_waiting.store(links.size());
+    auto waiting_things = links.size() + num_forwards_to_us;
+    log_trace("resetting audio input ", parent->name, ":", name, "; waiting things: ", waiting_things);
+
+    links_waiting.store(waiting_things);
 }
 
 std::shared_ptr<audio::buffer> audio::input::mix_sinks()
@@ -229,6 +245,11 @@ audio::output::output(const std::string& name_in, node::base::node * parent_in)
 
 }
 
+void audio::output::add_forward(UNUSED output_forward * forward_in)
+{
+    // forwards.push_back(forward_in);
+}
+
 std::shared_ptr<audio::buffer> audio::output::get_buffer()
 {
     assert(buffer != nullptr);
@@ -247,7 +268,6 @@ void audio::output::set_buffer(std::shared_ptr<audio::buffer> buffer_in, const b
 // FIXME this should go away and just rely on audio::channel::reset()
 void audio::output::reset()
 {
-    log_trace("creating new output channel buffer");
     buffer = std::make_shared<audio::buffer>();
     buffer->init(parent->get_domain()->buffer_size);
 }
@@ -263,6 +283,7 @@ void audio::output::forward(output * to_in)
 {
     auto new_forward = new audio::output_forward(this, to_in);
     forwards.push_back(new_forward);
+    to_in->add_forward(new_forward);
 }
 
 void audio::output::notify(std::shared_ptr<audio::buffer> buffer_in)
@@ -315,6 +336,7 @@ void audio::link::notify(std::shared_ptr<audio::buffer> ready_buffer_in, const b
 
     if (ready_buffer != nullptr) {
         if (blocking_in) {
+            log_debug("node ", source->get_parent()->name, ":", source->name, " is blocked notifying ", sink->get_parent()->name, ":", sink->name);
             ready_buffer_condition.wait(lock, [this]{ return ready_buffer == nullptr; });
         } else {
             throw std::runtime_error("attempt to set link ready when it was already ready");

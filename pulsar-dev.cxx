@@ -19,7 +19,7 @@
 using namespace std;
 using namespace std::chrono_literals;
 
-#define LOG_LEVEL logjam::loglevel::debug
+#define LOG_LEVEL logjam::loglevel::trace
 
 // Give valgrind lots of time
 #define ALARM_TIMEOUT 5
@@ -90,16 +90,16 @@ UNUSED static void process_audio()
     log_debug("audio processing is being started");
     domain->activate(domain_num_threads);
 
-    for(auto&& node : node_map) {
-        log_properties(node.second);
+    for(UNUSED auto&& node : node_map) {
+        // log_properties(node.second);
     }
 
     std::vector<pulsar::node::base::node *> compressor_nodes;
     compressor_nodes.push_back(node_map["tail_eater"]);
 
     while(1) {
-        for(auto&& compressor : compressor_nodes) {
-            log_info(get_compressor_state(compressor));
+        for(UNUSED auto&& compressor : compressor_nodes) {
+            // log_debug(get_compressor_state(compressor));
         }
 
         std::this_thread::sleep_for(50ms);

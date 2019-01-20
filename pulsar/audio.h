@@ -38,6 +38,7 @@ namespace audio {
 
 struct input;
 struct input_forward;
+struct forward;
 struct link;
 struct output;
 struct output_forward;
@@ -74,12 +75,13 @@ class channel {
     virtual ~channel();
     void activate();
     virtual void reset() = 0;
-    virtual void add_link(link * link_in);
+    void add_link(link * link_in);
     node::base::node * get_parent();
 };
 
 class input : public channel {
     std::atomic<pulsar::size_type> links_waiting = ATOMIC_VAR_INIT(0);
+    std::atomic<size_type> num_forwards_to_us = ATOMIC_VAR_INIT(0);
     std::vector<input_forward *> forwards;
     std::map<link *, std::shared_ptr<audio::buffer>> link_buffers;
 
@@ -87,6 +89,7 @@ class input : public channel {
     input(const std::string& name_in, node::base::node * parent_in);
     // virtual void add_link(link * link_in) override;
     pulsar::size_type get_links_waiting();
+    void add_forward(input_forward * forward_in);
     std::shared_ptr<audio::buffer> get_buffer();
     virtual void reset() override;
     void connect(output * sink_in);
@@ -101,6 +104,7 @@ class output : public channel {
 
     public:
     output(const std::string& name_in, node::base::node * parent_in);
+    void add_forward(output_forward * forward_in);
     std::shared_ptr<audio::buffer> get_buffer();
     void set_buffer(std::shared_ptr<audio::buffer> buffer_in, const bool notify_in = false);
     virtual void reset() override;
