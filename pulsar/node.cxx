@@ -122,14 +122,10 @@ void base::node::will_run()
 }
 
 void base::node::run()
-{
-
-}
+{ }
 
 void base::node::did_run()
-{
-
-}
+{ }
 
 void base::node::notify()
 {
@@ -147,9 +143,7 @@ void base::node::deactivate()
 }
 
 void base::node::init()
-{
-
-}
+{ }
 
 void base::node::execute()
 {
@@ -159,11 +153,6 @@ void base::node::execute()
     did_run();
     notify();
     reset_cycle();
-}
-
-void base::node::do_ready()
-{
-    will_run();
 }
 
 bool base::node::is_ready()

@@ -38,7 +38,6 @@ namespace audio {
 
 struct input;
 struct input_forward;
-// struct forward;
 struct link;
 struct output;
 struct output_forward;
@@ -53,9 +52,6 @@ class buffer {
     void init(const pulsar::size_type buffer_size_in, pulsar::sample_type * pointer_in = nullptr);
     pulsar::size_type get_size();
     pulsar::sample_type * get_pointer();
-    // void set_pointer(pulsar::sample_type * pointer_in);
-    // void clear_pointer();
-    // void release_memory();
     void zero();
     void mix(std::shared_ptr<buffer> mix_from_in);
     void set(sample_type * pointer_in, const size_type size_in);
@@ -73,9 +69,8 @@ class channel {
     public:
     const std::string name;
     virtual ~channel();
-    void activate();
-    virtual void init_cycle();
-    virtual void reset_cycle();
+    virtual void init_cycle() = 0;
+    virtual void reset_cycle() = 0;
     void add_link(link * link_in);
     node::base::node * get_parent();
 };
@@ -91,10 +86,9 @@ class input : public channel {
     mutex_type link_buffers_mutex;
 
     public:
-    // virtual void init_cycle() override;
-    virtual void reset_cycle() override;
+    virtual void init_cycle();
+    virtual void reset_cycle();
     input(const std::string& name_in, node::base::node * parent_in);
-    // virtual void add_link(link * link_in) override;
     pulsar::size_type get_links_waiting();
     void add_forward(input_forward * forward_in);
     std::shared_ptr<audio::buffer> get_buffer();

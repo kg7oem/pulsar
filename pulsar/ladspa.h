@@ -92,8 +92,6 @@ class node : public pulsar::node::base::node {
     public:
     node(const std::string& name_in, std::shared_ptr<pulsar::domain> domain_in);
     virtual void activate() override;
-    // node(const std::string& name_in, std::shared_ptr<ladspa::instance> instance_in, std::shared_ptr<pulsar::domain> domain_in);
-    // node(const std::string& name_in, const std::string& path_in, const id_type id_in, std::shared_ptr<pulsar::domain> domain_in);
 };
 
 } // namespace ladspa

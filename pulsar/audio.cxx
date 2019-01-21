@@ -115,19 +115,6 @@ audio::channel::channel(const std::string &name_in, node::base::node * parent_in
 audio::channel::~channel()
 { }
 
-// FIXME this should call reset() to create the buffer
-void audio::channel::activate()
-{
-    // buffer = std::make_shared<audio::buffer>();
-    // buffer->init(parent->get_domain()->buffer_size);
-}
-
-void audio::channel::init_cycle()
-{ }
-
-void audio::channel::reset_cycle()
-{ }
-
 void audio::channel::add_link(link * link_in)
 {
     links.push_back(link_in);
@@ -140,9 +127,10 @@ node::base::node * audio::channel::get_parent()
 
 audio::input::input(const std::string& name_in, node::base::node * parent_in)
 : audio::channel(name_in, parent_in)
-{
+{ }
 
-}
+void audio::input::init_cycle()
+{ }
 
 void audio::input::reset_cycle()
 {
@@ -265,11 +253,8 @@ audio::output::output(const std::string& name_in, node::base::node * parent_in)
 void audio::output::init_cycle()
 {
     log_trace("creating output buffer for ", parent->name, ":", name);
-
     buffer = std::make_shared<audio::buffer>();
     buffer->init(parent->get_domain()->buffer_size);
-
-    audio::channel::init_cycle();
 }
 
 void audio::output::reset_cycle()
@@ -279,9 +264,7 @@ void audio::output::reset_cycle()
 }
 
 void audio::output::add_forward(UNUSED output_forward * forward_in)
-{
-    // forwards.push_back(forward_in);
-}
+{ }
 
 std::shared_ptr<audio::buffer> audio::output::get_buffer()
 {
@@ -336,7 +319,7 @@ audio::link::link(audio::output * sink_in, audio::input * source_in)
 void audio::link::reset()
 {
     // FIXME does this need a lock? The flag is atomic
-    // and locks are needed to wake up a condvar
+    // and locks are not needed to wake up a condvar
     auto lock = lock_type(available_mutex);
     log_trace("resetting link for ",  sink->get_parent()->name, ":", sink->name, " -> ", source->get_parent()->name, ":", source->name);
     available_flag = true;
@@ -434,15 +417,7 @@ bool audio::component::is_ready()
 }
 
 void audio::component::activate()
-{
-    for (auto&& output : sinks) {
-        output.second->activate();
-    }
-
-    for(auto&& input : sources) {
-        input.second->activate();
-    }
-}
+{ }
 
 void audio::component::notify()
 {
@@ -453,8 +428,10 @@ void audio::component::notify()
 
 void audio::component::source_ready(audio::input *)
 {
+    // FIXME this should signal to the node that the component
+    // is ready instead of running the parent
     if (--sources_waiting == 0 && parent->is_ready()) {
-        parent->do_ready();
+        parent->will_run();
     }
 }
 

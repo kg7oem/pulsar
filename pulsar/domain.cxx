@@ -35,12 +35,6 @@ std::shared_ptr<audio::buffer> domain::get_zero_buffer()
     return zero_buffer;
 }
 
-// FIXME vestigual
-// domain::lock_type domain::make_step_done_lock()
-// {
-//     return lock_type(step_done_mutex);
-// }
-
 domain::lock_type domain::make_run_queue_lock()
 {
     return lock_type(run_queue_mutex);
@@ -56,38 +50,23 @@ void domain::activate(const size_type num_threads_in)
 
     activated = true;
 
-    // FIXME
-    // Activate all the nodes before any threads exist to run them
+    // FIXME Activate all the nodes before any threads exist to run them
     // so a node is not executed from the ready list before it is
-    // activated. Right now if the order is reversed there is a pause
-    // during startup and it causes JACK to log errors but then otherwise
-    // seems to run fine
-
-    for(size_type i = 0; i < num_threads_in; i++) {
-        threads.emplace_back(be_thread, this);
-    }
+    // activated. Right now if the order is reversed race conditions probably
+    // exist during startup.
+    //
+    // This will probably hold until topology changes are happening while
+    // the domain is running. If topology changes are safe then activation
+    // should be able to happen in any order.
 
     for(auto&& node : nodes) {
         node->activate();
     }
+
+    for(size_type i = 0; i < num_threads_in; i++) {
+        threads.emplace_back(be_thread, this);
+    }
 }
-
-// FIXME vestigual
-// void domain::step()
-// {
-//     if (! activated) {
-//         throw std::runtime_error("attempt to step a domain that was not activated");
-//     }
-
-//     std::cout << "starting to step the domain" << std::endl;
-
-//     auto lock = make_step_done_lock();
-//     step_done_flag = false;
-
-//     std::cout << "done stepping the domain" << std::endl;
-
-//     step_done_condition.wait(lock, [this]{ return step_done_flag; });
-// }
 
 void domain::add_ready_node(node::base::node * node_in)
 {

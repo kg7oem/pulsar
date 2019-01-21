@@ -67,6 +67,8 @@ struct node {
     lock_type make_lock();
 
     /*
+    * FIXME init_cycle should happen immediately before run but that does not
+    * work right now for unknown reasons
     *
     * Typical node lifecycle
     *
@@ -102,11 +104,7 @@ struct node {
     virtual void reset_cycle();
     virtual void deactivate();
 
-    // virtual void handle_activate();
     virtual void execute();
-    void do_ready();
-    // virtual void handle_ready();
-    // virtual void handle_run();
     property::generic& add_property(const std::string& name_in, const property::value_type& type_in);
     property::generic& add_property(const std::string& name_in, property::generic * property_in);
 

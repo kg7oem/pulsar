@@ -67,21 +67,6 @@ void generic::set(const double& value_in)
     system_fault("should never get out of switch statement");
 }
 
-// void generic::set(const size_type& value_in)
-// {
-//     set_size(value_in);
-// }
-
-// void generic::set(const integer_type& value_in)
-// {
-//     set_integer(value_in);
-// }
-
-// void generic::set(const real_type& value_in)
-// {
-//     set_real(value_in);
-// }
-
 void generic::set(const std::string& value_in)
 {
     auto c_str = value_in.c_str();
@@ -179,34 +164,6 @@ std::string& generic::get_string()
 
     return *value.string;
 }
-
-// integer::integer(const std::string& name_in)
-// : generic(name_in, value_type::integer)
-// { }
-
-// integer_type& integer::get()
-// {
-//     return get_integer();
-// }
-
-// void integer::set(const integer_type& value_in)
-// {
-//     set_integer(value_in);
-// }
-
-// string::string(const std::string& name_in)
-// : generic(name_in, value_type::string)
-// { }
-
-// std::string& string::get()
-// {
-//     return get_string();
-// }
-
-// void string::set(const std::string& value_in)
-// {
-//     set_string(value_in);
-// }
 
 } // namespace parameter
 

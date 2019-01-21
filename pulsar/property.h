@@ -41,7 +41,6 @@ class generic {
     generic(const std::string& name_in, const value_type& type_in);
     virtual ~generic();
     std::string get();
-    // void set(const size_type& value_in);
     void set(const double& value_in);
     void set(const std::string& value_in);
     void set(const YAML::Node& value_in);
@@ -54,14 +53,6 @@ class generic {
     std::string& get_string();
     void set_string(const std::string& string_in);
 };
-
-// struct integer : public generic {
-//     integer(const std::string& name_in);
-// };
-
-// struct string : public generic {
-//     string(const std::string& name_in);
-// };
 
 } // namespace property
 
