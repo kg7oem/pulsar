@@ -78,7 +78,7 @@ void audio::buffer::mix(std::shared_ptr<audio::buffer> mix_from_in)
         throw std::runtime_error("attempt to mix buffers of different size");
     }
 
-    audio::util::pcm_mix(mix_from_in->get_pointer(), pointer, size);
+    audio::util::pcm_mix(pointer, mix_from_in->get_pointer(), size);
 }
 
 void audio::buffer::set(pulsar::sample_type * pointer_in, const size_type size_in)
@@ -251,13 +251,15 @@ std::shared_ptr<audio::buffer> audio::input::get_buffer()
         assert(link_buffers.begin()->second != nullptr);
         return link_buffers.begin()->second;
     } else {
-        log_trace("returning pointer to input's mix buffer for", input_name);
+        log_trace("returning pointer to mix buffer for", input_name);
         return mix_sinks();
     }
 }
 
 std::shared_ptr<audio::buffer> audio::input::mix_sinks()
 {
+    log_trace("mixing ", links.size(), " input buffers for ", parent->name, ":", name);
+
     assert(links.size() + num_forwards_to_us > 1);
 
     auto mix_buffer = std::make_shared<audio::buffer>();
