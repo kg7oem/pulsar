@@ -11,8 +11,8 @@ templates:
     plugin:
       filename: /usr/lib/ladspa/ZamComp-ladspa.so
     config:
-      Knee: 15
-      Threshold: -20
+      Knee: 0
+      Threshold: 0
       Makeup: 0
       Sidechain: 1
   gate:
@@ -45,6 +45,12 @@ chains:
 
       - name: gate
         template: gate
+        config:
+          Sidechain: 1
+          Threshold: -65
+          Attack: 25
+          Release: 25
+          Max gate close: -.inf
         forward:
           Audio Output 1: remove_squelch_tail:out_1
 
