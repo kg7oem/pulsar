@@ -1,0 +1,55 @@
+#!/usr/bin/env pulsar -f
+#
+# read a file specified on the command line, compress the audio
+# in it, and save the result to a second file specified on the
+# command line
+---
+
+templates:
+  compressor:
+    class: pulsar::ladspa::node
+    plugin:
+      filename: /usr/lib/ladspa/ZamComp-ladspa.so
+    # ! is a template command
+    !rename:
+        input:
+          Audio Input 1: main_in
+          Sidechain Input: detector_in
+        output:
+          Audio Output: main_out
+    config:
+      Knee: 0
+      Threshold: 0
+      Makeup: 0
+      Sidechain: 1
+
+chains:
+  compress:
+    channels: stereo
+    forward:
+      in_left: left_compressor:*
+      in_right: right_compressor:*
+    nodes:
+      left_compressor:
+        template: compressor
+        forward: compress:out_left
+      right_compressor:
+        template: compressor
+        forward: compress:out_right
+
+domain:
+  config:
+    sample_rate: 48000
+    buffer_size: 32768
+    threads: 4
+  nodes:
+    io:
+      class: pulsar::sox::node
+      channels: stereo
+      config:
+        input_file: $ARG[0]
+        output_file: $ARG[1]
+      link: compressors
+    compressors:
+      chain: compress
+      link: io
