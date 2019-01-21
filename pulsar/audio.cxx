@@ -260,11 +260,11 @@ std::shared_ptr<audio::buffer> audio::input::get_buffer()
         return link_buffers.begin()->second;
     } else {
         log_trace("returning pointer to mix buffer for", input_name);
-        return mix_sinks();
+        return mix_outputs();
     }
 }
 
-std::shared_ptr<audio::buffer> audio::input::mix_sinks()
+std::shared_ptr<audio::buffer> audio::input::mix_outputs()
 {
     log_trace("mixing ", links.size(), " input buffers for ", parent->name, ":", name);
 
@@ -432,25 +432,25 @@ audio::component::component(node::base::node * parent_in)
 
 audio::component::~component()
 {
-    for (auto&& i : sources) {
+    for (auto&& i : inputs) {
         delete i.second;
     }
 
-    for(auto&& i : sinks) {
+    for(auto&& i : outputs) {
         delete i.second;
     }
 
-    sources.clear();
-    sinks.clear();
+    inputs.clear();
+    outputs.clear();
 }
 
 void audio::component::init_cycle()
 {
-    for(auto&& output : sinks) {
+    for(auto&& output : outputs) {
         output.second->init_cycle();
     }
 
-    for(auto&& input : sources) {
+    for(auto&& input : inputs) {
         input.second->init_cycle();
     }
 }
@@ -459,11 +459,11 @@ void audio::component::reset_cycle()
 {
     pulsar::size_type inputs_with_links = 0;
 
-    for(auto&& output : sinks) {
+    for(auto&& output : outputs) {
         output.second->reset_cycle();
     }
 
-    for(auto&& input : sources) {
+    for(auto&& input : inputs) {
         input.second->reset_cycle();
 
         if (input.second->get_links_waiting() > 0) {
@@ -471,17 +471,17 @@ void audio::component::reset_cycle()
         }
     }
 
-    sources_waiting.store(inputs_with_links);
+    inputs_waiting.store(inputs_with_links);
 }
 
-pulsar::size_type audio::component::get_sources_waiting()
+pulsar::size_type audio::component::get_inputs_waiting()
 {
-    return sources_waiting.load();
+    return inputs_waiting.load();
 }
 
 bool audio::component::is_ready()
 {
-    return get_sources_waiting() == 0;
+    return get_inputs_waiting() == 0;
 }
 
 void audio::component::activate()
@@ -489,7 +489,7 @@ void audio::component::activate()
 
 void audio::component::notify()
 {
-    for (auto&& output : sinks) {
+    for (auto&& output : outputs) {
         output.second->notify();
     }
 }
@@ -498,19 +498,19 @@ void audio::component::source_ready(audio::input *)
 {
     // FIXME this should signal to the node that the component
     // is ready instead of running the parent
-    if (--sources_waiting == 0 && parent->is_ready()) {
+    if (--inputs_waiting == 0 && parent->is_ready()) {
         parent->will_run();
     }
 }
 
 audio::input * audio::component::add_input(const string_type& name_in)
 {
-    if (sources.count(name_in) != 0) {
+    if (inputs.count(name_in) != 0) {
         throw std::runtime_error("attempt to add duplicate input name: " + name_in);
     }
 
     auto new_input = new audio::input(name_in, parent);
-    sources[new_input->name] = new_input;
+    inputs[new_input->name] = new_input;
 
     auto property_name = string_type("input:") + name_in;
     parent->add_property(property_name, property::value_type::string).set("audio");
@@ -520,18 +520,18 @@ audio::input * audio::component::add_input(const string_type& name_in)
 
 audio::input * audio::component::get_input(const string_type& name_in)
 {
-    if (sources.count(name_in) == 0) {
+    if (inputs.count(name_in) == 0) {
         system_fault("could not find input channel named ", name_in, " for node ", parent->name);
     }
 
-    return sources[name_in];
+    return inputs[name_in];
 }
 
 std::vector<string_type> audio::component::get_input_names()
 {
     std::vector<string_type> retval;
 
-    for(auto&& input : sources) {
+    for(auto&& input : inputs) {
         retval.push_back(input.first);
     }
 
@@ -540,12 +540,12 @@ std::vector<string_type> audio::component::get_input_names()
 
 audio::output * audio::component::add_output(const string_type& name_in)
 {
-    if (sinks.count(name_in) != 0) {
+    if (outputs.count(name_in) != 0) {
         throw std::runtime_error("attempt to add duplicate output name: " + name_in);
     }
 
     auto new_output = new audio::output(name_in, parent);
-    sinks[new_output->name] = new_output;
+    outputs[new_output->name] = new_output;
 
     auto property_name = string_type("output:") + name_in;
     parent->add_property(property_name, property::value_type::string).set("audio");
@@ -555,18 +555,18 @@ audio::output * audio::component::add_output(const string_type& name_in)
 
 audio::output * audio::component::get_output(const string_type& name_in)
 {
-    if (sinks.count(name_in) == 0) {
+    if (outputs.count(name_in) == 0) {
         system_fault("could not find output channel named ", name_in, " for node ", parent->name);
     }
 
-    return sinks[name_in];
+    return outputs[name_in];
 }
 
 std::vector<string_type> audio::component::get_output_names()
 {
     std::vector<string_type> retval;
 
-    for(auto&& output : sinks) {
+    for(auto&& output : outputs) {
         retval.push_back(output.first);
     }
 

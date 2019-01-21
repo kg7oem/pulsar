@@ -94,7 +94,7 @@ class input : public channel {
     void forward_to(node::base::node * node_in, const string_type& port_name_in);
     void register_forward(input_forward * forward_in);
     std::shared_ptr<audio::buffer> get_buffer();
-    std::shared_ptr<audio::buffer> mix_sinks();
+    std::shared_ptr<audio::buffer> mix_outputs();
     void link_ready(audio::link * link_in, std::shared_ptr<audio::buffer> buffer_in);
 };
 
@@ -146,9 +146,9 @@ class component {
     friend node::base::node;
 
     node::base::node * parent = nullptr;
-    std::map<string_type, audio::input *> sources;
-    std::map<string_type, audio::output *> sinks;
-    std::atomic<pulsar::size_type> sources_waiting = ATOMIC_VAR_INIT(0);
+    std::map<string_type, audio::input *> inputs;
+    std::map<string_type, audio::output *> outputs;
+    std::atomic<pulsar::size_type> inputs_waiting = ATOMIC_VAR_INIT(0);
 
     public:
     component(node::base::node * parent_in);
@@ -159,7 +159,7 @@ class component {
     void init_cycle();
     void reset_cycle();
     void source_ready(audio::input * ready_source_in);
-    pulsar::size_type get_sources_waiting();
+    pulsar::size_type get_inputs_waiting();
     audio::input * add_input(const string_type& name_in);
     audio::input * get_input(const string_type& name_in);
     std::vector<string_type> get_input_names();
