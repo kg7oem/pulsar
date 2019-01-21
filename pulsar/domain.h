@@ -23,6 +23,7 @@
 
 #include "audio.h"
 #include "system.h"
+#include "thread.h"
 
 namespace pulsar {
 
@@ -37,9 +38,6 @@ struct node;
 } // namespace node
 
 struct domain : public std::enable_shared_from_this<domain> {
-    using mutex_type = std::mutex;
-    using lock_type = std::unique_lock<mutex_type>;
-
     private:
     std::shared_ptr<audio::buffer> zero_buffer = std::make_shared<audio::buffer>();
     std::vector<node::base::node *> nodes;
@@ -48,12 +46,9 @@ struct domain : public std::enable_shared_from_this<domain> {
     std::condition_variable run_queue_condition;
     std::vector<std::thread> threads;
     std::condition_variable step_done_condition;
-    mutex_type step_done_mutex;
     bool activated = false;
     bool step_done_flag = false;
-    lock_type make_step_done_lock();
-    lock_type make_run_queue_lock();
-    static void be_thread(domain * domain_in);
+    void be_thread();
 
     public:
     const string_type name;

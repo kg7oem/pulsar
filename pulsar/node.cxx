@@ -47,11 +47,6 @@ base::node::node(const string_type& name_in, std::shared_ptr<pulsar::domain> dom
 base::node::~node()
 { }
 
-base::node::lock_type base::node::make_lock()
-{
-    return lock_type(mutex);
-}
-
 std::shared_ptr<domain> base::node::get_domain()
 {
     return domain;
@@ -79,7 +74,7 @@ string_type fully_qualify_property_name(const string_type& name_in)
 
 string_type base::node::peek(const string_type& name_in)
 {
-    auto lock = make_lock();
+    auto lock = lock_type(node_mutex);
     auto name = fully_qualify_property_name(name_in);
     return get_property(name).get();
 }
@@ -147,7 +142,7 @@ void base::node::init()
 
 void base::node::execute()
 {
-    auto lock = make_lock();
+    auto lock = lock_type(node_mutex);
 
     run();
     did_run();
@@ -166,7 +161,7 @@ forwarder::forwarder(const string_type& name_in, std::shared_ptr<pulsar::domain>
 
 void forwarder::will_run()
 {
-    auto lock = make_lock();
+    auto lock = lock_type(node_mutex);
 
     // a forwarder node does not use any CPU since all inputs and outputs
     // are forwarded but a full cycle still needs to happen so the

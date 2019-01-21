@@ -56,11 +56,6 @@ jackaudio::node::~node()
     jack_ports.empty();
 }
 
-pulsar::node::base::node::lock_type jackaudio::node::make_done_lock()
-{
-    return node::lock_type(done_mutex);
-}
-
 void jackaudio::node::open(const string_type& jack_name_in)
 {
     jack_client = jack_client_open(jack_name_in.c_str(), jack_options, 0);
@@ -155,8 +150,8 @@ void jackaudio::node::handle_jack_process(jack_nframes_t nframes_in)
 {
     log_trace("********** jackaudio process callback invoked");
 
-    auto lock = make_lock();
-    auto done_lock = make_done_lock();
+    auto lock = lock_type(node_mutex);
+    auto done_lock = lock_type(done_mutex);
 
     if (done_flag) {
         throw std::runtime_error("jackaudio handle_jack_process() went reentrant");
@@ -200,7 +195,7 @@ void jackaudio::node::run()
         audio::util::pcm_set(jack_buffer, channel_buffer->get_pointer(), buffer_size);
     }
 
-    auto done_lock = make_done_lock();
+    auto done_lock = lock_type(done_mutex);
     done_flag = true;
     done_cond.notify_all();
 

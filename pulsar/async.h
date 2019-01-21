@@ -26,9 +26,6 @@ namespace pulsar {
 
 namespace async {
 
-using mutex_type = std::mutex;
-using lock_type = std::unique_lock<mutex_type>;
-
 using boost_timer_type = boost::asio::system_timer;
 using duration_type = std::chrono::milliseconds;
 

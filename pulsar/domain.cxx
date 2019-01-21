@@ -12,6 +12,7 @@
 // GNU Lesser General Public License for more details.
 
 #include <cassert>
+#include <functional>
 
 #include "domain.h"
 #include "logging.h"
@@ -33,11 +34,6 @@ domain::~domain()
 std::shared_ptr<audio::buffer> domain::get_zero_buffer()
 {
     return zero_buffer;
-}
-
-domain::lock_type domain::make_run_queue_lock()
-{
-    return lock_type(run_queue_mutex);
 }
 
 void domain::activate(const size_type num_threads_in)
@@ -64,7 +60,7 @@ void domain::activate(const size_type num_threads_in)
     }
 
     for(size_type i = 0; i < num_threads_in; i++) {
-        threads.emplace_back(be_thread, this);
+        threads.emplace_back(std::bind(&domain::be_thread, this));
     }
 }
 
@@ -72,7 +68,7 @@ void domain::add_ready_node(node::base::node * node_in)
 {
     assert(activated);
 
-    auto lock = make_run_queue_lock();
+    auto lock = lock_type(run_queue_mutex);
 
     log_trace("adding ready node: ", node_in->name);
 
@@ -80,16 +76,15 @@ void domain::add_ready_node(node::base::node * node_in)
     run_queue_condition.notify_one();
 }
 
-void domain::be_thread(domain * domain_in)
+void domain::be_thread()
 {
     while(1) {
-        auto lock = domain_in->make_run_queue_lock();
-        domain_in->run_queue_condition.wait(lock, [domain_in]{
-            return domain_in->run_queue.size() > 0;
-        });
+        auto lock = lock_type(run_queue_mutex);
 
-        auto ready_node = domain_in->run_queue.front();
-        domain_in->run_queue.pop_front();
+        run_queue_condition.wait(lock, [this]{ return run_queue.size() > 0; });
+
+        auto ready_node = run_queue.front();
+        run_queue.pop_front();
 
         lock.unlock();
 

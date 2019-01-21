@@ -44,7 +44,6 @@ class node : public pulsar::node::base::node {
     std::condition_variable done_cond;
     mutex_type done_mutex;
     bool done_flag = false;
-    lock_type make_done_lock();
     port_type * add_port(const string_type& port_name_in, const char * port_type_in, const flags_type flags_in, const size_type buffer_size_in = 0);
     sample_type * get_port_buffer(const string_type& port_name_in);
     void start();

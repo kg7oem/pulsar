@@ -23,6 +23,7 @@
 #include "domain.h"
 #include "property.h"
 #include "system.h"
+#include "thread.h"
 
 namespace pulsar {
 
@@ -54,18 +55,12 @@ struct node {
     // FIXME only run() is needed but run() is static and friend didn't like that
     friend pulsar::domain;
 
-    using mutex_type = std::mutex;
-    using lock_type = std::unique_lock<mutex_type>;
-
-    private:
-    mutex_type mutex;
-
     protected:
+    mutex_type node_mutex;
     std::shared_ptr<pulsar::domain> domain;
     // FIXME pointer because I can't figure out how to make emplace() work
     std::map<string_type, property::generic *> properties;
     node(const string_type& name_in, std::shared_ptr<pulsar::domain> domain_in, const bool is_forwarder_in = false);
-    lock_type make_lock();
 
     /*
     * FIXME init_cycle should happen immediately before run but that does not
