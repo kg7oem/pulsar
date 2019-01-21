@@ -41,7 +41,7 @@ std::shared_ptr<pulsar::domain> make_domain(std::shared_ptr<pulsar::config::doma
     return domain;
 }
 
-static void apply_node_template(YAML::Node& dest_in, const YAML::Node& src_in)
+static void apply_yaml_template(YAML::Node& dest_in, const YAML::Node& src_in)
 {
     if (dest_in.Type() != src_in.Type()) {
         system_fault("YAML node type difference during template import");
@@ -55,7 +55,7 @@ static void apply_node_template(YAML::Node& dest_in, const YAML::Node& src_in)
                 if (src_in[key_name].IsSequence() || src_in[key_name].IsMap()) {
                     // FIXME is that how this is supposed to work?
                     auto new_node = dest_in[key_name];
-                    apply_node_template(new_node, src_in[key_name]);
+                    apply_yaml_template(new_node, src_in[key_name]);
                 }
             } else {
                 dest_in[key_name] = i.second;
@@ -70,7 +70,7 @@ static void apply_node_template(YAML::Node& dest_in, const YAML::Node& src_in)
         //         if (src_in[i].IsSequence() || src_in[i].IsMap()) {
         //             // FIXME is that how this is supposed to work?
         //             auto new_node = dest_in[i];
-        //             apply_node_template(new_node, src_in[i]);
+        //             apply_yaml_template(new_node, src_in[i]);
         //         }
         //     } else {
         //         dest_in[i] = src_in[i];
@@ -403,7 +403,7 @@ static pulsar::node::base::node * make_node(const YAML::Node& node_yaml_in, std:
 
         auto template_name = template_node.as<std::string>();
         auto template_src = config_in->get_parent()->get_template(template_name);
-        apply_node_template(node_yaml, template_src);
+        apply_yaml_template(node_yaml, template_src);
     }
 
     // check for the name after applying the template so

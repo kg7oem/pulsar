@@ -7,14 +7,23 @@ templates:
       filename: /usr/lib/ladspa/amp.so
       id: 1048
   compressor:
-      class: pulsar::ladspa::node
-      plugin:
-        filename: /usr/lib/ladspa/ZamComp-ladspa.so
-      config:
-        Knee: 15
-        Threshold: -20
-        Makeup: 0
-        Sidechain: 1
+    class: pulsar::ladspa::node
+    plugin:
+      filename: /usr/lib/ladspa/ZamComp-ladspa.so
+    config:
+      Knee: 15
+      Threshold: -20
+      Makeup: 0
+      Sidechain: 1
+  gate:
+    class: pulsar::ladspa::node
+    plugin:
+      filename: /usr/lib/ladspa/ZamGate-ladspa.so
+  delay:
+    class: pulsar::ladspa::node
+    plugin:
+      filename: /usr/lib/ladspa/delay_1898.so
+      id: 1899
 
 chains:
   remove_squelch_tail:
@@ -27,10 +36,7 @@ chains:
         - gate:Sidechain Input
     nodes:
       - name: delay
-        class: pulsar::ladspa::node
-        plugin:
-          filename: /usr/lib/ladspa/delay_1898.so
-          id: 1899
+        template: delay
         config:
           Delay Time (s): .1
           Max Delay (s): .2
@@ -38,9 +44,7 @@ chains:
           Output: gate:Audio Input 1
 
       - name: gate
-        class: pulsar::ladspa::node
-        plugin:
-          filename: /usr/lib/ladspa/ZamGate-ladspa.so
+        template: gate
         forward:
           Audio Output 1: remove_squelch_tail:out_1
 
@@ -61,6 +65,11 @@ domain:
         left_in: comp_left:*
         right_in: comp_right:*
         demod_in: tail_eater:in_1
+
+    - name: tail_eater
+      chain: remove_squelch_tail
+      link:
+        out_1: jack:demod_out
 
     - name: comp_left
       template: compressor
@@ -103,8 +112,3 @@ domain:
         Gain: 2
       link:
         Output: jack:right_out
-
-    - name: tail_eater
-      chain: remove_squelch_tail
-      link:
-        out_1: jack:demod_out
