@@ -105,8 +105,9 @@ static void connect_nodes(std::map<std::string, node::base::node *>& node_map_in
             }
 
             for(size_type i = 0; i < num_outputs; i++) {
-                auto sink_channel = sink_node->audio.get_input(input_names[i]);
-                source_node->audio.get_output(output_names[i])->connect(sink_channel);
+                sink_node->audio.get_input(input_names[i])->connect(source_node, output_names[i]);
+                // auto sink_channel = sink_node->audio.get_input(input_names[i]);
+                // source_node->audio.get_output(output_names[i])->link_to(sink_channel);
             }
         } else {
             for(auto&& i : connections) {
@@ -149,15 +150,7 @@ static void connect_nodes(std::map<std::string, node::base::node *>& node_map_in
                     system_fault("invalid connection string specified: ", target_string);
                 }
 
-                if (sink_channel_name == "*") {
-                    for (auto&& channel_name : sink_node->audio.get_input_names()) {
-                        auto sink_channel = sink_node->audio.get_input(channel_name);
-                        source_node->audio.get_output(source_channel)->connect(sink_channel);
-                    }
-                } else {
-                    auto sink_channel = sink_node->audio.get_input(sink_channel_name);
-                    source_node->audio.get_output(source_channel)->connect(sink_channel);
-                }
+                source_node->audio.get_output(source_channel)->connect(sink_node, sink_channel_name);
             }
         }
     }
@@ -172,7 +165,7 @@ static void connect_nodes(std::map<std::string, node::base::node *>& node_map_in
             auto to_parts = util::string::split(target_string, ':');
             auto target_node = node_map_in[to_parts[0]];
             auto target_port = target_node->audio.get_output(to_parts[1]);
-            from_port->forward(target_port);
+            from_port->forward_to(target_port);
         }
     }
 }
@@ -336,7 +329,7 @@ pulsar::node::base::node * make_chain_node(const YAML::Node& node_yaml_in, const
                 auto target_parts = util::string::split(target_string, ':');
                 auto target_node = chain_nodes[target_parts[0]];
                 auto target_input = target_node->audio.get_input(target_parts[1]);
-                chain_root_node->audio.get_input(output_name)->forward(target_input);
+                chain_root_node->audio.get_input(output_name)->forward_to(target_input);
             }
         } else {
             system_fault("can only handle a sequence right now");

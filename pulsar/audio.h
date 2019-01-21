@@ -85,6 +85,11 @@ class input : public channel {
     std::map<link *, std::shared_ptr<audio::buffer>> link_buffers;
     mutex_type link_buffers_mutex;
 
+    void link_to(output * to_in);
+    // FIXME make protected
+    public:
+    void forward_to(input * to_in);
+
     public:
     virtual void init_cycle();
     virtual void reset_cycle();
@@ -92,15 +97,19 @@ class input : public channel {
     pulsar::size_type get_links_waiting();
     void add_forward(input_forward * forward_in);
     std::shared_ptr<audio::buffer> get_buffer();
-    void connect(output * sink_in);
-    void forward(input * to_in);
+    void connect(node::base::node * node_in, const std::string& port_name_in);
     std::shared_ptr<audio::buffer> mix_sinks();
-    void link_ready(link * link_in, std::shared_ptr<audio::buffer> buffer_in);
+    void link_ready(audio::link * link_in, std::shared_ptr<audio::buffer> buffer_in);
 };
 
 class output : public channel {
     std::vector<output_forward *> forwards;
     std::shared_ptr<audio::buffer> buffer;
+
+    void link_to(input * to_in);
+    // FIXME make protected
+    public:
+    void forward_to(output * to_in);
 
     public:
     output(const std::string& name_in, node::base::node * parent_in);
@@ -110,8 +119,7 @@ class output : public channel {
     std::shared_ptr<audio::buffer> get_buffer();
     void set_buffer(std::shared_ptr<audio::buffer> buffer_in);
     void notify();
-    void connect(input * source_in);
-    void forward(output * to_in);
+    void connect(node::base::node * node_in, const std::string& port_name_in);
 };
 
 struct link {
