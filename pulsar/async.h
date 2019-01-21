@@ -27,7 +27,6 @@ namespace pulsar {
 namespace async {
 
 using boost_timer_type = boost::asio::system_timer;
-using duration_type = std::chrono::milliseconds;
 
 void init(const size_type num_threads_in = 1);
 // boost::asio::io_service& get_global_io();

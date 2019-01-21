@@ -13,6 +13,7 @@
 
 #pragma once
 
+#include <chrono>
 #include <sstream>
 #include <string>
 
@@ -29,6 +30,7 @@
 
 namespace pulsar {
 
+using duration_type = std::chrono::milliseconds;
 using integer_type = int;
 using real_type = float;
 using size_type = unsigned long;
