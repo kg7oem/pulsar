@@ -22,6 +22,9 @@ namespace pulsar {
 namespace audio {
 
 namespace util {
+    // TODO move to pulsar::pcm and rename to zero(), scale() etc and
+    // turn into templates that specialize for floats of any size and
+    // complex numbers as well
     void pcm_zero(sample_type * dest_in, const size_type samples_in);
     void pcm_scale(sample_type * dest_in, const float scale_in, const size_type samples_in);
     void pcm_set(sample_type * dest_in, const sample_type * src_in, const size_type samples_in);
