@@ -71,7 +71,7 @@ class channel {
     virtual ~channel();
     virtual void init_cycle() = 0;
     virtual void reset_cycle() = 0;
-    void add_link(link * link_in);
+    void register_link(link * link_in);
     node::base::node * get_parent();
 };
 
@@ -85,17 +85,14 @@ class input : public channel {
     std::map<link *, std::shared_ptr<audio::buffer>> link_buffers;
     mutex_type link_buffers_mutex;
 
-    void link_to(output * to_in);
-    // FIXME make protected
-    public:
-    void forward_to(input * to_in);
-
     public:
     virtual void init_cycle();
     virtual void reset_cycle();
     input(const std::string& name_in, node::base::node * parent_in);
     pulsar::size_type get_links_waiting();
-    void add_forward(input_forward * forward_in);
+    void link_to(output * to_in);
+    void forward_to(input * to_in);
+    void register_forward(input_forward * forward_in);
     std::shared_ptr<audio::buffer> get_buffer();
     void connect(node::base::node * node_in, const std::string& port_name_in);
     std::shared_ptr<audio::buffer> mix_sinks();
@@ -106,20 +103,17 @@ class output : public channel {
     std::vector<output_forward *> forwards;
     std::shared_ptr<audio::buffer> buffer;
 
-    void link_to(input * to_in);
-    // FIXME make protected
-    public:
-    void forward_to(output * to_in);
-
     public:
     output(const std::string& name_in, node::base::node * parent_in);
     virtual void init_cycle() override;
     virtual void reset_cycle() override;
-    void add_forward(output_forward * forward_in);
+    void link_to(input * to_in);
+    void link_to(node::base::node * node_in, const std::string& port_name_in);
+    void forward_to(output * to_in);
+    void register_forward(output_forward * forward_in);
     std::shared_ptr<audio::buffer> get_buffer();
     void set_buffer(std::shared_ptr<audio::buffer> buffer_in);
     void notify();
-    void connect(node::base::node * node_in, const std::string& port_name_in);
 };
 
 struct link {

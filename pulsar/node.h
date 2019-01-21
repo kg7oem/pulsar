@@ -64,6 +64,7 @@ struct node {
     std::shared_ptr<pulsar::domain> domain;
     // FIXME pointer because I can't figure out how to make emplace() work
     std::map<std::string, property::generic *> properties;
+    node(const std::string& name_in, std::shared_ptr<pulsar::domain> domain_in, const bool is_forwarder_in = false);
     lock_type make_lock();
 
     /*
@@ -94,7 +95,9 @@ struct node {
     */
 
     // needs to be reachable by templated factory methods
-    public: virtual void activate();
+    public:
+    virtual void activate();
+
     protected:
     virtual void init_cycle();
     virtual void will_run();
@@ -110,8 +113,8 @@ struct node {
 
     public:
     const std::string name;
+    const bool is_forwarder = false;
     audio::component audio;
-    node(const std::string& name_in, std::shared_ptr<pulsar::domain> domain_in);
     virtual ~node();
     std::shared_ptr<pulsar::domain> get_domain();
     const std::map<std::string, property::generic *>& get_properties();
@@ -123,13 +126,15 @@ struct node {
 
 } // namespace base
 
-class chain : public base::node {
+class forwarder : public base::node {
     protected:
     virtual void will_run() override;
     virtual void execute() override;
     virtual void notify() override;
+    forwarder(const std::string& name_in, std::shared_ptr<pulsar::domain> domain_in);
+};
 
-    public:
+struct chain : public forwarder {
     chain(const std::string& name_in, std::shared_ptr<pulsar::domain> domain_in);
 };
 

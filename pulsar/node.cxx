@@ -35,8 +35,8 @@ base::node * make_chain_node(const std::string& name_in, std::shared_ptr<pulsar:
     return domain_in->make_node<chain>(name_in);
 }
 
-base::node::node(const std::string& name_in, std::shared_ptr<pulsar::domain> domain_in)
-: domain(domain_in), name(name_in), audio(this)
+base::node::node(const std::string& name_in, std::shared_ptr<pulsar::domain> domain_in, const bool is_forwarder_in)
+: domain(domain_in), name(name_in), is_forwarder(is_forwarder_in), audio(this)
 {
     assert(domain != nullptr);
 
@@ -160,31 +160,35 @@ bool base::node::is_ready()
     return audio.is_ready();
 }
 
-chain::chain(const std::string& name_in, std::shared_ptr<pulsar::domain> domain_in)
-: base::node(name_in, domain_in)
+forwarder::forwarder(const std::string& name_in, std::shared_ptr<pulsar::domain> domain_in)
+: base::node(name_in, domain_in, true)
 { }
 
-void chain::will_run()
+void forwarder::will_run()
 {
     auto lock = make_lock();
 
-    // a chain node does not use any CPU since all inputs and outputs
+    // a forwarder node does not use any CPU since all inputs and outputs
     // are forwarded but a full cycle still needs to happen so the
     // ready node queue can be skipped
     init_cycle();
     reset_cycle();
 }
 
-void chain::execute()
+void forwarder::execute()
 {
-    system_fault("chain nodes should never try to execute");
+    system_fault("forwarder nodes should never try to execute");
 }
 
 // notifications happen via forwarding
-void chain::notify()
+void forwarder::notify()
 {
-    system_fault("chain nodes should never try to notify");
+    system_fault("forwarder nodes should never try to notify");
 }
+
+chain::chain(const std::string& name_in, std::shared_ptr<pulsar::domain> domain_in)
+: forwarder(name_in, domain_in)
+{ }
 
 } // namespace node
 

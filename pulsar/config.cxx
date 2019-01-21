@@ -150,7 +150,7 @@ static void connect_nodes(std::map<std::string, node::base::node *>& node_map_in
                     system_fault("invalid connection string specified: ", target_string);
                 }
 
-                source_node->audio.get_output(source_channel)->connect(sink_node, sink_channel_name);
+                source_node->audio.get_output(source_channel)->link_to(sink_node, sink_channel_name);
             }
         }
     }

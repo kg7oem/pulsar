@@ -115,7 +115,7 @@ audio::channel::channel(const std::string &name_in, node::base::node * parent_in
 audio::channel::~channel()
 { }
 
-void audio::channel::add_link(link * link_in)
+void audio::channel::register_link(link * link_in)
 {
     links.push_back(link_in);
 }
@@ -151,15 +151,15 @@ void audio::input::reset_cycle()
 
 void audio::input::link_to(audio::output * source_in) {
     auto new_link = new audio::link(source_in, this);
-    add_link(new_link);
-    source_in->add_link(new_link);
+    register_link(new_link);
+    source_in->register_link(new_link);
 }
 
 void audio::input::forward_to(input * to_in)
 {
     auto new_forward = new audio::input_forward(this, to_in);
     forwards.push_back(new_forward);
-    to_in->add_forward(new_forward);
+    to_in->register_forward(new_forward);
 }
 
 void audio::input::connect(node::base::node * node_in, const std::string& port_name_in)
@@ -208,7 +208,7 @@ pulsar::size_type audio::input::get_links_waiting()
     return links_waiting.load();
 }
 
-void audio::input::add_forward(UNUSED input_forward * forward_in)
+void audio::input::register_forward(UNUSED input_forward * forward_in)
 {
     num_forwards_to_us++;
 }
@@ -276,7 +276,7 @@ void audio::output::reset_cycle()
     buffer = nullptr;
 }
 
-void audio::output::add_forward(UNUSED output_forward * forward_in)
+void audio::output::register_forward(UNUSED output_forward * forward_in)
 { }
 
 std::shared_ptr<audio::buffer> audio::output::get_buffer()
@@ -296,23 +296,23 @@ void audio::output::set_buffer(std::shared_ptr<audio::buffer> buffer_in)
 void audio::output::link_to(audio::input * sink_in)
 {
     auto new_link = new audio::link(this, sink_in);
-    add_link(new_link);
-    sink_in->add_link(new_link);
+    register_link(new_link);
+    sink_in->register_link(new_link);
 }
 
 void audio::output::forward_to(output * to_in)
 {
     auto new_forward = new audio::output_forward(this, to_in);
     forwards.push_back(new_forward);
-    to_in->add_forward(new_forward);
+    to_in->register_forward(new_forward);
 }
 
-void audio::output::connect(node::base::node * node_in, const std::string& port_name_in)
+void audio::output::link_to(node::base::node * node_in, const std::string& port_name_in)
 {
     if (port_name_in == "*") {
         for(auto&& input_name : node_in->audio.get_input_names()) {
             assert(input_name != "*");
-            connect(node_in, input_name);
+            link_to(node_in, input_name);
         }
     } else {
         auto input = node_in->audio.get_input(port_name_in);
