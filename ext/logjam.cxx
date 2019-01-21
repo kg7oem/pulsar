@@ -19,6 +19,13 @@
 
 #include "logjam.h"
 
+// g++ 6.3.0 as it comes in debian/stretch does not support maybe_unused
+#ifdef __GNUC__
+#define UNUSED __attribute__((unused))
+#else
+#define UNUSED [[ maybe_unused ]]
+#endif
+
 namespace logjam {
 
 bool should_log(const loglevel& level_in) {
@@ -114,7 +121,8 @@ void shared_mutex::lock_shared() {
 void shared_mutex::unlock_shared() {
     auto our_thread_id = std::this_thread::get_id();
     std::unique_lock<std::mutex> our_lock(lock_tracking_mutex);
-    auto deleted_owners = shared_owners.erase(our_thread_id);
+    // erase() must run but if asserts are off the result is ignored
+    UNUSED auto deleted_owners = shared_owners.erase(our_thread_id);
     assert(deleted_owners == 1);
     std::shared_timed_mutex::unlock_shared();
 }

@@ -2,14 +2,17 @@ cmake_minimum_required(VERSION 3.8.2)
 
 project(pulsar)
 
-set(CMAKE_CXX_STANDARD 17)
+# configuration
+# Debug, Release, RelWithDebInfo, MinSizeRel
+set(CMAKE_BUILD_TYPE Debug)
 set(CMAKE_VERBOSE_MAKEFILE OFF)
+
+# don't change anything below this line
+set(CMAKE_CXX_STANDARD 17)
 
 find_package(Boost 1.5.8 COMPONENTS system)
 find_package(Threads)
 find_package(yaml-cpp)
-
-add_definitions(-g)
 
 add_definitions(-fPIC)
 add_definitions(-Wfatal-errors -Werror -Wall -Wextra)

@@ -50,11 +50,11 @@ static void async_thread()
 
 void init(const size_type num_threads_in)
 {
+#ifndef NDEBUG
     static bool did_init = false;
-
     assert(! did_init);
-
     did_init = true;
+#endif
 
     for(size_type i = 0; i < num_threads_in; i++) {
         async_threads.emplace_back(async_thread);
