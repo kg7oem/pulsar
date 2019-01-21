@@ -82,15 +82,15 @@ static void connect_nodes(std::map<std::string, node::base::node *>& node_map_in
     auto node_yaml = node_yaml_in;
     auto node_name = node_yaml["name"].as<std::string>();
     auto source_node = node_map_in[node_name];
-    auto connections = node_yaml["connect"];
+    auto links = node_yaml["link"];
     auto forwards = node_yaml["forward"];
 
-    if (connections) {
+    if (links) {
         // if the number of inputs and outputs is the same
         // connect them together in order
-        if (connections.IsScalar()) {
+        if (links.IsScalar()) {
             auto output_names = source_node->audio.get_output_names();
-            auto sink_node_name = connections.as<std::string>();
+            auto sink_node_name = links.as<std::string>();
 
             if (node_map_in.find(sink_node_name) == node_map_in.end()) {
                 system_fault("could not find a node named ", sink_node_name);
@@ -111,7 +111,7 @@ static void connect_nodes(std::map<std::string, node::base::node *>& node_map_in
                 // source_node->audio.get_output(output_names[i])->link_to(sink_channel);
             }
         } else {
-            for(auto&& i : connections) {
+            for(auto&& i : links) {
                 auto source_channel = i.first.as<std::string>();
                 auto target_node = i.second;
 
