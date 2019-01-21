@@ -41,15 +41,15 @@ struct node;
 } // namespace base
 
 void init();
-base::node * make_chain_node(const std::string& name_in, std::shared_ptr<pulsar::domain> domain_in);
-std::string fully_qualify_property_name(const std::string& name_in);
+base::node * make_chain_node(const string_type& name_in, std::shared_ptr<pulsar::domain> domain_in);
+string_type fully_qualify_property_name(const string_type& name_in);
 
 namespace base {
 
 struct node {
     friend void audio::component::source_ready(audio::input *);
-    friend audio::input * audio::component::add_input(const std::string& name_in);
-    friend audio::output * audio::component::add_output(const std::string& name_in);
+    friend audio::input * audio::component::add_input(const string_type& name_in);
+    friend audio::output * audio::component::add_output(const string_type& name_in);
     friend node * config::make_chain_node(const YAML::Node& node_yaml_in, const YAML::Node& chain_yaml_in, std::shared_ptr<pulsar::config::domain> config_in, std::shared_ptr<pulsar::domain> domain_in);
     // FIXME only run() is needed but run() is static and friend didn't like that
     friend pulsar::domain;
@@ -63,8 +63,8 @@ struct node {
     protected:
     std::shared_ptr<pulsar::domain> domain;
     // FIXME pointer because I can't figure out how to make emplace() work
-    std::map<std::string, property::generic *> properties;
-    node(const std::string& name_in, std::shared_ptr<pulsar::domain> domain_in, const bool is_forwarder_in = false);
+    std::map<string_type, property::generic *> properties;
+    node(const string_type& name_in, std::shared_ptr<pulsar::domain> domain_in, const bool is_forwarder_in = false);
     lock_type make_lock();
 
     /*
@@ -108,18 +108,18 @@ struct node {
     virtual void deactivate();
 
     virtual void execute();
-    property::generic& add_property(const std::string& name_in, const property::value_type& type_in);
-    property::generic& add_property(const std::string& name_in, property::generic * property_in);
+    property::generic& add_property(const string_type& name_in, const property::value_type& type_in);
+    property::generic& add_property(const string_type& name_in, property::generic * property_in);
 
     public:
-    const std::string name;
+    const string_type name;
     const bool is_forwarder = false;
     audio::component audio;
     virtual ~node();
     std::shared_ptr<pulsar::domain> get_domain();
-    const std::map<std::string, property::generic *>& get_properties();
-    property::generic& get_property(const std::string& name_in);
-    std::string peek(const std::string& name_in);
+    const std::map<string_type, property::generic *>& get_properties();
+    property::generic& get_property(const string_type& name_in);
+    string_type peek(const string_type& name_in);
     virtual void init();
     virtual bool is_ready();
 };
@@ -131,11 +131,11 @@ class forwarder : public base::node {
     virtual void will_run() override;
     virtual void execute() override;
     virtual void notify() override;
-    forwarder(const std::string& name_in, std::shared_ptr<pulsar::domain> domain_in);
+    forwarder(const string_type& name_in, std::shared_ptr<pulsar::domain> domain_in);
 };
 
 struct chain : public forwarder {
-    chain(const std::string& name_in, std::shared_ptr<pulsar::domain> domain_in);
+    chain(const string_type& name_in, std::shared_ptr<pulsar::domain> domain_in);
 };
 
 } // namespace node

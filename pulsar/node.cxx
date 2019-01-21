@@ -30,12 +30,12 @@ void init()
     library::register_node_factory("pulsar::node::chain", make_chain_node);
 }
 
-base::node * make_chain_node(const std::string& name_in, std::shared_ptr<pulsar::domain> domain_in)
+base::node * make_chain_node(const string_type& name_in, std::shared_ptr<pulsar::domain> domain_in)
 {
     return domain_in->make_node<chain>(name_in);
 }
 
-base::node::node(const std::string& name_in, std::shared_ptr<pulsar::domain> domain_in, const bool is_forwarder_in)
+base::node::node(const string_type& name_in, std::shared_ptr<pulsar::domain> domain_in, const bool is_forwarder_in)
 : domain(domain_in), name(name_in), is_forwarder(is_forwarder_in), audio(this)
 {
     assert(domain != nullptr);
@@ -57,7 +57,7 @@ std::shared_ptr<domain> base::node::get_domain()
     return domain;
 }
 
-property::generic& base::node::get_property(const std::string& name_in)
+property::generic& base::node::get_property(const string_type& name_in)
 {
     auto result = properties.find(name_in);
 
@@ -68,28 +68,28 @@ property::generic& base::node::get_property(const std::string& name_in)
     return *result->second;
 }
 
-std::string fully_qualify_property_name(const std::string& name_in)
+string_type fully_qualify_property_name(const string_type& name_in)
 {
-    if (name_in.find(":") == std::string::npos) {
-        return std::string("config:") + name_in;
+    if (name_in.find(":") == string_type::npos) {
+        return string_type("config:") + name_in;
     }
 
     return name_in;
 }
 
-std::string base::node::peek(const std::string& name_in)
+string_type base::node::peek(const string_type& name_in)
 {
     auto lock = make_lock();
     auto name = fully_qualify_property_name(name_in);
     return get_property(name).get();
 }
 
-const std::map<std::string, property::generic *>& base::node::get_properties()
+const std::map<string_type, property::generic *>& base::node::get_properties()
 {
     return properties;
 }
 
-property::generic& base::node::add_property(const std::string& name_in, const property::value_type& type_in)
+property::generic& base::node::add_property(const string_type& name_in, const property::value_type& type_in)
 {
     // FIXME why doesn't emplace work?
     auto new_property = new property::generic(name_in, type_in);
@@ -97,7 +97,7 @@ property::generic& base::node::add_property(const std::string& name_in, const pr
     return *new_property;
 }
 
-property::generic& base::node::add_property(const std::string& name_in, property::generic * property_in)
+property::generic& base::node::add_property(const string_type& name_in, property::generic * property_in)
 {
     properties[name_in] = property_in;
     return *property_in;
@@ -160,7 +160,7 @@ bool base::node::is_ready()
     return audio.is_ready();
 }
 
-forwarder::forwarder(const std::string& name_in, std::shared_ptr<pulsar::domain> domain_in)
+forwarder::forwarder(const string_type& name_in, std::shared_ptr<pulsar::domain> domain_in)
 : base::node(name_in, domain_in, true)
 { }
 
@@ -186,7 +186,7 @@ void forwarder::notify()
     system_fault("forwarder nodes should never try to notify");
 }
 
-chain::chain(const std::string& name_in, std::shared_ptr<pulsar::domain> domain_in)
+chain::chain(const string_type& name_in, std::shared_ptr<pulsar::domain> domain_in)
 : forwarder(name_in, domain_in)
 { }
 

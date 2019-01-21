@@ -25,9 +25,9 @@ namespace pulsar {
 
 namespace ladspa {
 
-static std::map<std::string, std::shared_ptr<file>> loaded_files;
+static std::map<string_type, std::shared_ptr<file>> loaded_files;
 
-pulsar::node::base::node * make_node(const std::string& name_in, std::shared_ptr<domain> domain_in)
+pulsar::node::base::node * make_node(const string_type& name_in, std::shared_ptr<domain> domain_in)
 {
     return domain_in->make_node<ladspa::node>(name_in);
 }
@@ -37,7 +37,7 @@ void init()
     library::register_node_factory("pulsar::ladspa::node", make_node);
 }
 
-std::shared_ptr<file> open(const std::string& path_in)
+std::shared_ptr<file> open(const string_type& path_in)
 {
     auto result = loaded_files.find(path_in);
 
@@ -51,13 +51,13 @@ std::shared_ptr<file> open(const std::string& path_in)
     return new_file;
 }
 
-const ladspa::descriptor_type * open(const std::string& path_in, const id_type id_in)
+const ladspa::descriptor_type * open(const string_type& path_in, const id_type id_in)
 {
     auto file = open(path_in);
     return file->get_descriptor(id_in);
 }
 
-ladspa::handle_type open(const std::string& path_in, const id_type id_in, const pulsar::size_type sample_rate_in)
+ladspa::handle_type open(const string_type& path_in, const id_type id_in, const pulsar::size_type sample_rate_in)
 {
     auto descriptor = open(path_in, id_in);
     auto instance = descriptor->instantiate(descriptor, sample_rate_in);
@@ -75,7 +75,7 @@ std::shared_ptr<instance> make_instance(std::shared_ptr<file> file_in, const id_
     return std::make_shared<instance>(file_in, descriptor, sample_rate_in);
 }
 
-std::shared_ptr<instance> make_instance(const std::string& path_in, const id_type id_in, const pulsar::size_type sample_rate_in)
+std::shared_ptr<instance> make_instance(const string_type& path_in, const id_type id_in, const pulsar::size_type sample_rate_in)
 {
     auto file = open(path_in);
     return make_instance(file, id_in, sample_rate_in);
@@ -123,7 +123,7 @@ data_type get_control_port_default(const descriptor_type * descriptor_in, const 
     throw std::logic_error("could not find hint for LADSPA port");
 }
 
-file::file(const std::string &path_in)
+file::file(const string_type &path_in)
 : path(path_in)
 {
     handle = dlopen(path_in.c_str(), RTLD_NOW);
@@ -194,9 +194,9 @@ const std::vector<const descriptor_type *> file::get_descriptors()
     return descriptors;
 }
 
-const std::vector<std::pair<id_type, std::string>> file::enumerate()
+const std::vector<std::pair<id_type, string_type>> file::enumerate()
 {
-    std::vector<std::pair<id_type, std::string>> retval;
+    std::vector<std::pair<id_type, string_type>> retval;
 
     for (auto&& descriptor : get_descriptors()) {
         retval.emplace_back(descriptor->UniqueID, descriptor->Name);
@@ -218,7 +218,7 @@ instance::instance(std::shared_ptr<ladspa::file> file_in, const descriptor_type 
     }
 
     for(size_type i = 0; i < get_port_count(); i++) {
-        std::string name(descriptor->PortNames[i]);
+        string_type name(descriptor->PortNames[i]);
         port_name_to_num[name] = i;
     }
 }
@@ -238,12 +238,12 @@ port_descriptor_type instance::get_port_descriptor(const size_type port_num_in)
     return descriptor->PortDescriptors[port_num_in];
 }
 
-const std::string instance::get_port_name(const size_type port_num_in)
+const string_type instance::get_port_name(const size_type port_num_in)
 {
-    return std::string(descriptor->PortNames[port_num_in]);
+    return string_type(descriptor->PortNames[port_num_in]);
 }
 
-id_type instance::get_port_num(const std::string& name_in)
+id_type instance::get_port_num(const string_type& name_in)
 {
     auto result = port_name_to_num.find(name_in);
 
@@ -271,7 +271,7 @@ void instance::run(const size_type num_samples_in)
     descriptor->run(handle, num_samples_in);
 }
 
-node::node(const std::string& name_in, std::shared_ptr<pulsar::domain> domain_in)
+node::node(const string_type& name_in, std::shared_ptr<pulsar::domain> domain_in)
 : pulsar::node::base::node(name_in, domain_in)
 {
     add_property("node:class", property::value_type::string).set("pulsar::ladspa::node");
@@ -309,7 +309,7 @@ void node::init()
             }
         } else if (LADSPA_IS_PORT_CONTROL(descriptor)) {
             auto default_value = get_control_port_default(ladspa->get_descriptor(), port_num);
-            std::string property_name;
+            string_type property_name;
 
             if (LADSPA_IS_PORT_OUTPUT(descriptor)) {
                 property_name = "state:";

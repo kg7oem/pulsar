@@ -17,6 +17,8 @@
 #include <memory>
 #include <yaml-cpp/yaml.h>
 
+#include "system.h"
+
 namespace pulsar {
 
 struct domain;
@@ -36,7 +38,7 @@ namespace config {
 struct domain;
 
 std::shared_ptr<pulsar::domain> make_domain(std::shared_ptr<pulsar::config::domain> domain_info_in);
-std::map<std::string, pulsar::node::base::node *> make_nodes(std::shared_ptr<pulsar::config::domain> config_in, std::shared_ptr<pulsar::domain> domain_in);
+std::map<string_type, pulsar::node::base::node *> make_nodes(std::shared_ptr<pulsar::config::domain> config_in, std::shared_ptr<pulsar::domain> domain_in);
 pulsar::node::base::node * make_chain_node(const YAML::Node& node_yaml_in, const YAML::Node& chain_yaml_in, std::shared_ptr<pulsar::config::domain> config_in, std::shared_ptr<pulsar::domain> domain_in);
 
 class file : public std::enable_shared_from_this<file> {
@@ -46,20 +48,20 @@ class file : public std::enable_shared_from_this<file> {
     void parse();
 
     public:
-    const std::string path;
-    file(const std::string& path_in);
+    const string_type path;
+    file(const string_type& path_in);
     template <typename... Args>
     static std::shared_ptr<file> make(Args&&... args) {
         auto new_file = std::make_shared<file>(args...);
         new_file->open();
         return new_file;
     }
-    std::vector<std::string> get_domain_names();
-    std::shared_ptr<domain> get_domain(const std::string& name_in = "main");
+    std::vector<string_type> get_domain_names();
+    std::shared_ptr<domain> get_domain(const string_type& name_in = "main");
     const YAML::Node get_templates();
-    YAML::Node get_template(const std::string& name_in);
+    YAML::Node get_template(const string_type& name_in);
     const YAML::Node get_chains();
-    const YAML::Node get_chain(const std::string& name_in);
+    const YAML::Node get_chain(const string_type& name_in);
 };
 
 class domain : public std::enable_shared_from_this<domain> {
@@ -67,8 +69,8 @@ class domain : public std::enable_shared_from_this<domain> {
     std::shared_ptr<file> parent;
 
     public:
-    const std::string name;
-    domain(const std::string name_in, const YAML::Node& yaml_in, std::shared_ptr<file> parent_in);
+    const string_type name;
+    domain(const string_type name_in, const YAML::Node& yaml_in, std::shared_ptr<file> parent_in);
     template <typename... Args>
     static std::shared_ptr<domain> make(Args&&... args) {
         auto new_domain = std::make_shared<domain>(args...);

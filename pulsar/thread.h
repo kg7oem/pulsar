@@ -13,32 +13,14 @@
 
 #pragma once
 
-#include <sstream>
-#include <string>
-#include <vector>
-
-#include "system.h"
+#include <mutex>
+#include <thread>
 
 namespace pulsar {
 
-namespace util {
+using mutex_type = std::mutex;
+using lock_type = std::unique_lock<mutex_type>;
 
-namespace string {
+using thread_type = std::thread;
 
-// from https://stackoverflow.com/a/236803
-template<typename Out>
-void split(const string_type &string_in, const char delim_in, Out result) {
-    std::stringstream ss(string_in);
-    string_type item;
-    while (std::getline(ss, item, delim_in)) {
-        *(result++) = item;
-    }
-}
-
-std::vector<string_type> split(const string_type& string_in, const char delim_in);
-
-} // namespace string
-
-} // namespace util
-
-} //namespace pulsar
+} // namespace pulsar

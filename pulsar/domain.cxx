@@ -19,7 +19,7 @@
 
 namespace pulsar {
 
-domain::domain(const std::string& name_in, const pulsar::size_type sample_rate_in, const pulsar::size_type buffer_size_in)
+domain::domain(const string_type& name_in, const pulsar::size_type sample_rate_in, const pulsar::size_type buffer_size_in)
 : name(name_in), sample_rate(sample_rate_in), buffer_size(buffer_size_in)
 {
     // FIXME use mprotect() to set the zero_buffer memory as read-only

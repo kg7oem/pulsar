@@ -27,7 +27,7 @@ namespace async {
 using namespace std::chrono_literals;
 
 static boost::asio::io_service boost_io;
-static std::vector<std::thread> async_threads;
+static std::vector<thread_type> async_threads;
 
 // boost::asio::io_service& get_global_io()
 // {

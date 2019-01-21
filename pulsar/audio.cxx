@@ -108,7 +108,7 @@ void audio::buffer::scale(const float scale_in)
     audio::util::pcm_scale(pointer, scale_in, size);
 }
 
-audio::channel::channel(const std::string &name_in, node::base::node * parent_in)
+audio::channel::channel(const string_type &name_in, node::base::node * parent_in)
 : parent(parent_in), name(name_in)
 { }
 
@@ -125,7 +125,7 @@ node::base::node * audio::channel::get_parent()
     return parent;
 }
 
-audio::input::input(const std::string& name_in, node::base::node * parent_in)
+audio::input::input(const string_type& name_in, node::base::node * parent_in)
 : audio::channel(name_in, parent_in)
 { }
 
@@ -155,7 +155,7 @@ void audio::input::link_to(audio::output * source_in) {
     source_in->register_link(new_link);
 }
 
-void audio::input::link_to(node::base::node * node_in, const std::string& port_name_in)
+void audio::input::link_to(node::base::node * node_in, const string_type& port_name_in)
 {
     if (port_name_in == "*") {
         for(auto&& output_name : node_in->audio.get_output_names()) {
@@ -183,7 +183,7 @@ void audio::input::forward_to(input * to_in)
     to_in->register_forward(new_forward);
 }
 
-void audio::input::forward_to(node::base::node * node_in, const std::string& port_name_in)
+void audio::input::forward_to(node::base::node * node_in, const string_type& port_name_in)
 {
     if (port_name_in == "*") {
         for(auto&& input_name : node_in->audio.get_input_names()) {
@@ -280,7 +280,7 @@ std::shared_ptr<audio::buffer> audio::input::mix_sinks()
     return mix_buffer;
 }
 
-audio::output::output(const std::string& name_in, node::base::node * parent_in)
+audio::output::output(const string_type& name_in, node::base::node * parent_in)
 : audio::channel(name_in, parent_in)
 { }
 
@@ -321,7 +321,7 @@ void audio::output::link_to(audio::input * sink_in)
     sink_in->register_link(new_link);
 }
 
-void audio::output::link_to(node::base::node * node_in, const std::string& port_name_in)
+void audio::output::link_to(node::base::node * node_in, const string_type& port_name_in)
 {
     if (port_name_in == "*") {
         for(auto&& input_name : node_in->audio.get_input_names()) {
@@ -349,7 +349,7 @@ void audio::output::forward_to(output * to_in)
     to_in->register_forward(new_forward);
 }
 
-void audio::output::forward_to(node::base::node * node_in, const std::string& port_name_in)
+void audio::output::forward_to(node::base::node * node_in, const string_type& port_name_in)
 {
     if (port_name_in == "*") {
         for(auto&& output_name : node_in->audio.get_output_names()) {
@@ -503,7 +503,7 @@ void audio::component::source_ready(audio::input *)
     }
 }
 
-audio::input * audio::component::add_input(const std::string& name_in)
+audio::input * audio::component::add_input(const string_type& name_in)
 {
     if (sources.count(name_in) != 0) {
         throw std::runtime_error("attempt to add duplicate input name: " + name_in);
@@ -512,13 +512,13 @@ audio::input * audio::component::add_input(const std::string& name_in)
     auto new_input = new audio::input(name_in, parent);
     sources[new_input->name] = new_input;
 
-    auto property_name = std::string("input:") + name_in;
+    auto property_name = string_type("input:") + name_in;
     parent->add_property(property_name, property::value_type::string).set("audio");
 
     return new_input;
 }
 
-audio::input * audio::component::get_input(const std::string& name_in)
+audio::input * audio::component::get_input(const string_type& name_in)
 {
     if (sources.count(name_in) == 0) {
         system_fault("could not find input channel named ", name_in, " for node ", parent->name);
@@ -527,9 +527,9 @@ audio::input * audio::component::get_input(const std::string& name_in)
     return sources[name_in];
 }
 
-std::vector<std::string> audio::component::get_input_names()
+std::vector<string_type> audio::component::get_input_names()
 {
-    std::vector<std::string> retval;
+    std::vector<string_type> retval;
 
     for(auto&& input : sources) {
         retval.push_back(input.first);
@@ -538,7 +538,7 @@ std::vector<std::string> audio::component::get_input_names()
     return retval;
 }
 
-audio::output * audio::component::add_output(const std::string& name_in)
+audio::output * audio::component::add_output(const string_type& name_in)
 {
     if (sinks.count(name_in) != 0) {
         throw std::runtime_error("attempt to add duplicate output name: " + name_in);
@@ -547,13 +547,13 @@ audio::output * audio::component::add_output(const std::string& name_in)
     auto new_output = new audio::output(name_in, parent);
     sinks[new_output->name] = new_output;
 
-    auto property_name = std::string("output:") + name_in;
+    auto property_name = string_type("output:") + name_in;
     parent->add_property(property_name, property::value_type::string).set("audio");
 
     return new_output;
 }
 
-audio::output * audio::component::get_output(const std::string& name_in)
+audio::output * audio::component::get_output(const string_type& name_in)
 {
     if (sinks.count(name_in) == 0) {
         system_fault("could not find output channel named ", name_in, " for node ", parent->name);
@@ -562,9 +562,9 @@ audio::output * audio::component::get_output(const std::string& name_in)
     return sinks[name_in];
 }
 
-std::vector<std::string> audio::component::get_output_names()
+std::vector<string_type> audio::component::get_output_names()
 {
-    std::vector<std::string> retval;
+    std::vector<string_type> retval;
 
     for(auto&& output : sinks) {
         retval.push_back(output.first);

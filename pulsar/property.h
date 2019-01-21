@@ -28,7 +28,7 @@ union value_container {
     size_type size;
     integer_type integer;
     real_type real;
-    std::string * string;
+    string_type * string;
 };
 
 class generic {
@@ -36,13 +36,13 @@ class generic {
     value_container value;
 
     public:
-    const std::string name;
+    const string_type name;
     const value_type type = value_type::unknown;
-    generic(const std::string& name_in, const value_type& type_in);
+    generic(const string_type& name_in, const value_type& type_in);
     virtual ~generic();
-    std::string get();
+    string_type get();
     void set(const double& value_in);
-    void set(const std::string& value_in);
+    void set(const string_type& value_in);
     void set(const YAML::Node& value_in);
     size_type& get_size();
     void set_size(const size_type& size_in);
@@ -50,8 +50,8 @@ class generic {
     void set_integer(const integer_type& integer_in);
     void set_real(const real_type& real_in);
     real_type& get_real();
-    std::string& get_string();
-    void set_string(const std::string& string_in);
+    string_type& get_string();
+    void set_string(const string_type& string_in);
 };
 
 } // namespace property

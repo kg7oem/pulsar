@@ -38,14 +38,14 @@ using port_descriptor_type = LADSPA_PortDescriptor;
 struct file;
 struct instance;
 
-pulsar::node::base::node * make_node(const std::string& name_in, std::shared_ptr<domain> domain_in);
+pulsar::node::base::node * make_node(const string_type& name_in, std::shared_ptr<domain> domain_in);
 void init();
-std::shared_ptr<file> open(const std::string& path_in);
-handle_type open(const std::string& path_in, const id_type id_in, const size_type sample_rate_in);
-const ladspa::descriptor_type * open(const std::string& path_in, const id_type id_in);
-ladspa::handle_type open(const std::string& path_in, const id_type id_in, const pulsar::size_type sample_rate_in);
+std::shared_ptr<file> open(const string_type& path_in);
+handle_type open(const string_type& path_in, const id_type id_in, const size_type sample_rate_in);
+const ladspa::descriptor_type * open(const string_type& path_in, const id_type id_in);
+ladspa::handle_type open(const string_type& path_in, const id_type id_in, const pulsar::size_type sample_rate_in);
 std::shared_ptr<instance> make_instance(std::shared_ptr<file> file_in, const id_type id_in, const pulsar::size_type sample_rate_in);
-std::shared_ptr<instance> make_instance(const std::string& path_in, const id_type id_in, const pulsar::size_type sample_rate_in);
+std::shared_ptr<instance> make_instance(const string_type& path_in, const id_type id_in, const pulsar::size_type sample_rate_in);
 data_type get_control_port_default(const descriptor_type * descriptor_in, const size_type port_num_in);
 
 class file : public std::enable_shared_from_this<file> {
@@ -54,11 +54,11 @@ class file : public std::enable_shared_from_this<file> {
     std::map<id_type, const descriptor_type *> id_to_descriptor;
 
     public:
-    const std::string path;
+    const string_type path;
     const std::vector<const descriptor_type *> get_descriptors();
     const descriptor_type * get_descriptor(const id_type id_in);
-    const std::vector<std::pair<id_type, std::string>> enumerate();
-    file(const std::string &path_in);
+    const std::vector<std::pair<id_type, string_type>> enumerate();
+    file(const string_type &path_in);
     virtual ~file();
     std::shared_ptr<instance> make_instance(const id_type id_in, const pulsar::size_type sample_rate_in);
 };
@@ -67,16 +67,16 @@ class instance : public std::enable_shared_from_this<instance> {
     std::shared_ptr<ladspa::file> file = nullptr;
     const descriptor_type * descriptor = nullptr;
     handle_type handle = nullptr;
-    std::map<std::string, size_type> port_name_to_num;
+    std::map<string_type, size_type> port_name_to_num;
 
     public:
     instance(std::shared_ptr<ladspa::file> file_in, const descriptor_type * descriptor_in, const pulsar::size_type sample_rate_in);
     const descriptor_type * get_descriptor();
     size_type get_port_count();
     port_descriptor_type get_port_descriptor(const size_type port_num_in);
-    const std::string get_port_name(const size_type port_num_in);
-    const std::vector<std::string> get_port_names();
-    id_type get_port_num(const std::string &name_in);
+    const string_type get_port_name(const size_type port_num_in);
+    const std::vector<string_type> get_port_names();
+    id_type get_port_num(const string_type &name_in);
     void activate();
     void connect(const size_type port_num_in, data_type * buffer_in);
     void run(const size_type num_samples_in);
@@ -90,7 +90,7 @@ class node : public pulsar::node::base::node {
     virtual void run() override;
 
     public:
-    node(const std::string& name_in, std::shared_ptr<pulsar::domain> domain_in);
+    node(const string_type& name_in, std::shared_ptr<pulsar::domain> domain_in);
     virtual void activate() override;
 };
 

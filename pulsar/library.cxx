@@ -24,9 +24,9 @@ using mutex_type = std::mutex;
 using lock_type = std::unique_lock<mutex_type>;
 
 static mutex_type class_to_factory_mutex;
-static std::map<std::string, node_factory_type> class_to_factory;
+static std::map<string_type, node_factory_type> class_to_factory;
 
-void register_node_factory(const std::string& name_in, node_factory_type factory_in)
+void register_node_factory(const string_type& name_in, node_factory_type factory_in)
 {
     lock_type lock(class_to_factory_mutex);
 
@@ -39,7 +39,7 @@ void register_node_factory(const std::string& name_in, node_factory_type factory
     class_to_factory[name_in] = factory_in;
 }
 
-node::base::node * make_node(const std::string& class_name_in, const std::string& name_in, std::shared_ptr<domain> domain_in)
+node::base::node * make_node(const string_type& class_name_in, const string_type& name_in, std::shared_ptr<domain> domain_in)
 {
     lock_type lock(class_to_factory_mutex);
 

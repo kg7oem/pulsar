@@ -31,7 +31,7 @@ void init()
     library::register_node_factory("pulsar::jackaudio::node", make_node);
 }
 
-pulsar::node::base::node * make_node(const std::string& name_in, std::shared_ptr<domain> domain_in)
+pulsar::node::base::node * make_node(const string_type& name_in, std::shared_ptr<domain> domain_in)
 {
     return domain_in->make_node<jackaudio::node>(name_in);
 }
@@ -39,7 +39,7 @@ pulsar::node::base::node * make_node(const std::string& name_in, std::shared_ptr
 } // namespace jackaudio
 
 
-jackaudio::node::node(const std::string& name_in, std::shared_ptr<pulsar::domain> domain_in)
+jackaudio::node::node(const string_type& name_in, std::shared_ptr<pulsar::domain> domain_in)
 : pulsar::node::base::node(name_in, domain_in)
 {
     add_property("node:class", property::value_type::string).set("pulsar::jackaudio::node");
@@ -61,7 +61,7 @@ pulsar::node::base::node::lock_type jackaudio::node::make_done_lock()
     return node::lock_type(done_mutex);
 }
 
-void jackaudio::node::open(const std::string& jack_name_in)
+void jackaudio::node::open(const string_type& jack_name_in)
 {
     jack_client = jack_client_open(jack_name_in.c_str(), jack_options, 0);
 
@@ -80,7 +80,7 @@ void jackaudio::node::open(const std::string& jack_name_in)
     get_property("config:sample_rate").set(sample_rate);
 }
 
-jackaudio::port_type * jackaudio::node::add_port(const std::string& port_name_in, const char * port_type_in, const flags_type flags_in, const size_type buffer_size_in)
+jackaudio::port_type * jackaudio::node::add_port(const string_type& port_name_in, const char * port_type_in, const flags_type flags_in, const size_type buffer_size_in)
 {
     if (jack_ports.count(port_name_in) != 0) {
         throw std::runtime_error("attempt to register duplicate jackaudio port name: " + port_name_in);
@@ -97,7 +97,7 @@ jackaudio::port_type * jackaudio::node::add_port(const std::string& port_name_in
     return new_port;
 }
 
-pulsar::sample_type * jackaudio::node::get_port_buffer(const std::string& name_in)
+pulsar::sample_type * jackaudio::node::get_port_buffer(const string_type& name_in)
 {
     if (jack_ports.count(name_in) == 0) {
         throw std::runtime_error("could not find a jackaudio port named " + name_in);

@@ -21,7 +21,7 @@ namespace pulsar {
 
 namespace property {
 
-generic::generic(const std::string& name_in, const value_type& type_in)
+generic::generic(const string_type& name_in, const value_type& type_in)
 : name(name_in), type(type_in)
 {
     switch(type) {
@@ -29,7 +29,7 @@ generic::generic(const std::string& name_in, const value_type& type_in)
         case value_type::size: value.size = 0; break;
         case value_type::integer: value.integer = 0; break;
         case value_type::real: value.real = 0; break;
-        case value_type::string: value.string = new std::string; break;
+        case value_type::string: value.string = new string_type; break;
     }
 }
 
@@ -41,7 +41,7 @@ generic::~generic()
     }
 }
 
-std::string generic::get()
+string_type generic::get()
 {
     switch(type) {
         case value_type::unknown: system_fault("parameter type was not known");
@@ -67,7 +67,7 @@ void generic::set(const double& value_in)
     system_fault("should never get out of switch statement");
 }
 
-void generic::set(const std::string& value_in)
+void generic::set(const string_type& value_in)
 {
     auto c_str = value_in.c_str();
 
@@ -89,7 +89,7 @@ void generic::set(const YAML::Node& value_in)
         case value_type::size: value.size = value_in.as<size_type>(); return;
         case value_type::integer: value.integer = value_in.as<integer_type>(); return;
         case value_type::real: value.real = value_in.as<real_type>(); return;
-        case value_type::string: *value.string = value_in.as<std::string>(); return;
+        case value_type::string: *value.string = value_in.as<string_type>(); return;
     }
 }
 
@@ -147,7 +147,7 @@ real_type& generic::get_real()
     return value.real;
 }
 
-void generic::set_string(const std::string& string_in)
+void generic::set_string(const string_type& string_in)
 {
     if (type != value_type::string) {
         system_fault("parameter is not of type: string");
@@ -156,7 +156,7 @@ void generic::set_string(const std::string& string_in)
     *value.string = string_in;
 }
 
-std::string& generic::get_string()
+string_type& generic::get_string()
 {
     if (type != value_type::string) {
         system_fault("parameter is not of type: string");

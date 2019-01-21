@@ -54,23 +54,23 @@ void register_alive_handler(alive_handler_type cb_in, void * arg_in)
     alive_timer->watch(wrapper);
 }
 
-std::string make_boost_version();
+string_type make_boost_version();
 
-const std::string boost_version = make_boost_version();
+const string_type boost_version = make_boost_version();
 
-const std::string& get_boost_version()
+const string_type& get_boost_version()
 {
     return boost_version;
 }
 
-std::string make_boost_version()
+string_type make_boost_version()
 {
-    std::string buf("v");
-    std::string version(BOOST_LIB_VERSION);
+    string_type buf("v");
+    string_type version(BOOST_LIB_VERSION);
 
     auto pos = version.find("_");
 
-    if (pos == std::string::npos) {
+    if (pos == string_type::npos) {
         throw std::runtime_error("expected to find _ in " + version);
     }
 
@@ -78,7 +78,7 @@ std::string make_boost_version()
 
     pos = version.find("_");
 
-    if (pos == std::string::npos) {
+    if (pos == string_type::npos) {
         version += ".0";
     } else {
         version.replace(pos, 1, ".");
@@ -89,7 +89,7 @@ std::string make_boost_version()
     return buf;
 }
 
-[[noreturn]] void fault(const char* file_in, int line_in, const char* function_in, const std::string& message_in)
+[[noreturn]] void fault(const char* file_in, int line_in, const char* function_in, const string_type& message_in)
 {
     logjam::send_logevent(PULSAR_LOG_NAME, logjam::loglevel::fatal, function_in, file_in, line_in, message_in);
     abort();

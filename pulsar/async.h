@@ -18,9 +18,9 @@
 #include <chrono>
 #include <functional>
 #include <memory>
-#include <mutex>
 
 #include "system.h"
+#include "thread.h"
 
 namespace pulsar {
 

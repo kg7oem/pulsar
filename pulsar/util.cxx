@@ -20,9 +20,9 @@ namespace util {
 namespace string {
 
 // from https://stackoverflow.com/a/236803
-std::vector<std::string> split(const std::string& string_in, const char delim_in)
+std::vector<string_type> split(const string_type& string_in, const char delim_in)
 {
-    std::vector<std::string> parts;
+    std::vector<string_type> parts;
     split(string_in, delim_in, std::back_inserter(parts));
     return parts;
 }

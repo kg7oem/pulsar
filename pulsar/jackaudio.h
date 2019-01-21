@@ -33,28 +33,28 @@ using port_type = jack_port_t;
 using size_type = unsigned long;
 
 void init();
-pulsar::node::base::node * make_node(const std::string& name_in, std::shared_ptr<domain> domain_in);
+pulsar::node::base::node * make_node(const string_type& name_in, std::shared_ptr<domain> domain_in);
 
 class node : public pulsar::node::base::node {
     std::shared_ptr<async::watchdog> watchdog = nullptr;
     client_type * jack_client = nullptr;
     const options_type jack_options = JackNoStartServer;
-    std::map<std::string, port_type *> jack_ports;
+    std::map<string_type, port_type *> jack_ports;
     std::atomic<bool> did_notify = ATOMIC_VAR_INIT(false);
     std::condition_variable done_cond;
     mutex_type done_mutex;
     bool done_flag = false;
     lock_type make_done_lock();
-    port_type * add_port(const std::string& port_name_in, const char * port_type_in, const flags_type flags_in, const size_type buffer_size_in = 0);
-    sample_type * get_port_buffer(const std::string& port_name_in);
+    port_type * add_port(const string_type& port_name_in, const char * port_type_in, const flags_type flags_in, const size_type buffer_size_in = 0);
+    sample_type * get_port_buffer(const string_type& port_name_in);
     void start();
-    void open(const std::string& jack_name_in);
+    void open(const string_type& jack_name_in);
     virtual void run() override;
     virtual void notify() override;
     void handle_jack_process(jack_nframes_t nframes_in);
 
     public:
-    node(const std::string& name_in, std::shared_ptr<pulsar::domain> domain_in);
+    node(const string_type& name_in, std::shared_ptr<pulsar::domain> domain_in);
     ~node();
     virtual void activate() override;
 };

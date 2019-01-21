@@ -24,10 +24,10 @@ namespace pulsar {
 
 namespace library {
 
-using node_factory_type = std::function<node::base::node * (const std::string&, std::shared_ptr<domain>)>;
+using node_factory_type = std::function<node::base::node * (const string_type&, std::shared_ptr<domain>)>;
 
-void register_node_factory(const std::string& name_in, node_factory_type factory_in);
-node::base::node * make_node(const std::string& class_name_in, const std::string& name_in, std::shared_ptr<domain> domain_in);
+void register_node_factory(const string_type& name_in, node_factory_type factory_in);
+node::base::node * make_node(const string_type& class_name_in, const string_type& name_in, std::shared_ptr<domain> domain_in);
 
 } // namespace library
 

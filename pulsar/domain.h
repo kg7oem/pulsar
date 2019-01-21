@@ -56,7 +56,7 @@ struct domain : public std::enable_shared_from_this<domain> {
     static void be_thread(domain * domain_in);
 
     public:
-    const std::string name;
+    const string_type name;
     const pulsar::size_type sample_rate;
     const pulsar::size_type buffer_size;
     template <typename... Args>
@@ -64,7 +64,7 @@ struct domain : public std::enable_shared_from_this<domain> {
     {
         return std::make_shared<domain>(args...);
     }
-    domain(const std::string& name_in, const pulsar::size_type sample_rate_in, const pulsar::size_type buffer_size_in);
+    domain(const string_type& name_in, const pulsar::size_type sample_rate_in, const pulsar::size_type buffer_size_in);
     virtual ~domain();
     std::shared_ptr<audio::buffer> get_zero_buffer();
     void activate(const size_type num_threads_in = 1);
