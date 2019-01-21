@@ -170,6 +170,14 @@ void audio::input::link_to(node::base::node * node_in, const std::string& port_n
 
 void audio::input::forward_to(input * to_in)
 {
+    if (! parent->is_forwarder) {
+        system_fault("node to forward from is not a forwarder: ", parent->name);
+    }
+
+    if (to_in->get_parent()->is_forwarder) {
+        system_fault("node to forward to is also a forwarder: ", parent->name, ":", name, " -> ", to_in->get_parent()->name, ":", to_in->name);
+    }
+
     auto new_forward = new audio::input_forward(this, to_in);
     forwards.push_back(new_forward);
     to_in->register_forward(new_forward);
@@ -328,6 +336,14 @@ void audio::output::link_to(node::base::node * node_in, const std::string& port_
 
 void audio::output::forward_to(output * to_in)
 {
+    if (parent->is_forwarder) {
+        system_fault("node to forward output from is a forwarder: ", parent->name);
+    }
+
+    if (! to_in->get_parent()->is_forwarder) {
+        system_fault("node to forward output to is not a forwarder: ", parent->name, ":", name, " -> ", to_in->get_parent()->name, ":", to_in->name);
+    }
+
     auto new_forward = new audio::output_forward(this, to_in);
     forwards.push_back(new_forward);
     to_in->register_forward(new_forward);
