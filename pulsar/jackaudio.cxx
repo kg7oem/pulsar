@@ -31,7 +31,7 @@ void init()
     library::register_node_factory("pulsar::jackaudio::node", make_node);
 }
 
-pulsar::node::base::node * make_node(const string_type& name_in, std::shared_ptr<domain> domain_in)
+pulsar::node::base * make_node(const string_type& name_in, std::shared_ptr<domain> domain_in)
 {
     return domain_in->make_node<jackaudio::node>(name_in);
 }
@@ -40,7 +40,7 @@ pulsar::node::base::node * make_node(const string_type& name_in, std::shared_ptr
 
 
 jackaudio::node::node(const string_type& name_in, std::shared_ptr<pulsar::domain> domain_in)
-: pulsar::node::base::node(name_in, domain_in)
+: pulsar::node::base(name_in, domain_in)
 {
     add_property("node:class", property::value_type::string).set("pulsar::jackaudio::node");
     add_property("config:client_name", property::value_type::string).set(name_in);
@@ -140,7 +140,7 @@ void jackaudio::node::activate()
 
     start();
 
-    pulsar::node::base::node::activate();
+    pulsar::node::base::activate();
 }
 
 // FIXME right now a node with no inputs will never run.
@@ -199,7 +199,7 @@ void jackaudio::node::run()
     done_flag = true;
     done_cond.notify_all();
 
-    pulsar::node::base::node::run();
+    pulsar::node::base::run();
 }
 
 // notifications happened from inside the jackaudio callback

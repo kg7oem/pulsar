@@ -30,12 +30,12 @@ void init()
     library::register_node_factory("pulsar::node::chain", make_chain_node);
 }
 
-base::node * make_chain_node(const string_type& name_in, std::shared_ptr<pulsar::domain> domain_in)
+base * make_chain_node(const string_type& name_in, std::shared_ptr<pulsar::domain> domain_in)
 {
     return domain_in->make_node<chain>(name_in);
 }
 
-base::node::node(const string_type& name_in, std::shared_ptr<pulsar::domain> domain_in, const bool is_forwarder_in)
+base::base(const string_type& name_in, std::shared_ptr<pulsar::domain> domain_in, const bool is_forwarder_in)
 : domain(domain_in), name(name_in), is_forwarder(is_forwarder_in), audio(this)
 {
     assert(domain != nullptr);
@@ -44,15 +44,15 @@ base::node::node(const string_type& name_in, std::shared_ptr<pulsar::domain> dom
     add_property("node:domain", pulsar::property::value_type::string).set(domain->name);
 }
 
-base::node::~node()
+base::~base()
 { }
 
-std::shared_ptr<domain> base::node::get_domain()
+std::shared_ptr<domain> base::get_domain()
 {
     return domain;
 }
 
-property::generic& base::node::get_property(const string_type& name_in)
+property::generic& base::get_property(const string_type& name_in)
 {
     auto result = properties.find(name_in);
 
@@ -72,19 +72,19 @@ string_type fully_qualify_property_name(const string_type& name_in)
     return name_in;
 }
 
-string_type base::node::peek(const string_type& name_in)
+string_type base::peek(const string_type& name_in)
 {
     auto lock = lock_type(node_mutex);
     auto name = fully_qualify_property_name(name_in);
     return get_property(name).get();
 }
 
-const std::map<string_type, property::generic *>& base::node::get_properties()
+const std::map<string_type, property::generic *>& base::get_properties()
 {
     return properties;
 }
 
-property::generic& base::node::add_property(const string_type& name_in, const property::value_type& type_in)
+property::generic& base::add_property(const string_type& name_in, const property::value_type& type_in)
 {
     // FIXME why doesn't emplace work?
     auto new_property = new property::generic(name_in, type_in);
@@ -92,55 +92,55 @@ property::generic& base::node::add_property(const string_type& name_in, const pr
     return *new_property;
 }
 
-property::generic& base::node::add_property(const string_type& name_in, property::generic * property_in)
+property::generic& base::add_property(const string_type& name_in, property::generic * property_in)
 {
     properties[name_in] = property_in;
     return *property_in;
 }
 
-void base::node::activate()
+void base::activate()
 {
     audio.activate();
     reset_cycle();
 }
 
-void base::node::init_cycle()
+void base::init_cycle()
 {
     log_trace("initializing cycle for node ", name);
     audio.init_cycle();
 }
 
-void base::node::will_run()
+void base::will_run()
 {
     init_cycle();
     domain->add_ready_node(this);
 }
 
-void base::node::run()
+void base::run()
 { }
 
-void base::node::did_run()
+void base::did_run()
 { }
 
-void base::node::notify()
+void base::notify()
 {
     audio.notify();
 }
 
-void base::node::reset_cycle()
+void base::reset_cycle()
 {
     audio.reset_cycle();
 }
 
-void base::node::deactivate()
+void base::deactivate()
 {
     system_fault("cant deactivate yet");
 }
 
-void base::node::init()
+void base::init()
 { }
 
-void base::node::execute()
+void base::execute()
 {
     auto lock = lock_type(node_mutex);
 
@@ -150,13 +150,13 @@ void base::node::execute()
     reset_cycle();
 }
 
-bool base::node::is_ready()
+bool base::is_ready()
 {
     return audio.is_ready();
 }
 
 forwarder::forwarder(const string_type& name_in, std::shared_ptr<pulsar::domain> domain_in)
-: base::node(name_in, domain_in, true)
+: base(name_in, domain_in, true)
 { }
 
 void forwarder::will_run()

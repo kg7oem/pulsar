@@ -108,7 +108,7 @@ void audio::buffer::scale(const float scale_in)
     audio::util::pcm_scale(pointer, scale_in, size);
 }
 
-audio::channel::channel(const string_type &name_in, node::base::node * parent_in)
+audio::channel::channel(const string_type &name_in, node::base * parent_in)
 : parent(parent_in), name(name_in)
 { }
 
@@ -120,12 +120,12 @@ void audio::channel::register_link(link * link_in)
     links.push_back(link_in);
 }
 
-node::base::node * audio::channel::get_parent()
+node::base * audio::channel::get_parent()
 {
     return parent;
 }
 
-audio::input::input(const string_type& name_in, node::base::node * parent_in)
+audio::input::input(const string_type& name_in, node::base * parent_in)
 : audio::channel(name_in, parent_in)
 { }
 
@@ -155,7 +155,7 @@ void audio::input::link_to(audio::output * source_in) {
     source_in->register_link(new_link);
 }
 
-void audio::input::link_to(node::base::node * node_in, const string_type& port_name_in)
+void audio::input::link_to(node::base * node_in, const string_type& port_name_in)
 {
     if (port_name_in == "*") {
         for(auto&& output_name : node_in->audio.get_output_names()) {
@@ -183,7 +183,7 @@ void audio::input::forward_to(input * to_in)
     to_in->register_forward(new_forward);
 }
 
-void audio::input::forward_to(node::base::node * node_in, const string_type& port_name_in)
+void audio::input::forward_to(node::base * node_in, const string_type& port_name_in)
 {
     if (port_name_in == "*") {
         for(auto&& input_name : node_in->audio.get_input_names()) {
@@ -280,7 +280,7 @@ std::shared_ptr<audio::buffer> audio::input::mix_outputs()
     return mix_buffer;
 }
 
-audio::output::output(const string_type& name_in, node::base::node * parent_in)
+audio::output::output(const string_type& name_in, node::base * parent_in)
 : audio::channel(name_in, parent_in)
 { }
 
@@ -321,7 +321,7 @@ void audio::output::link_to(audio::input * sink_in)
     sink_in->register_link(new_link);
 }
 
-void audio::output::link_to(node::base::node * node_in, const string_type& port_name_in)
+void audio::output::link_to(node::base * node_in, const string_type& port_name_in)
 {
     if (port_name_in == "*") {
         for(auto&& input_name : node_in->audio.get_input_names()) {
@@ -349,7 +349,7 @@ void audio::output::forward_to(output * to_in)
     to_in->register_forward(new_forward);
 }
 
-void audio::output::forward_to(node::base::node * node_in, const string_type& port_name_in)
+void audio::output::forward_to(node::base * node_in, const string_type& port_name_in)
 {
     if (port_name_in == "*") {
         for(auto&& output_name : node_in->audio.get_output_names()) {
@@ -424,7 +424,7 @@ audio::output_forward::output_forward(output * from_in, output * to_in)
 : from(from_in), to(to_in)
 { }
 
-audio::component::component(node::base::node * parent_in)
+audio::component::component(node::base * parent_in)
 : parent(parent_in)
 {
 

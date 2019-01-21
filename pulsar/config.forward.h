@@ -13,22 +13,24 @@
 
 #pragma once
 
-#include <functional>
 #include <memory>
-#include <string>
 
-#include <pulsar/domain.h>
-#include <pulsar/node.h>
+#include <pulsar/domain.forward.h>
+#include <pulsar/node.forward.h>
+#include <pulsar/system.h>
 
 namespace pulsar {
 
-namespace library {
+namespace config {
 
-using node_factory_type = std::function<node::base * (const string_type&, std::shared_ptr<domain>)>;
+struct domain;
+struct file;
 
-void register_node_factory(const string_type& name_in, node_factory_type factory_in);
-node::base * make_node(const string_type& class_name_in, const string_type& name_in, std::shared_ptr<domain> domain_in);
+pulsar::node::base * make_chain_node(const YAML::Node& node_yaml_in, const YAML::Node& chain_yaml_in, std::shared_ptr<pulsar::config::domain> config_in, std::shared_ptr<pulsar::domain> domain_in);
+std::shared_ptr<pulsar::domain> make_domain(std::shared_ptr<pulsar::config::domain> domain_info_in);
+std::map<string_type, pulsar::node::base *> make_nodes(std::shared_ptr<pulsar::config::domain> config_in, std::shared_ptr<pulsar::domain> domain_in);
 
-} // namespace library
+
+} // namespace config
 
 } // namespace pulsar

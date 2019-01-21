@@ -39,7 +39,7 @@ void register_node_factory(const string_type& name_in, node_factory_type factory
     class_to_factory[name_in] = factory_in;
 }
 
-node::base::node * make_node(const string_type& class_name_in, const string_type& name_in, std::shared_ptr<domain> domain_in)
+node::base * make_node(const string_type& class_name_in, const string_type& name_in, std::shared_ptr<domain> domain_in)
 {
     lock_type lock(class_to_factory_mutex);
 

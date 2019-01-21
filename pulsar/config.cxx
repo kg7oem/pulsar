@@ -24,9 +24,9 @@ namespace pulsar {
 
 namespace config {
 
-using node_map_type = std::map<string_type, node::base::node *>;
+using node_map_type = std::map<string_type, node::base *>;
 
-static pulsar::node::base::node * make_node(const YAML::Node& node_yaml_in, std::shared_ptr<pulsar::config::domain> config_in, std::shared_ptr<pulsar::domain> domain_in);
+static pulsar::node::base * make_node(const YAML::Node& node_yaml_in, std::shared_ptr<pulsar::config::domain> config_in, std::shared_ptr<pulsar::domain> domain_in);
 std::shared_ptr<pulsar::domain> make_domain(std::shared_ptr<pulsar::config::domain> domain_info_in)
 {
     auto domain_config = domain_info_in->get_config();
@@ -79,7 +79,7 @@ static void apply_yaml_template(YAML::Node& dest_in, const YAML::Node& src_in)
     }
 }
 
-static void link_node_n_to_n(node::base::node * source_node_in, node::base::node * sink_node_in)
+static void link_node_n_to_n(node::base * source_node_in, node::base * sink_node_in)
 {
     auto output_names = source_node_in->audio.get_output_names();
     auto input_names = sink_node_in->audio.get_input_names();
@@ -98,7 +98,7 @@ static void link_channel_by_target(audio::output * source_channel_in, const node
     auto target_split = util::string::split(target_string_in, ':');
     auto split_size = target_split.size();
     string_type sink_node_name, sink_channel_name;
-    node::base::node * sink_node;
+    node::base * sink_node;
 
     if (split_size == 2) {
         sink_node_name = target_split[0];
@@ -187,7 +187,7 @@ static void connect_nodes(node_map_type& node_map_in, const YAML::Node& node_yam
     }
 }
 
-static pulsar::node::base::node * make_class_node(const YAML::Node& node_yaml_in, std::shared_ptr<pulsar::domain> domain_in)
+static pulsar::node::base * make_class_node(const YAML::Node& node_yaml_in, std::shared_ptr<pulsar::domain> domain_in)
 {
     auto node_yaml = node_yaml_in;
     auto node_name_node = node_yaml["name"];
@@ -239,7 +239,7 @@ static pulsar::node::base::node * make_class_node(const YAML::Node& node_yaml_in
     return new_node;
 }
 
-pulsar::node::base::node * make_chain_node(const YAML::Node& node_yaml_in, const YAML::Node& chain_yaml_in, std::shared_ptr<pulsar::config::domain> config_in, std::shared_ptr<pulsar::domain> domain_in)
+pulsar::node::base * make_chain_node(const YAML::Node& node_yaml_in, const YAML::Node& chain_yaml_in, std::shared_ptr<pulsar::config::domain> config_in, std::shared_ptr<pulsar::domain> domain_in)
 {
     YAML::Node node_yaml = node_yaml_in;
     node_map_type chain_nodes;
@@ -392,9 +392,9 @@ pulsar::node::base::node * make_chain_node(const YAML::Node& node_yaml_in, const
     return chain_root_node;
 }
 
-static pulsar::node::base::node * make_node(const YAML::Node& node_yaml_in, std::shared_ptr<pulsar::config::domain> config_in, std::shared_ptr<pulsar::domain> domain_in)
+static pulsar::node::base * make_node(const YAML::Node& node_yaml_in, std::shared_ptr<pulsar::config::domain> config_in, std::shared_ptr<pulsar::domain> domain_in)
 {
-    node::base::node * new_node = nullptr;
+    node::base * new_node = nullptr;
     auto node_yaml = node_yaml_in;
     auto template_node = node_yaml["template"];
 
@@ -435,8 +435,8 @@ static pulsar::node::base::node * make_node(const YAML::Node& node_yaml_in, std:
     return new_node;
 }
 
-std::map<string_type, pulsar::node::base::node *> make_nodes(std::shared_ptr<pulsar::config::domain> config_in, std::shared_ptr<pulsar::domain> domain_in) {
-    auto node_map = std::map<string_type, pulsar::node::base::node *>();
+std::map<string_type, pulsar::node::base *> make_nodes(std::shared_ptr<pulsar::config::domain> config_in, std::shared_ptr<pulsar::domain> domain_in) {
+    auto node_map = std::map<string_type, pulsar::node::base *>();
 
     for (YAML::Node node_yaml : config_in->get_nodes()) {
         auto new_node = make_node(node_yaml, config_in, domain_in);

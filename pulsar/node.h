@@ -21,37 +21,24 @@
 
 #include <pulsar/audio.h>
 #include <pulsar/domain.h>
+#include <pulsar/node.forward.h>
 #include <pulsar/property.h>
 #include <pulsar/system.h>
 #include <pulsar/thread.h>
 
 namespace pulsar {
 
-namespace config {
-
-pulsar::node::base::node * make_chain_node(const YAML::Node& node_yaml_in, const YAML::Node& chain_yaml_in, std::shared_ptr<pulsar::config::domain> config_in, std::shared_ptr<pulsar::domain> domain_in);
-
-} // namespace config
-
 namespace node {
 
-namespace base {
-
-struct node;
-
-} // namespace base
-
 void init();
-base::node * make_chain_node(const string_type& name_in, std::shared_ptr<pulsar::domain> domain_in);
 string_type fully_qualify_property_name(const string_type& name_in);
+base * make_chain_node(const string_type& name_in, std::shared_ptr<pulsar::domain> domain_in);
 
-namespace base {
-
-struct node {
+struct base {
     friend void audio::component::source_ready(audio::input *);
     friend audio::input * audio::component::add_input(const string_type& name_in);
     friend audio::output * audio::component::add_output(const string_type& name_in);
-    friend node * config::make_chain_node(const YAML::Node& node_yaml_in, const YAML::Node& chain_yaml_in, std::shared_ptr<pulsar::config::domain> config_in, std::shared_ptr<pulsar::domain> domain_in);
+    friend base * config::make_chain_node(const YAML::Node& node_yaml_in, const YAML::Node& chain_yaml_in, std::shared_ptr<pulsar::config::domain> config_in, std::shared_ptr<pulsar::domain> domain_in);
     // FIXME only run() is needed but run() is static and friend didn't like that
     friend pulsar::domain;
 
@@ -60,7 +47,7 @@ struct node {
     std::shared_ptr<pulsar::domain> domain;
     // FIXME pointer because I can't figure out how to make emplace() work
     std::map<string_type, property::generic *> properties;
-    node(const string_type& name_in, std::shared_ptr<pulsar::domain> domain_in, const bool is_forwarder_in = false);
+    base(const string_type& name_in, std::shared_ptr<pulsar::domain> domain_in, const bool is_forwarder_in = false);
 
     /*
     * FIXME init_cycle should happen immediately before run but that does not
@@ -110,7 +97,7 @@ struct node {
     const string_type name;
     const bool is_forwarder = false;
     audio::component audio;
-    virtual ~node();
+    virtual ~base();
     std::shared_ptr<pulsar::domain> get_domain();
     const std::map<string_type, property::generic *>& get_properties();
     property::generic& get_property(const string_type& name_in);
@@ -119,9 +106,7 @@ struct node {
     virtual bool is_ready();
 };
 
-} // namespace base
-
-class forwarder : public base::node {
+class forwarder : public base {
     protected:
     virtual void will_run() override;
     virtual void execute() override;

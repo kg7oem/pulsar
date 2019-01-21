@@ -20,20 +20,11 @@
 #include <mutex>
 #include <vector>
 
+#include <pulsar/node.forward.h>
 #include <pulsar/system.h>
 #include <pulsar/thread.h>
 
 namespace pulsar {
-
-namespace node {
-
-namespace base {
-
-struct node;
-
-} // namespace base
-
-} // namespace node
 
 namespace audio {
 
@@ -62,10 +53,10 @@ class buffer {
 
 class channel {
     protected:
-    node::base::node * parent;
+    node::base * parent;
     std::vector<link *> links;
 
-    channel(const string_type &name_in, node::base::node * parent_in);
+    channel(const string_type &name_in, node::base * parent_in);
 
     public:
     const string_type name;
@@ -73,7 +64,7 @@ class channel {
     virtual void init_cycle() = 0;
     virtual void reset_cycle() = 0;
     void register_link(link * link_in);
-    node::base::node * get_parent();
+    node::base * get_parent();
 };
 
 class input : public channel {
@@ -86,12 +77,12 @@ class input : public channel {
     public:
     virtual void init_cycle();
     virtual void reset_cycle();
-    input(const string_type& name_in, node::base::node * parent_in);
+    input(const string_type& name_in, node::base * parent_in);
     pulsar::size_type get_links_waiting();
     void link_to(output * to_in);
-    void link_to(node::base::node * node_in, const string_type& port_name_in);
+    void link_to(node::base * node_in, const string_type& port_name_in);
     void forward_to(input * to_in);
-    void forward_to(node::base::node * node_in, const string_type& port_name_in);
+    void forward_to(node::base * node_in, const string_type& port_name_in);
     void register_forward(input_forward * forward_in);
     std::shared_ptr<audio::buffer> get_buffer();
     std::shared_ptr<audio::buffer> mix_outputs();
@@ -103,13 +94,13 @@ class output : public channel {
     std::shared_ptr<audio::buffer> buffer;
 
     public:
-    output(const string_type& name_in, node::base::node * parent_in);
+    output(const string_type& name_in, node::base * parent_in);
     virtual void init_cycle() override;
     virtual void reset_cycle() override;
     void link_to(input * to_in);
-    void link_to(node::base::node * node_in, const string_type& port_name_in);
+    void link_to(node::base * node_in, const string_type& port_name_in);
     void forward_to(output * to_in);
-    void forward_to(node::base::node * node_in, const string_type& port_name_in);
+    void forward_to(node::base * node_in, const string_type& port_name_in);
     void register_forward(output_forward * forward_in);
     std::shared_ptr<audio::buffer> get_buffer();
     void set_buffer(std::shared_ptr<audio::buffer> buffer_in);
@@ -143,15 +134,15 @@ struct output_forward {
 };
 
 class component {
-    friend node::base::node;
+    friend node::base;
 
-    node::base::node * parent = nullptr;
+    node::base * parent = nullptr;
     std::map<string_type, audio::input *> inputs;
     std::map<string_type, audio::output *> outputs;
     std::atomic<pulsar::size_type> inputs_waiting = ATOMIC_VAR_INIT(0);
 
     public:
-    component(node::base::node * parent_in);
+    component(node::base * parent_in);
     ~component();
     bool is_ready();
     void activate();

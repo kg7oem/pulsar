@@ -22,26 +22,17 @@
 #include <vector>
 
 #include <pulsar/audio.h>
+#include <pulsar/node.forward.h>
 #include <pulsar/system.h>
 #include <pulsar/thread.h>
 
 namespace pulsar {
 
-namespace node {
-
-namespace base {
-
-struct node;
-
-} // namespace base
-
-} // namespace node
-
 struct domain : public std::enable_shared_from_this<domain> {
     private:
     std::shared_ptr<audio::buffer> zero_buffer = std::make_shared<audio::buffer>();
-    std::vector<node::base::node *> nodes;
-    std::list<node::base::node *> run_queue;
+    std::vector<node::base *> nodes;
+    std::list<node::base *> run_queue;
     mutex_type run_queue_mutex;
     std::condition_variable run_queue_condition;
     std::vector<std::thread> threads;
@@ -64,7 +55,7 @@ struct domain : public std::enable_shared_from_this<domain> {
     std::shared_ptr<audio::buffer> get_zero_buffer();
     void activate(const size_type num_threads_in = 1);
     void step();
-    void add_ready_node(node::base::node * node_in);
+    void add_ready_node(node::base * node_in);
     template<class T, typename... Args>
     T * make_node(Args&&... args)
     {

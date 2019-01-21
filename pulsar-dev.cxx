@@ -50,7 +50,7 @@ UNUSED static void init()
     init_pulsar();
 }
 
-UNUSED void log_properties(pulsar::node::base::node * node_in)
+UNUSED void log_properties(pulsar::node::base * node_in)
 {
     auto& node_name = node_in->get_property("node:name").get_string();
 
@@ -66,7 +66,7 @@ UNUSED void log_properties(pulsar::node::base::node * node_in)
     }
 }
 
-std::string get_compressor_state(pulsar::node::base::node * node_in)
+std::string get_compressor_state(pulsar::node::base * node_in)
 {
     std::string buf;
 
@@ -94,7 +94,7 @@ UNUSED static void process_audio()
         log_properties(node.second);
     }
 
-    std::vector<pulsar::node::base::node *> compressor_nodes;
+    std::vector<pulsar::node::base *> compressor_nodes;
     compressor_nodes.push_back(node_map["comp_right"]);
     compressor_nodes.push_back(node_map["comp_left"]);
     compressor_nodes.push_back(node_map["tail_eater"]);

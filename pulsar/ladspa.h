@@ -38,7 +38,7 @@ using port_descriptor_type = LADSPA_PortDescriptor;
 struct file;
 struct instance;
 
-pulsar::node::base::node * make_node(const string_type& name_in, std::shared_ptr<domain> domain_in);
+pulsar::node::base * make_node(const string_type& name_in, std::shared_ptr<domain> domain_in);
 void init();
 std::shared_ptr<file> open(const string_type& path_in);
 handle_type open(const string_type& path_in, const id_type id_in, const size_type sample_rate_in);
@@ -82,7 +82,7 @@ class instance : public std::enable_shared_from_this<instance> {
     void run(const size_type num_samples_in);
 };
 
-class node : public pulsar::node::base::node {
+class node : public pulsar::node::base {
     virtual void init() override;
 
     protected:

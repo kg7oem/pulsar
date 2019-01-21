@@ -27,7 +27,7 @@ namespace ladspa {
 
 static std::map<string_type, std::shared_ptr<file>> loaded_files;
 
-pulsar::node::base::node * make_node(const string_type& name_in, std::shared_ptr<domain> domain_in)
+pulsar::node::base * make_node(const string_type& name_in, std::shared_ptr<domain> domain_in)
 {
     return domain_in->make_node<ladspa::node>(name_in);
 }
@@ -272,7 +272,7 @@ void instance::run(const size_type num_samples_in)
 }
 
 node::node(const string_type& name_in, std::shared_ptr<pulsar::domain> domain_in)
-: pulsar::node::base::node(name_in, domain_in)
+: pulsar::node::base(name_in, domain_in)
 {
     add_property("node:class", property::value_type::string).set("pulsar::ladspa::node");
     add_property("plugin:filename", property::value_type::string);
@@ -330,13 +330,13 @@ void node::init()
         }
     }
 
-    pulsar::node::base::node::init();
+    pulsar::node::base::init();
 }
 
 void node::activate()
 {
     ladspa->activate();
-    pulsar::node::base::node::activate();
+    pulsar::node::base::activate();
 }
 
 void node::run()
@@ -369,7 +369,7 @@ void node::run()
 
     log_trace("done running LADSPA plugin");
 
-    pulsar::node::base::node::run();
+    pulsar::node::base::run();
 }
 
 } // namespace ladspa

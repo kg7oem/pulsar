@@ -33,9 +33,9 @@ using port_type = jack_port_t;
 using size_type = unsigned long;
 
 void init();
-pulsar::node::base::node * make_node(const string_type& name_in, std::shared_ptr<domain> domain_in);
+pulsar::node::base * make_node(const string_type& name_in, std::shared_ptr<domain> domain_in);
 
-class node : public pulsar::node::base::node {
+class node : public pulsar::node::base {
     std::shared_ptr<async::watchdog> watchdog = nullptr;
     client_type * jack_client = nullptr;
     const options_type jack_options = JackNoStartServer;

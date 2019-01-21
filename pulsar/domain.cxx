@@ -64,7 +64,7 @@ void domain::activate(const size_type num_threads_in)
     }
 }
 
-void domain::add_ready_node(node::base::node * node_in)
+void domain::add_ready_node(node::base * node_in)
 {
     assert(activated);
 
