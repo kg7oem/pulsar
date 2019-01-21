@@ -45,7 +45,7 @@ void audio::buffer::init(const pulsar::size_type buffer_size_in, pulsar::sample_
         pointer = static_cast<pulsar::sample_type *>(std::calloc(size, sizeof(pulsar::sample_type)));
 
         if (pointer == nullptr) {
-            throw std::runtime_error("could not allocate memory for audio buffer");
+            system_fault("could not allocate memory for audio buffer");
         }
     }
 
@@ -75,7 +75,7 @@ void audio::buffer::mix(std::shared_ptr<audio::buffer> mix_from_in)
     assert(pointer != nullptr);
 
     if (size != mix_from_in->size) {
-        throw std::runtime_error("attempt to mix buffers of different size");
+        system_fault("attempt to mix buffers of different size");
     }
 
     audio::util::pcm_mix(pointer, mix_from_in->get_pointer(), size);
@@ -86,7 +86,7 @@ void audio::buffer::set(pulsar::sample_type * pointer_in, const size_type size_i
     assert(pointer != nullptr);
 
     if (size_in > size) {
-        throw std::runtime_error("attempt to set buffer contents with a size that was too large");
+        system_fault("attempt to set buffer contents with a size that was too large");
     }
 
     audio::util::pcm_set(pointer, pointer_in, size_in);
@@ -95,7 +95,7 @@ void audio::buffer::set(pulsar::sample_type * pointer_in, const size_type size_i
 void audio::buffer::set(std::shared_ptr<audio::buffer> buffer_in)
 {
     if (size != buffer_in->size) {
-        throw std::runtime_error("attempt to set buffer contents from buffer of different size");
+        system_fault("attempt to set buffer contents from buffer of different size");
     }
 
     auto src_p = buffer_in->get_pointer();
@@ -405,7 +405,7 @@ void audio::link::notify(std::shared_ptr<audio::buffer> ready_buffer_in, const b
             log_debug("node ", source->get_parent()->name, ":", source->name, " is blocked notifying ", sink->get_parent()->name, ":", sink->name);
             available_condition.wait(lock, [this]{ return available_flag.load(); });
         } else {
-            throw std::runtime_error("attempt to set link ready when it was already ready");
+            system_fault("attempt to set link ready when it was already ready");
         }
     }
 
@@ -506,7 +506,7 @@ void audio::component::source_ready(audio::input *)
 audio::input * audio::component::add_input(const string_type& name_in)
 {
     if (inputs.count(name_in) != 0) {
-        throw std::runtime_error("attempt to add duplicate input name: " + name_in);
+        system_fault("attempt to add duplicate input name: " + name_in);
     }
 
     auto new_input = new audio::input(name_in, parent);
@@ -541,7 +541,7 @@ std::vector<string_type> audio::component::get_input_names()
 audio::output * audio::component::add_output(const string_type& name_in)
 {
     if (outputs.count(name_in) != 0) {
-        throw std::runtime_error("attempt to add duplicate output name: " + name_in);
+        system_fault("attempt to add duplicate output name: " + name_in);
     }
 
     auto new_output = new audio::output(name_in, parent);

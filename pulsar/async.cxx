@@ -37,7 +37,7 @@ static std::vector<thread_type> async_threads;
 static void async_thread()
 {
     boost_io.run();
-    throw std::runtime_error("Boost io.run() returned");
+    system_fault("Boost io.run() returned");
 }
 
 // void init_tick()

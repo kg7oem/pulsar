@@ -61,7 +61,7 @@ void jackaudio::node::open(const string_type& jack_name_in)
     jack_client = jack_client_open(jack_name_in.c_str(), jack_options, 0);
 
     if (jack_client == nullptr) {
-        throw std::runtime_error("could not open connection to jack server");
+        system_fault("could not open connection to jack server");
     }
 
     auto sample_rate = jack_get_sample_rate(jack_client);
@@ -78,13 +78,13 @@ void jackaudio::node::open(const string_type& jack_name_in)
 jackaudio::port_type * jackaudio::node::add_port(const string_type& port_name_in, const char * port_type_in, const flags_type flags_in, const size_type buffer_size_in)
 {
     if (jack_ports.count(port_name_in) != 0) {
-        throw std::runtime_error("attempt to register duplicate jackaudio port name: " + port_name_in);
+        system_fault("attempt to register duplicate jackaudio port name: " + port_name_in);
     }
 
     auto new_port = jack_port_register(jack_client, port_name_in.c_str(), port_type_in, flags_in, buffer_size_in);
 
     if (new_port == nullptr) {
-        throw std::runtime_error("could not create a jackaudio port named " + port_name_in);
+        system_fault("could not create a jackaudio port named " + port_name_in);
     }
 
     jack_ports[port_name_in] = new_port;
@@ -95,7 +95,7 @@ jackaudio::port_type * jackaudio::node::add_port(const string_type& port_name_in
 pulsar::sample_type * jackaudio::node::get_port_buffer(const string_type& name_in)
 {
     if (jack_ports.count(name_in) == 0) {
-        throw std::runtime_error("could not find a jackaudio port named " + name_in);
+        system_fault("could not find a jackaudio port named " + name_in);
     }
 
     auto port = jack_ports[name_in];
@@ -135,7 +135,7 @@ void jackaudio::node::activate()
         static_cast<void *>(new std::function<void(jack_nframes_t)>([this](jack_nframes_t nframes_in) -> void {
             this->handle_jack_process(nframes_in);
     })))) {
-        throw std::runtime_error("could not set jackaudio process callback");
+        system_fault("could not set jackaudio process callback");
     }
 
     start();
@@ -154,13 +154,13 @@ void jackaudio::node::handle_jack_process(jack_nframes_t nframes_in)
     auto done_lock = lock_type(done_mutex);
 
     if (done_flag) {
-        throw std::runtime_error("jackaudio handle_jack_process() went reentrant");
+        system_fault("jackaudio handle_jack_process() went reentrant");
     }
 
     done_lock.unlock();
 
     if (nframes_in != domain->buffer_size) {
-        throw std::runtime_error("jackaudio process request and buffer size were not the same");
+        system_fault("jackaudio process request and buffer size were not the same");
     }
 
     for(auto&& name : audio.get_output_names()) {
@@ -211,7 +211,7 @@ void jackaudio::node::start()
     watchdog = async::watchdog::make(WATCHDOG_TIMEOUT);
 
     if (jack_activate(jack_client)) {
-        throw std::runtime_error("could not activate jack client");
+        system_fault("could not activate jack client");
     }
 
     watchdog->start();

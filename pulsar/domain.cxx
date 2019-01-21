@@ -39,7 +39,7 @@ std::shared_ptr<audio::buffer> domain::get_zero_buffer()
 void domain::activate(const size_type num_threads_in)
 {
     if (num_threads_in <= 0) {
-        throw std::runtime_error("attempt to activate a domain with invalid number of threads");
+        system_fault("attempt to activate a domain with invalid number of threads");
     }
 
     assert(! activated);

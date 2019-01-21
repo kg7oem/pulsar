@@ -71,7 +71,7 @@ string_type make_boost_version()
     auto pos = version.find("_");
 
     if (pos == string_type::npos) {
-        throw std::runtime_error("expected to find _ in " + version);
+        system_fault("expected to find _ in " + version);
     }
 
     version.replace(pos, 1, ".");

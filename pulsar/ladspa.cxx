@@ -63,7 +63,7 @@ ladspa::handle_type open(const string_type& path_in, const id_type id_in, const 
     auto instance = descriptor->instantiate(descriptor, sample_rate_in);
 
     if (instance == nullptr) {
-        throw std::runtime_error("could not instantiate ladspa plugin");
+        system_fault("could not instantiate ladspa plugin");
     }
 
     return instance;
@@ -128,12 +128,12 @@ file::file(const string_type &path_in)
 {
     handle = dlopen(path_in.c_str(), RTLD_NOW);
     if (handle == nullptr) {
-        throw std::runtime_error("could not dlopen(" + path + ")");
+        system_fault("could not dlopen(" + path + ")");
     }
 
     descriptor_fn = (LADSPA_Descriptor_Function) dlsym(handle, DESCRIPTOR_SYMBOL);
     if (descriptor_fn == nullptr) {
-        throw std::runtime_error("could not get descriptor function for " + path);
+        system_fault("could not get descriptor function for " + path);
     }
 
     for (auto&& i : get_descriptors()) {
@@ -179,7 +179,7 @@ const descriptor_type * file::get_descriptor(const id_type id_in)
         return result->second;
     }
 
-    throw std::runtime_error("could not find type id in plugin");
+    system_fault("could not find type id in plugin");
 }
 
 const std::vector<const descriptor_type *> file::get_descriptors()
@@ -214,7 +214,7 @@ instance::instance(std::shared_ptr<ladspa::file> file_in, const descriptor_type 
     handle = descriptor->instantiate(descriptor, sample_rate_in);
 
     if (handle == nullptr) {
-        throw std::runtime_error("could not instantiate LADSPA");
+        system_fault("could not instantiate LADSPA");
     }
 
     for(size_type i = 0; i < get_port_count(); i++) {
@@ -248,7 +248,7 @@ id_type instance::get_port_num(const string_type& name_in)
     auto result = port_name_to_num.find(name_in);
 
     if (result == port_name_to_num.end()) {
-        throw std::runtime_error("could not find port with name " + name_in);
+        system_fault("could not find port with name " + name_in);
     }
 
     return result->second;
@@ -305,7 +305,7 @@ void node::init()
             } else if (LADSPA_IS_PORT_OUTPUT(descriptor)) {
                 audio.add_output(port_name);
             } else {
-                throw std::runtime_error("LADSPA port was neither input nor output");
+                system_fault("LADSPA port was neither input nor output");
             }
         } else if (LADSPA_IS_PORT_CONTROL(descriptor)) {
             auto default_value = get_control_port_default(ladspa->get_descriptor(), port_num);
@@ -316,7 +316,7 @@ void node::init()
             } else if (LADSPA_IS_PORT_INPUT(descriptor)) {
                 property_name = "config:";
             } else {
-                throw std::runtime_error("LADSPA port was neither input nor output");
+                system_fault("LADSPA port was neither input nor output");
             }
 
             property_name += port_name;
@@ -326,7 +326,7 @@ void node::init()
 
             ladspa->connect(port_num, &control.get_real());
         } else {
-            throw std::runtime_error("LADSPA port was neither audio nor control");
+            system_fault("LADSPA port was neither audio nor control");
         }
     }
 
