@@ -274,9 +274,7 @@ std::shared_ptr<audio::buffer> audio::input::mix_sinks()
 
 audio::output::output(const std::string& name_in, node::base::node * parent_in)
 : audio::channel(name_in, parent_in)
-{
-
-}
+{ }
 
 void audio::output::init_cycle()
 {
