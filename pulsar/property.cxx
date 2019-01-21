@@ -13,9 +13,9 @@
 
 #include <cstdlib>
 
-#include "logging.h"
-#include "property.h"
-#include "system.h"
+#include <pulsar/logging.h>
+#include <pulsar/property.h>
+#include <pulsar/system.h>
 
 namespace pulsar {
 

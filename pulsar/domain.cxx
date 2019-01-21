@@ -14,9 +14,9 @@
 #include <cassert>
 #include <functional>
 
-#include "domain.h"
-#include "logging.h"
-#include "node.h"
+#include <pulsar/domain.h>
+#include <pulsar/logging.h>
+#include <pulsar/node.h>
 
 namespace pulsar {
 

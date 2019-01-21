@@ -13,12 +13,12 @@
 
 #include <cassert>
 
-#include "config.h"
-#include "domain.h"
-#include "library.h"
-#include "logging.h"
-#include "system.h"
-#include "util.h"
+#include <pulsar/config.h>
+#include <pulsar/domain.h>
+#include <pulsar/library.h>
+#include <pulsar/logging.h>
+#include <pulsar/system.h>
+#include <pulsar/util.h>
 
 namespace pulsar {
 

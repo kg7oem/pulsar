@@ -14,7 +14,7 @@
 #include <cassert>
 #include <cstring>
 
-#include "audio.util.h"
+#include <pulsar/audio.util.h>
 
 namespace pulsar {
 

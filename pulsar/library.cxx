@@ -13,8 +13,8 @@
 
 #include <mutex>
 
-#include "library.h"
-#include "system.h"
+#include <pulsar/library.h>
+#include <pulsar/system.h>
 
 namespace pulsar {
 

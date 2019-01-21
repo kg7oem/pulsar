@@ -15,12 +15,12 @@
 #include <stdexcept>
 #include <string>
 
-#include "async.h"
-#include "jackaudio.h"
-#include "ladspa.h"
-#include "logging.h"
-#include "node.h"
-#include "system.h"
+#include <pulsar/async.h>
+#include <pulsar/jackaudio.h>
+#include <pulsar/ladspa.h>
+#include <pulsar/logging.h>
+#include <pulsar/node.h>
+#include <pulsar/system.h>
 
 #define ALIVE_TICK_INTERVAL 100ms
 

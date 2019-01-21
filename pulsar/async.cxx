@@ -16,9 +16,9 @@
 #include <thread>
 #include <vector>
 
-#include "async.h"
-#include "logging.h"
-#include "system.h"
+#include <pulsar/async.h>
+#include <pulsar/logging.h>
+#include <pulsar/system.h>
 
 namespace pulsar {
 

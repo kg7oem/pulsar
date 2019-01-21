@@ -17,7 +17,7 @@
 #include <memory>
 #include <yaml-cpp/yaml.h>
 
-#include "system.h"
+#include <pulsar/system.h>
 
 namespace pulsar {
 

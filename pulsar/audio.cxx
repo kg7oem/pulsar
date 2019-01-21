@@ -16,10 +16,10 @@
 #include <cstring>
 #include <stdexcept>
 
-#include "audio.h"
-#include "audio.util.h"
-#include "logging.h"
-#include "node.h"
+#include <pulsar/audio.h>
+#include <pulsar/audio.util.h>
+#include <pulsar/logging.h>
+#include <pulsar/node.h>
 
 namespace pulsar {
 

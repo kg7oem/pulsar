@@ -15,8 +15,8 @@
 
 #include <string>
 
-#include "config.h"
-#include "system.h"
+#include <pulsar/config.h>
+#include <pulsar/system.h>
 
 namespace pulsar {
 

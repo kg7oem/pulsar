@@ -15,7 +15,7 @@
 
 #include <memory>
 
-#include "system.h"
+#include <pulsar/system.h>
 
 namespace pulsar {
 

@@ -13,10 +13,10 @@
 
 #include <chrono>
 
-#include "audio.util.h"
-#include "jackaudio.h"
-#include "logging.h"
-#include "system.h"
+#include <pulsar/audio.util.h>
+#include <pulsar/jackaudio.h>
+#include <pulsar/logging.h>
+#include <pulsar/system.h>
 
 #define WATCHDOG_TIMEOUT 1500ms
 

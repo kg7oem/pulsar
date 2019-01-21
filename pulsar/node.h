@@ -19,11 +19,11 @@
 #include <mutex>
 #include <string>
 
-#include "audio.h"
-#include "domain.h"
-#include "property.h"
-#include "system.h"
-#include "thread.h"
+#include <pulsar/audio.h>
+#include <pulsar/domain.h>
+#include <pulsar/property.h>
+#include <pulsar/system.h>
+#include <pulsar/thread.h>
 
 namespace pulsar {
 

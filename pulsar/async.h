@@ -19,8 +19,8 @@
 #include <functional>
 #include <memory>
 
-#include "system.h"
-#include "thread.h"
+#include <pulsar/system.h>
+#include <pulsar/thread.h>
 
 namespace pulsar {
 

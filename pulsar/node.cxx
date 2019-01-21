@@ -16,10 +16,10 @@
 #include <cstdlib>
 #include <stdexcept>
 
-#include "library.h"
-#include "logging.h"
-#include "node.h"
-#include "system.h"
+#include <pulsar/library.h>
+#include <pulsar/logging.h>
+#include <pulsar/node.h>
+#include <pulsar/system.h>
 
 namespace pulsar {
 

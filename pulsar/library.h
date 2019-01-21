@@ -17,8 +17,8 @@
 #include <memory>
 #include <string>
 
-#include "domain.h"
-#include "node.h"
+#include <pulsar/domain.h>
+#include <pulsar/node.h>
 
 namespace pulsar {
 

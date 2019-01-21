@@ -13,10 +13,10 @@
 
 #pragma once
 
-#include "async.h"
-#include "audio.h"
-#include "library.h"
-#include "node.h"
+#include <pulsar/async.h>
+#include <pulsar/audio.h>
+#include <pulsar/library.h>
+#include <pulsar/node.h>
 
 namespace pulsar {
 

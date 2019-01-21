@@ -15,9 +15,9 @@
 #include <cmath>
 #include <dlfcn.h>
 
-#include "ladspa.h"
-#include "logging.h"
-#include "system.h"
+#include <pulsar/ladspa.h>
+#include <pulsar/logging.h>
+#include <pulsar/system.h>
 
 #define DESCRIPTOR_SYMBOL "ladspa_descriptor"
 

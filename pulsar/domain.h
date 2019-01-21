@@ -21,9 +21,9 @@
 #include <thread>
 #include <vector>
 
-#include "audio.h"
-#include "system.h"
-#include "thread.h"
+#include <pulsar/audio.h>
+#include <pulsar/system.h>
+#include <pulsar/thread.h>
 
 namespace pulsar {
 
