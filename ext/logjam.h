@@ -25,17 +25,15 @@
 #include <unordered_set>
 #include <vector>
 
-// FIXME how does something like this work?
-#ifdef LOGJAM_LOG_WRAPPER
-#define LOGJAM_WRAPPER_MACRO(logname, loglevel, ...) \
-( \
-    if (logengine::get_engine()->should_log(loglevel)) { \
-        logjam::send_logevent(PULSAR_LOG_NAME, logjam::loglevel::error, __VA_ARGS__) \
-    } \
-)
-#endif
+// FIXME why doesn' this work?
+// #ifdef LOGJAM_LOG_MACROS
+#define LOGJAM_LOG_VARGS(logname, loglevel, ...) logjam::send_logevent(logname, loglevel, __PRETTY_FUNCTION__, __FILE__, __LINE__, __VA_ARGS__)
+#define LOGJAM_LOG_LAMBDA(logname, loglevel, block) logjam::send_logevent(logname, loglevel, __PRETTY_FUNCTION__, __FILE__, __LINE__, [&]() -> std::string block)
+// #endif
 
 namespace logjam {
+
+using log_wrapper_type = std::function<std::string ()>;
 
 enum class loglevel {
     uninit = -2,
@@ -213,12 +211,18 @@ loglevel level_from_name(const char* name_in);
 bool should_log(const loglevel& level_in);
 
 template <typename T>
-void sstream_accumulate_vaargs(std::stringstream& sstream, T t) {
+void sstream_accumulate_vaargs(std::stringstream& sstream, T&& t) {
     sstream << t;
 }
 
+// FIXME how does this get specialized?
+// template <>
+// void sstream_accumulate_vaargs(std::stringstream& sstream, std::function<std::string ()>&& t) {
+//     sstream << t();
+// }
+
 template <typename T, typename... Args>
-void sstream_accumulate_vaargs(std::stringstream& sstream, T t, Args&&... args) {
+void sstream_accumulate_vaargs(std::stringstream& sstream, T&& t, Args&&... args) {
     sstream_accumulate_vaargs(sstream, t);
     sstream_accumulate_vaargs(sstream, args...);
 }
@@ -242,4 +246,9 @@ void send_logevent(const std::string& source, const loglevel& level, const char 
     }
 }
 
-}
+void send_lambda_logevent(const std::string& source, const loglevel& level, const char *function, const char *path, const int& line, log_wrapper_type lambda_in);
+
+} // namespace logjam
+
+// FIXME does this need to go at the top?
+// std::ostream& operator<<(std::ostream&, logjam::log_wrapper_type);

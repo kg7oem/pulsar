@@ -13,13 +13,22 @@
 
 #pragma once
 
+#define LOGJAM_LOG_MACROS
+
 #include "ext/logjam.h"
 
 #define PULSAR_LOG_NAME "pulsar"
 
-#define log_error(...)   logjam::send_logevent(PULSAR_LOG_NAME, logjam::loglevel::error, __PRETTY_FUNCTION__, __FILE__, __LINE__, __VA_ARGS__)
-#define log_info(...)    logjam::send_logevent(PULSAR_LOG_NAME, logjam::loglevel::info, __PRETTY_FUNCTION__, __FILE__, __LINE__, __VA_ARGS__)
-#define log_verbose(...) logjam::send_logevent(PULSAR_LOG_NAME, logjam::loglevel::verbose, __PRETTY_FUNCTION__, __FILE__, __LINE__, __VA_ARGS__)
-#define log_debug(...)   logjam::send_logevent(PULSAR_LOG_NAME, logjam::loglevel::debug, __PRETTY_FUNCTION__, __FILE__, __LINE__, __VA_ARGS__)
-#define log_trace(...)   logjam::send_logevent(PULSAR_LOG_NAME, logjam::loglevel::trace, __PRETTY_FUNCTION__, __FILE__, __LINE__, __VA_ARGS__)
-#define log_unknown(...) logjam::send_logevent(PULSAR_LOG_NAME, logjam::loglevel::unknown, __PRETTY_FUNCTION__, __FILE__, __LINE__, __VA_ARGS__)
+#define log_error(...)    LOGJAM_LOG_VARGS(PULSAR_LOG_NAME, logjam::loglevel::error, __VA_ARGS__)
+#define log_info(...)     LOGJAM_LOG_VARGS(PULSAR_LOG_NAME, logjam::loglevel::info, __VA_ARGS__)
+#define log_verbose(...)  LOGJAM_LOG_VARGS(PULSAR_LOG_NAME, logjam::loglevel::verbose, __VA_ARGS__)
+#define log_debug(...)    LOGJAM_LOG_VARGS(PULSAR_LOG_NAME, logjam::loglevel::debug, __VA_ARGS__)
+#define log_trace(...)    LOGJAM_LOG_VARGS(PULSAR_LOG_NAME, logjam::loglevel::trace, __VA_ARGS__)
+#define log_unknown(...)  LOGJAM_LOG_VARGS(PULSAR_LOG_NAME, logjam::loglevel::unknown, __VA_ARGS__)
+
+#define llog_error(block)   LOGJAM_LOG_LAMBDA(PULSAR_LOG_NAME, logjam::loglevel::error, block)
+#define llog_info(block)    LOGJAM_LOG_LAMBDA(PULSAR_LOG_NAME, logjam::loglevel::error, block)
+#define llog_verbose(block) LOGJAM_LOG_LAMBDA(PULSAR_LOG_NAME, logjam::loglevel::verbose, block)
+#define llog_debug(block)   LOGJAM_LOG_LAMBDA(PULSAR_LOG_NAME, logjam::loglevel::debug, block)
+#define llog_trace(block)   LOGJAM_LOG_LAMBDA(PULSAR_LOG_NAME, logjam::loglevel::trace, block)
+#define llog_unknown(block) LOGJAM_LOG_LAMBDA(PULSAR_LOG_NAME, logjam::loglevel::unknown, block)

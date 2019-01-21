@@ -118,10 +118,13 @@ int main(void)
 {
     init();
 
+
     log_info("pulsar-dev initialized");
     log_info("Using Boost ", pulsar::system::get_boost_version());
 
-    process_audio();
+    llog_info({ bool foo = true; return "yep: " + std::to_string(foo); });
+
+    // process_audio();
 
     return 0;
 }
