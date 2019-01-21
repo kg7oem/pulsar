@@ -54,7 +54,7 @@ domain:
       class: pulsar::jackaudio::node
       config:
         client_name: pulsar
-      inputs: [ left_out, right_out, demod_out ]
+      inputs: [ left_out, right_out, demod_out, mono_out ]
       outputs: [ right_in, left_in, demod_in ]
       link:
         left_in: comp_left:*
@@ -75,13 +75,19 @@ domain:
         filename: /usr/lib/ladspa/amp.so
       config:
         Gain: .5
-      link: gain_left2
+      link:
+        Output:
+          - gain_left2
+          - jack:mono_out
 
     - name: gain_right1
       template: gain
       config:
         Gain: .5
-      link: gain_right2
+      link:
+        Output:
+          - gain_right2
+          - jack:mono_out
 
     - name: gain_left2
       template: gain
@@ -89,7 +95,6 @@ domain:
         Gain: 2
       link:
         Output: jack:left_out
-        # Output: mono_gain
 
     - name: gain_right2
       template: gain
@@ -97,7 +102,6 @@ domain:
         Gain: 2
       link:
         Output: jack:right_out
-        # Output: mono_gain
 
     - name: tail_eater
       chain: remove_squelch_tail

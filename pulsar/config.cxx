@@ -24,6 +24,8 @@ namespace pulsar {
 
 namespace config {
 
+using node_map_type = std::map<std::string, node::base::node *>;
+
 static pulsar::node::base::node * make_node(const YAML::Node& node_yaml_in, std::shared_ptr<pulsar::config::domain> config_in, std::shared_ptr<pulsar::domain> domain_in);
 std::shared_ptr<pulsar::domain> make_domain(std::shared_ptr<pulsar::config::domain> domain_info_in)
 {
@@ -77,7 +79,58 @@ static void apply_node_template(YAML::Node& dest_in, const YAML::Node& src_in)
     }
 }
 
-static void connect_nodes(std::map<std::string, node::base::node *>& node_map_in, const YAML::Node& node_yaml_in)
+static void link_node_n_to_n(node::base::node * source_node_in, node::base::node * sink_node_in)
+{
+    auto output_names = source_node_in->audio.get_output_names();
+    auto input_names = sink_node_in->audio.get_input_names();
+    auto num_outputs = output_names.size();
+
+    if (input_names.size() != num_outputs) {
+        system_fault("number of inputs and outputs was not the same");
+    }
+
+    for(size_type i = 0; i < num_outputs; i++) {
+        source_node_in->audio.get_output(output_names[i])->link_to(sink_node_in, input_names[i]);
+    }
+}
+
+static void link_channel_by_target(audio::output * source_channel_in, const node_map_type& node_map_in, const std::string& target_string_in) {
+    auto target_split = util::string::split(target_string_in, ':');
+    auto split_size = target_split.size();
+    std::string sink_node_name, sink_channel_name;
+    node::base::node * sink_node;
+
+    if (split_size == 2) {
+        sink_node_name = target_split[0];
+        auto found = node_map_in.find(sink_node_name);
+        if (found == node_map_in.end()) {
+            system_fault("could not find a node named ", sink_node_name);
+        }
+        sink_node = found->second;
+        sink_channel_name = target_split[1];
+    } else if (split_size == 1) {
+        sink_node_name = target_string_in;
+        auto found = node_map_in.find(sink_node_name);
+        if (found == node_map_in.end()) {
+            system_fault("could not find a node named ", sink_node_name);
+        }
+        sink_node = found->second;
+        auto sink_node_inputs = sink_node->audio.get_input_names();
+
+        if (sink_node_inputs.size() != 1) {
+            system_fault("no input channel was specified and target node has more than 1 input");
+        }
+
+        sink_channel_name = sink_node_inputs[0];
+
+    } else {
+        system_fault("invalid connection string specified: ", target_string_in);
+    }
+
+    source_channel_in->link_to(sink_node, sink_channel_name);
+}
+
+static void connect_nodes(node_map_type& node_map_in, const YAML::Node& node_yaml_in)
 {
     auto node_yaml = node_yaml_in;
     auto node_name = node_yaml["name"].as<std::string>();
@@ -89,7 +142,6 @@ static void connect_nodes(std::map<std::string, node::base::node *>& node_map_in
         // if the number of inputs and outputs is the same
         // connect them together in order
         if (links.IsScalar()) {
-            auto output_names = source_node->audio.get_output_names();
             auto sink_node_name = links.as<std::string>();
 
             if (node_map_in.find(sink_node_name) == node_map_in.end()) {
@@ -97,61 +149,25 @@ static void connect_nodes(std::map<std::string, node::base::node *>& node_map_in
             }
 
             auto sink_node = node_map_in[sink_node_name];
-            auto input_names = sink_node->audio.get_input_names();
-
-            auto num_outputs = output_names.size();
-            if (input_names.size() != num_outputs) {
-                system_fault("number of inputs and outputs was not the same");
-            }
-
-            for(size_type i = 0; i < num_outputs; i++) {
-                source_node->audio.get_output(output_names[i])->link_to(sink_node, input_names[i]);
-                // sink_node->audio.get_input(input_names[i])->connect(source_node, );
-                // auto sink_channel = sink_node->audio.get_input(input_names[i]);
-                // source_node->audio.get_output(output_names[i])->link_to(sink_channel);
-            }
+            link_node_n_to_n(source_node, sink_node);
         } else {
             for(auto&& i : links) {
-                auto source_channel = i.first.as<std::string>();
-                auto target_node = i.second;
+                auto source_channel_string = i.first.as<std::string>();
+                auto source_channel = source_node->audio.get_output(source_channel_string);
+                auto target_yaml = i.second;
 
-                if (target_node.IsSequence()) {
-                    system_fault("can't handle a sequence yet");
-                }
+                if (target_yaml.IsSequence()) {
+                    auto seq_size = target_yaml.size();
 
-                auto target_string = i.second.as<std::string>();
-                auto target_split = util::string::split(target_string, ':');
-                auto split_size = target_split.size();
-                std::string sink_node_name, sink_channel_name;
-                node::base::node * sink_node;
-
-                if (split_size == 2) {
-                    sink_node_name = target_split[0];
-                    auto found = node_map_in.find(sink_node_name);
-                    if (found == node_map_in.end()) {
-                        system_fault("could not find a node named ", sink_node_name);
-                    }
-                    sink_node = found->second;
-                    sink_channel_name = target_split[1];
-                } else if (split_size == 1) {
-                    sink_node_name = target_string;
-                    auto found = node_map_in.find(sink_node_name);
-                    if (found == node_map_in.end()) {
-                        system_fault("could not find a node named ", sink_node_name);
-                    }
-                    sink_node = found->second;
-                    auto sink_node_inputs = sink_node->audio.get_input_names();
-
-                    if (sink_node_inputs.size() != 1) {
-                        system_fault("no input channel was specified and target node has more than 1 input");
+                    for(size_type i = 0; i < seq_size; i++) {
+                        auto target_string = target_yaml[i].as<std::string>();
+                        link_channel_by_target(source_channel, node_map_in, target_string);
                     }
 
-                    sink_channel_name = sink_node_inputs[0];
                 } else {
-                    system_fault("invalid connection string specified: ", target_string);
+                    auto target_string = i.second.as<std::string>();
+                    link_channel_by_target(source_channel, node_map_in, target_string);
                 }
-
-                source_node->audio.get_output(source_channel)->link_to(sink_node, sink_channel_name);
             }
         }
     }
@@ -226,7 +242,7 @@ static pulsar::node::base::node * make_class_node(const YAML::Node& node_yaml_in
 pulsar::node::base::node * make_chain_node(const YAML::Node& node_yaml_in, const YAML::Node& chain_yaml_in, std::shared_ptr<pulsar::config::domain> config_in, std::shared_ptr<pulsar::domain> domain_in)
 {
     YAML::Node node_yaml = node_yaml_in;
-    std::map<std::string, node::base::node *> chain_nodes;
+    node_map_type chain_nodes;
 
     auto chain_name = node_yaml_in["chain"].as<std::string>();
     auto node_name = node_yaml_in["name"].as<std::string>();
