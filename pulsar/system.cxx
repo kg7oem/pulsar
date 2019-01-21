@@ -47,7 +47,7 @@ void bootstrap()
 
 void register_alive_handler(alive_handler_type cb_in, void * arg_in)
 {
-    auto wrapper = [cb_in, arg_in](async::base::timer&) {
+    auto wrapper = [cb_in, arg_in](async::base_timer&) {
         cb_in(arg_in);
     };
 

@@ -61,23 +61,41 @@ void init(const size_type num_threads_in)
     }
 }
 
-base::timer::timer(const duration_type& initial_in, const duration_type& repeat_in)
+base_timer::base_timer(const duration_type& initial_in, const duration_type& repeat_in)
+: initial(initial_in), repeat(repeat_in), boost_timer(boost_io)
+{ }
+
+base_timer::base_timer(const duration_type& initial_in, const duration_type& repeat_in, handler_type handler_in)
 : initial(initial_in), repeat(repeat_in), boost_timer(boost_io)
 {
+    watch(handler_in);
+}
+
+base_timer::base_timer(const duration_type& initial_in, handler_type handler_in)
+: initial(initial_in), repeat(0), boost_timer(boost_io)
+{
+    watch(handler_in);
 }
 
 timer::timer(const duration_type& initial_in, const duration_type& repeat_in)
-: base::timer(initial_in, repeat_in)
-{
-}
+: base_timer(initial_in, repeat_in)
+{ }
 
-void base::timer::watch(timer::handler_type handler_in)
+timer::timer(const duration_type& initial_in, const duration_type& repeat_in, handler_type handler_in)
+: base_timer(initial_in, repeat_in, handler_in)
+{ }
+
+timer::timer(const duration_type& initial_in, handler_type handler_in)
+: base_timer(initial_in, handler_in)
+{ }
+
+void base_timer::watch(timer::handler_type handler_in)
 {
     lock_type lock(mutex);
     watchers.push_back(handler_in);
 }
 
-void base::timer::boost_handler(const boost::system::error_code& error_in)
+void base_timer::boost_handler(const boost::system::error_code& error_in)
 {
     lock_type lock(mutex);
 
@@ -105,12 +123,10 @@ void base::timer::boost_handler(const boost::system::error_code& error_in)
     boost_timer.async_wait(bound);
 }
 
-void base::timer::run()
-{
+void base_timer::run()
+{ }
 
-}
-
-void base::timer::start()
+void base_timer::start()
 {
     lock_type lock(mutex);
 
@@ -120,14 +136,12 @@ void base::timer::start()
 }
 
 watchdog::watchdog(const duration_type& timeout_in)
-: base::timer(timeout_in, timeout_in)
-{
-
-}
+: base_timer(timeout_in, timeout_in)
+{ }
 
 void watchdog::start()
 {
-    base::timer::start();
+    base_timer::start();
 }
 
 void watchdog::reset()

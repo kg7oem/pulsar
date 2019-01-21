@@ -31,10 +31,8 @@ using boost_timer_type = boost::asio::system_timer;
 void init(const size_type num_threads_in = 1);
 // boost::asio::io_service& get_global_io();
 
-namespace base {
-
-struct timer {
-    using handler_type = std::function<void (timer&)>;
+struct base_timer {
+    using handler_type = std::function<void (base_timer&)>;
 
     protected:
     mutex_type mutex;
@@ -46,15 +44,17 @@ struct timer {
     virtual void run();
 
     public:
-    timer(const duration_type& initial_in, const duration_type& repeat_in = duration_type(0));
+    base_timer(const duration_type& initial_in, const duration_type& repeat_in = duration_type(0));
+    base_timer(const duration_type& initial_in, const duration_type& repeat_in, handler_type handler_in);
+    base_timer(const duration_type& initial_in, handler_type handler_in);
     void start();
     void watch(handler_type handler_in);
 };
 
-} // namespace base
-
-struct timer : public base::timer, public std::enable_shared_from_this<timer> {
+struct timer : public base_timer, public std::enable_shared_from_this<timer> {
     timer(const duration_type& initial_in, const duration_type& repeat_in = duration_type(0));
+    timer(const duration_type& initial_in, const duration_type& repeat_in, handler_type handler_in);
+    timer(const duration_type& initial_in, handler_type handler_in);
     template <typename... Args>
     static std::shared_ptr<timer> make(Args&&... args)
     {
@@ -62,7 +62,7 @@ struct timer : public base::timer, public std::enable_shared_from_this<timer> {
     }
 };
 
-struct watchdog : protected base::timer, public std::enable_shared_from_this<watchdog> {
+struct watchdog : protected base_timer, public std::enable_shared_from_this<watchdog> {
     watchdog(const duration_type& timeout_in);
     template <typename... Args>
     static std::shared_ptr<watchdog> make(Args&&... args)

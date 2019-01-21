@@ -11,16 +11,17 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
 
-#include "pulsar/config.h"
-#include "pulsar/logging.h"
-#include "pulsar/node.h"
-#include "pulsar/system.h"
+#include <pulsar/async.h>
+#include <pulsar/config.h>
+#include <pulsar/logging.h>
+#include <pulsar/node.h>
+#include <pulsar/system.h>
 
 using namespace std;
 using namespace std::chrono_literals;
 
 #define LOG_LEVEL logjam::loglevel::debug
-
+#define INFO_DELAY 50ms
 // Give valgrind lots of time
 #define ALARM_TIMEOUT 5
 
@@ -99,12 +100,17 @@ UNUSED static void process_audio()
     compressor_nodes.push_back(node_map["comp_left"]);
     compressor_nodes.push_back(node_map["tail_eater"]);
 
-    while(1) {
-        for(UNUSED auto&& compressor : compressor_nodes) {
-            log_debug(get_compressor_state(compressor));
+    auto info_timer = pulsar::async::timer::make(
+        INFO_DELAY, INFO_DELAY, [compressor_nodes](pulsar::async::base_timer&) {
+            for(UNUSED auto&& compressor : compressor_nodes) {
+            log_verbose(get_compressor_state(compressor));
         }
+    });
 
-        std::this_thread::sleep_for(50ms);
+    info_timer->start();
+
+    while(1) {
+        std::this_thread::sleep_for(1s);
     }
 }
 
