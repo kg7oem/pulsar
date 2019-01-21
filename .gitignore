@@ -1,11 +1,15 @@
 pulsar-dev
 libpulsar*.so
 libpulsar*.a
+docs/
 
 CMakeCache.txt
 CMakeFiles/
-Makefile
 cmake_install.cmake
+CMakeDoxyfile.in
+CMakeDoxygenDefaults.cmake
+Doxyfile
+Makefile
 
 core
 callgrind.out.*
