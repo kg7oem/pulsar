@@ -25,6 +25,16 @@
 #include <unordered_set>
 #include <vector>
 
+// FIXME how does something like this work?
+#ifdef LOGJAM_LOG_WRAPPER
+#define LOGJAM_WRAPPER_MACRO(logname, loglevel, ...) \
+( \
+    if (logengine::get_engine()->should_log(loglevel)) { \
+        logjam::send_logevent(PULSAR_LOG_NAME, logjam::loglevel::error, __VA_ARGS__) \
+    } \
+)
+#endif
+
 namespace logjam {
 
 enum class loglevel {
