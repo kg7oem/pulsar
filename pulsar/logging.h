@@ -13,7 +13,7 @@
 
 #pragma once
 
-#include "logjam.h"
+#include "ext/logjam.h"
 
 #define PULSAR_LOG_NAME "pulsar"
 

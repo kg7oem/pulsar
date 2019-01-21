@@ -9,10 +9,13 @@ find_package(Boost 1.5.8 COMPONENTS system)
 find_package(Threads)
 find_package(yaml-cpp)
 
-add_definitions(-Wfatal-errors -Werror -Wall -Wextra)
 add_definitions(-g)
 
+add_definitions(-fPIC)
+add_definitions(-Wfatal-errors -Werror -Wall -Wextra)
+
 include_directories(${Boost_INCLUDE_DIRS})
+include_directories(.)
 
 add_library(
     pulsar SHARED
@@ -25,11 +28,16 @@ add_library(
     pulsar/jackaudio.cxx
     pulsar/ladspa.cxx
     pulsar/library.cxx
-    pulsar/logjam.cxx
     pulsar/node.cxx
     pulsar/property.cxx
     pulsar/system.cxx
     pulsar/util.cxx
+)
+
+add_library(
+    pulsar-ext STATIC
+
+    ext/logjam.cxx
 )
 
 add_executable(
@@ -42,6 +50,7 @@ target_link_libraries(pulsar ${CMAKE_THREAD_LIBS_INIT})
 target_link_libraries(pulsar ${Boost_LIBRARIES})
 target_link_libraries(pulsar dl)
 target_link_libraries(pulsar jack)
+target_link_libraries(pulsar pulsar-ext)
 target_link_libraries(pulsar yaml-cpp)
 
 target_link_libraries(pulsar-dev pulsar)
