@@ -155,6 +155,19 @@ void audio::input::link_to(audio::output * source_in) {
     source_in->register_link(new_link);
 }
 
+void audio::input::link_to(node::base::node * node_in, const std::string& port_name_in)
+{
+    if (port_name_in == "*") {
+        for(auto&& output_name : node_in->audio.get_output_names()) {
+            assert(output_name != "*");
+            link_to(node_in, output_name);
+        }
+    } else {
+        auto output = node_in->audio.get_output(port_name_in);
+        link_to(output);
+    }
+}
+
 void audio::input::forward_to(input * to_in)
 {
     auto new_forward = new audio::input_forward(this, to_in);
@@ -162,16 +175,16 @@ void audio::input::forward_to(input * to_in)
     to_in->register_forward(new_forward);
 }
 
-void audio::input::connect(node::base::node * node_in, const std::string& port_name_in)
+void audio::input::forward_to(node::base::node * node_in, const std::string& port_name_in)
 {
     if (port_name_in == "*") {
-        for(auto&& output_name : node_in->audio.get_output_names()) {
-            assert(output_name != "*");
-            connect(node_in, output_name);
+        for(auto&& input_name : node_in->audio.get_input_names()) {
+            assert(input_name != "*");
+            forward_to(node_in, input_name);
         }
     } else {
-        auto output = node_in->audio.get_output(port_name_in);
-        link_to(output);
+        auto input = node_in->audio.get_input(port_name_in);
+        forward_to(input);
     }
 }
 
@@ -300,13 +313,6 @@ void audio::output::link_to(audio::input * sink_in)
     sink_in->register_link(new_link);
 }
 
-void audio::output::forward_to(output * to_in)
-{
-    auto new_forward = new audio::output_forward(this, to_in);
-    forwards.push_back(new_forward);
-    to_in->register_forward(new_forward);
-}
-
 void audio::output::link_to(node::base::node * node_in, const std::string& port_name_in)
 {
     if (port_name_in == "*") {
@@ -317,6 +323,26 @@ void audio::output::link_to(node::base::node * node_in, const std::string& port_
     } else {
         auto input = node_in->audio.get_input(port_name_in);
         link_to(input);
+    }
+}
+
+void audio::output::forward_to(output * to_in)
+{
+    auto new_forward = new audio::output_forward(this, to_in);
+    forwards.push_back(new_forward);
+    to_in->register_forward(new_forward);
+}
+
+void audio::output::forward_to(node::base::node * node_in, const std::string& port_name_in)
+{
+    if (port_name_in == "*") {
+        for(auto&& output_name : node_in->audio.get_output_names()) {
+            assert(output_name != "*");
+            link_to(node_in, output_name);
+        }
+    } else {
+        auto output = node_in->audio.get_output(port_name_in);
+        forward_to(output);
     }
 }
 

@@ -91,10 +91,11 @@ class input : public channel {
     input(const std::string& name_in, node::base::node * parent_in);
     pulsar::size_type get_links_waiting();
     void link_to(output * to_in);
+    void link_to(node::base::node * node_in, const std::string& port_name_in);
     void forward_to(input * to_in);
+    void forward_to(node::base::node * node_in, const std::string& port_name_in);
     void register_forward(input_forward * forward_in);
     std::shared_ptr<audio::buffer> get_buffer();
-    void connect(node::base::node * node_in, const std::string& port_name_in);
     std::shared_ptr<audio::buffer> mix_sinks();
     void link_ready(audio::link * link_in, std::shared_ptr<audio::buffer> buffer_in);
 };
@@ -110,6 +111,7 @@ class output : public channel {
     void link_to(input * to_in);
     void link_to(node::base::node * node_in, const std::string& port_name_in);
     void forward_to(output * to_in);
+    void forward_to(node::base::node * node_in, const std::string& port_name_in);
     void register_forward(output_forward * forward_in);
     std::shared_ptr<audio::buffer> get_buffer();
     void set_buffer(std::shared_ptr<audio::buffer> buffer_in);
