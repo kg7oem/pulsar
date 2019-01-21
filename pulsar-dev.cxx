@@ -98,7 +98,7 @@ UNUSED static void process_audio()
 
     while(1) {
         for(auto&& compressor : compressor_nodes) {
-            log_debug(get_compressor_state(compressor));
+            log_info(get_compressor_state(compressor));
         }
 
         std::this_thread::sleep_for(50ms);
