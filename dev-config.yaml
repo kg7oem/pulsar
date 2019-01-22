@@ -2,7 +2,7 @@
 
 engine:
   logs:
-    memory_level: trace
+    memory_level: debug
 
 templates:
   gain:

@@ -47,12 +47,25 @@ namespace logjam {
 std::string format_event_detailed(const logevent& event_in) {
     std::stringstream buf;
 
+    #if 0
     buf << event_in.tid << " ";
     buf << event_in.source << "." << level_name(event_in.level) << " ";
     buf << event_in.function << std::endl;
+    #endif
 
-    buf << event_in.file << ":" << event_in.line << " ";
+    #if 1
+    // might be a full path name
+    auto file_name = std::string(event_in.file);
+    auto pos = file_name.find_last_of("/");
+
+    if (pos != std::string::npos) {
+        file_name = file_name.substr(pos + 1);
+    }
+
+    buf << event_in.tid << " ";
+    buf << file_name << ":" << event_in.line << " ";
     buf << event_in.message;
+    #endif
 
     auto strbuf = buf.str();
     auto last_char_pos = strbuf.size() - 1;
