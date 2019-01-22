@@ -79,7 +79,7 @@ loglevel level_from_name(const char* name_in) {
     throw std::runtime_error(buf);
 }
 
-void send_lambda_logevent(const std::string& source, const loglevel& level, const char *function, const char *path, const int& line, log_wrapper_type lambda_in) {
+void send_lambda_logevent(const std::string& source, const loglevel& level, const char *function, const char *path, const int& line, const log_wrapper_type& lambda_in) {
     if (logjam::should_log(level)) {
         auto when = std::chrono::system_clock::now();
         auto tid = std::this_thread::get_id();

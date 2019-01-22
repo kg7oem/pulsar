@@ -268,6 +268,6 @@ void send_vargs_logevent(const std::string& source, const loglevel& level, const
     return;
 }
 
-void send_lambda_logevent(const std::string& source, const loglevel& level, const char *function, const char *path, const int& line, log_wrapper_type lambda_in);
+void send_lambda_logevent(const std::string& source, const loglevel& level, const char *function, const char *path, const int& line, const log_wrapper_type& lambda_in);
 
 } // namespace logjam
