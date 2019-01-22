@@ -181,8 +181,9 @@ void jackaudio::node::handle_jack_process(jack_nframes_t nframes_in)
     done_cond.wait(done_lock, [this]{ return done_flag; });
 
     done_flag = false;
-    log_debug("********** giving control back to jackaudio");
+    log_trace("going to reset watchdog for node", name);
     if (watchdog != nullptr) watchdog->stop();
+    log_debug("********** giving control back to jackaudio");
 }
 
 void jackaudio::node::run()

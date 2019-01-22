@@ -19,6 +19,22 @@
 
 #include <logjam/logjam.h>
 
+#ifdef LOGJAM_NDEBUG
+#ifndef NDEBUG
+#define NDEBUG
+#endif // NDEBUG
+#endif
+
+#ifdef NDEBUG
+#define LOGJAM_NLOCK_ASSERTIONS
+#endif // NDEBUG
+
+#ifdef LOGJAM_NLOCK_ASSERTIONS
+#define assert_lock(expr) ((void)0)
+#else // LOGJAM_LOCK_ASSERTIONS
+#define assert_lock(expr) assert(expr)
+#endif // LOGJAM_LOCK_ASSERTIONS
+
 // g++ 6.3.0 as it comes in debian/stretch does not support maybe_unused
 #ifdef __GNUC__
 #define UNUSED __attribute__((unused))
@@ -254,7 +270,7 @@ void logengine::add_destination(const std::shared_ptr<logdest>& destination_in) 
 // attempts to add a destination more than once silently return
 // THREAD this function asserts required locking
 void logengine::add_destination__lockex(const std::shared_ptr<logdest>& destination_in) {
-    assert(caller_has_lockex());
+    assert_lock(caller_has_lockex());
 
     for (auto&& i : destinations) {
         if (i->id == destination_in->id) {
@@ -279,7 +295,7 @@ loglevel logengine::get_min_level() {
 
 // THREAD this function asserts required locking
 loglevel logengine::set_min_level__lockex(loglevel level_in) {
-    assert(caller_has_lockex());
+    assert_lock(caller_has_lockex());
 
     auto known_level = get_min_level();
     if (known_level == level_in) {
@@ -297,7 +313,7 @@ loglevel logengine::set_min_level__lockex(loglevel level_in) {
 
 // THREAD this function asserts required locking
 void logengine::update_min_level__lockex() {
-    assert(caller_has_lockex());
+    assert_lock(caller_has_lockex());
 
     auto min_found = loglevel::fatal;
 
@@ -327,7 +343,7 @@ void logengine::start() {
 
 // THREAD this function asserts required locking
 void logengine::start__lockex() {
-    assert(caller_has_lockex());
+    assert_lock(caller_has_lockex());
     logevent* event_ptr;
 
     while(event_buffer.pop(event_ptr)) {
@@ -348,7 +364,7 @@ void logengine::deliver(const logevent& event_in) {
 // event queue uses lockless insertion
 // https://en.cppreference.com/w/cpp/atomic/atomic_compare_exchange
 void logengine::deliver__locksh(const logevent& event_in) {
-    assert(caller_has_locksh());
+    assert_lock(caller_has_locksh());
     assert(event_in.level >= loglevel::unknown);
 
     // only deliver messages if started and then deliver them
@@ -364,14 +380,14 @@ void logengine::deliver__locksh(const logevent& event_in) {
 }
 
 void logengine::deliver_to_one__locksh(const std::shared_ptr<logdest>& dest_in, const logevent& event_in) {
-    assert(caller_has_locksh());
+    assert_lock(caller_has_locksh());
     if (event_in.level >= dest_in->get_min_level()) {
         dest_in->output(event_in);
     }
 }
 
 void logengine::deliver_to_all__locksh(const logevent& event_in) {
-    assert(caller_has_locksh());
+    assert_lock(caller_has_locksh());
 
     uint sent = 0;
     for(auto&& i : destinations) {
@@ -404,7 +420,7 @@ loglevel logdest::set_min_level(const loglevel& min_level_in) {
 
 // THREAD this function asserts correct locking
 loglevel logdest::set_min_level__lockreq(const loglevel& min_level_in) {
-    assert(logengine::get_engine()->caller_has_lockex());
+    assert_lock(logengine::get_engine()->caller_has_lockex());
 
     loglevel old = get_min_level();
     min_level = min_level_in;
@@ -430,7 +446,7 @@ std::string logconsole::format_event(const logevent& event_in) const {
 // THREAD this function asserts the required locking
 void logconsole::write_stdio__lockreq(const std::string& message_in) {
     // writing to stdio needs to be serialized so different threads don't overlap
-    assert(caller_has_lock());
+    assert_lock(caller_has_lock());
     std::cout <<  message_in;
 }
 

@@ -66,14 +66,16 @@ void domain::activate(const size_type num_threads_in)
 
 void domain::add_ready_node(node::base * node_in)
 {
+    llog_trace({ return pulsar::util::to_string("adding ready node: ", node_in->name); });
+
     assert(activated);
 
     auto lock = lock_type(run_queue_mutex);
 
-    llog_trace({ return pulsar::util::to_string("adding ready node: ", node_in->name); });
-
     run_queue.push_back(node_in);
     run_queue_condition.notify_one();
+
+    log_trace("done adding ready node ", node_in->name);
 }
 
 void domain::be_thread()

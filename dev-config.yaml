@@ -2,7 +2,7 @@
 
 engine:
   logs:
-    console_level: info
+    console_level: debug
     memory_level: trace
 
 templates:
@@ -69,6 +69,8 @@ domain:
       class: pulsar::jackaudio::node
       config:
         client_name: pulsar
+        # reduce sensitivity because of interrupt isues on test
+        # hardware
         watchdog_timeout_ms: 100
       inputs: [ left_out, right_out, demod_out, mono_out ]
       outputs: [ right_in, left_in, demod_in ]

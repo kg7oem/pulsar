@@ -148,7 +148,7 @@ UNUSED static void process_audio(std::shared_ptr<pulsar::config::file> config_in
         }
     });
 
-    info_timer->start();
+    // info_timer->start();
 
     while(1) {
         std::this_thread::sleep_for(1s);
