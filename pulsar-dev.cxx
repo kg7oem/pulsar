@@ -20,7 +20,7 @@
 using namespace std;
 using namespace std::chrono_literals;
 
-#define LOG_LEVEL logjam::loglevel::debug
+#define LOG_LEVEL verbose
 #define INFO_DELAY 50ms
 // Give valgrind lots of time
 #define ALARM_TIMEOUT 5
@@ -28,7 +28,7 @@ using namespace std::chrono_literals;
 static void init_logging()
 {
     auto logging = logjam::logengine::get_engine();
-    auto console = make_shared<logjam::logconsole>(LOG_LEVEL);
+    auto console = make_shared<logjam::logconsole>(logjam::loglevel::LOG_LEVEL);
 
     logging->add_destination(console);
     logging->start();
@@ -53,17 +53,21 @@ UNUSED static void init()
 
 UNUSED void log_properties(pulsar::node::base * node_in)
 {
-    auto& node_name = node_in->get_property("node:name").get_string();
 
-    log_debug("Properties for node: ", node_name);
+    llog_debug({
+        auto& node_name = node_in->get_property("node:name").get_string();
+        return pulsar::util::to_string("Properties for node: ", node_name);
+    });
 
     for(auto&& i : node_in->get_properties()) {
         if (i.first == "node:name") {
             continue;
         }
 
-        auto property = i.second;
-        log_debug("property: ", property->name, "; value = '", property->get(), "'");
+        llog_debug({
+            auto property = i.second;
+            return pulsar::util::to_string("property: ", property->name, "; value = '", property->get(), "'");
+        });
     }
 }
 
@@ -118,11 +122,10 @@ int main(void)
 {
     init();
 
-
     log_info("pulsar-dev initialized");
     log_info("Using Boost ", pulsar::system::get_boost_version());
 
-    llog_info({ bool foo = true; return "yep: " + std::to_string(foo); });
+    LOGJAM_LOG_LAMBDA(PULSAR_LOG_NAME, logjam::loglevel::info, { UNUSED bool foo = true; return "yep"; });
 
     process_audio();
 

@@ -12,6 +12,7 @@
 // GNU Lesser General Public License for more details.
 
 #include <boost/version.hpp>
+#include <iostream>
 #include <stdexcept>
 #include <string>
 
@@ -91,7 +92,8 @@ string_type make_boost_version()
 
 [[noreturn]] void fault(const char* file_in, int line_in, const char* function_in, const string_type& message_in)
 {
-    logjam::send_logevent(PULSAR_LOG_NAME, logjam::loglevel::fatal, function_in, file_in, line_in, message_in);
+    std::cerr << "Pulsar faulted: " << message_in << " at " << file_in << ":" << line_in << std::endl;
+    logjam::send_vargs_logevent(PULSAR_LOG_NAME, logjam::loglevel::fatal, function_in, file_in, line_in, message_in);
     abort();
 }
 

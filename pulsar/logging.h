@@ -14,6 +14,7 @@
 #pragma once
 
 #define LOGJAM_LOG_MACROS
+#undef LOGJAM_NLOG
 
 #include "ext/logjam.h"
 
@@ -29,7 +30,7 @@
 #define log_unknown(...)  LOGJAM_LOG_VARGS(PULSAR_LOG_NAME, logjam::loglevel::unknown, __VA_ARGS__)
 
 #define llog_error(block)   LOGJAM_LOG_LAMBDA(PULSAR_LOG_NAME, logjam::loglevel::error, block)
-#define llog_info(block)    LOGJAM_LOG_LAMBDA(PULSAR_LOG_NAME, logjam::loglevel::error, block)
+#define llog_info(block)    LOGJAM_LOG_LAMBDA(PULSAR_LOG_NAME, logjam::loglevel::info, block)
 #define llog_verbose(block) LOGJAM_LOG_LAMBDA(PULSAR_LOG_NAME, logjam::loglevel::verbose, block)
 #define llog_debug(block)   LOGJAM_LOG_LAMBDA(PULSAR_LOG_NAME, logjam::loglevel::debug, block)
 #define llog_trace(block)   LOGJAM_LOG_LAMBDA(PULSAR_LOG_NAME, logjam::loglevel::trace, block)

@@ -145,7 +145,7 @@ void audio::input::reset_cycle()
     }
 
     auto waiting_things = links.size() + num_forwards_to_us;
-    log_trace("resetting audio input ", parent->name, ":", name, "; waiting things: ", waiting_things);
+    // llog_trace({ return pulsar::util::to_string("resetting audio input ", parent->name, ":", name, "; waiting things: ", waiting_things);) ;
 
     links_waiting.store(waiting_things);
 }

@@ -25,11 +25,15 @@
 #include <unordered_set>
 #include <vector>
 
-// FIXME why doesn' this work?
-// #ifdef LOGJAM_LOG_MACROS
-#define LOGJAM_LOG_VARGS(logname, loglevel, ...) logjam::send_logevent(logname, loglevel, __PRETTY_FUNCTION__, __FILE__, __LINE__, __VA_ARGS__)
-#define LOGJAM_LOG_LAMBDA(logname, loglevel, block) logjam::send_logevent(logname, loglevel, __PRETTY_FUNCTION__, __FILE__, __LINE__, [&]() -> std::string block)
-// #endif
+#ifdef LOGJAM_LOG_MACROS
+#ifndef LOGJAM_NLOG
+#define LOGJAM_LOG_VARGS(logname, loglevel, ...) logjam::send_vargs_logevent(logname, loglevel, __PRETTY_FUNCTION__, __FILE__, __LINE__, __VA_ARGS__)
+#define LOGJAM_LOG_LAMBDA(logname, loglevel, block) logjam::send_lambda_logevent(logname, loglevel, __PRETTY_FUNCTION__, __FILE__, __LINE__, [&]() -> std::string block)
+#else // LOGJAM_NLOG
+#define LOGJAM_LOG_VARGS(logname, loglevel, ...) ((void)0)
+#define LOGJAM_LOG_LAMBDA(logname, loglevel, block) ((void)0)
+#endif // LOGJAM_NLOG
+#endif // LOGJAM_LOG_MACROS
 
 namespace logjam {
 
@@ -215,12 +219,6 @@ void sstream_accumulate_vaargs(std::stringstream& sstream, T&& t) {
     sstream << t;
 }
 
-// FIXME how does this get specialized?
-// template <>
-// void sstream_accumulate_vaargs(std::stringstream& sstream, std::function<std::string ()>&& t) {
-//     sstream << t();
-// }
-
 template <typename T, typename... Args>
 void sstream_accumulate_vaargs(std::stringstream& sstream, T&& t, Args&&... args) {
     sstream_accumulate_vaargs(sstream, t);
@@ -235,7 +233,8 @@ std::string vaargs_to_string(Args&&... args) {
 }
 
 template<typename... Args>
-void send_logevent(const std::string& source, const loglevel& level, const char *function, const char *path, const int& line, Args&&... args) {
+void send_vargs_logevent(const std::string& source, const loglevel& level, const char *function, const char *path, const int& line, Args&&... args)
+{
     if (logjam::should_log(level)) {
         auto when = std::chrono::system_clock::now();
 
@@ -244,11 +243,10 @@ void send_logevent(const std::string& source, const loglevel& level, const char 
         logevent event(source, level, when, tid, function, path, line, message);
         logengine::get_engine()->deliver(event);
     }
+
+    return;
 }
 
 void send_lambda_logevent(const std::string& source, const loglevel& level, const char *function, const char *path, const int& line, log_wrapper_type lambda_in);
 
 } // namespace logjam
-
-// FIXME does this need to go at the top?
-// std::ostream& operator<<(std::ostream&, logjam::log_wrapper_type);

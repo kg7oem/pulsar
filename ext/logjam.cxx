@@ -28,17 +28,6 @@
 
 namespace logjam {
 
-void send_lambda_logevent(const std::string& source, const loglevel& level, const char *function, const char *path, const int& line, log_wrapper_type lambda_in)
-{
-    if (logjam::should_log(level)) {
-        auto when = std::chrono::system_clock::now();
-        auto tid = std::this_thread::get_id();
-        auto message = lambda_in();
-        logevent event(source, level, when, tid, function, path, line, message);
-        logengine::get_engine()->deliver(event);
-    }
-}
-
 bool should_log(const loglevel& level_in) {
     return logengine::get_engine()->should_log(level_in);
 }
@@ -84,6 +73,16 @@ loglevel level_from_name(const char* name_in) {
     std::string buf("no match for loglevel name: ");
     buf += name_in;
     throw std::runtime_error(buf);
+}
+
+void send_lambda_logevent(const std::string& source, const loglevel& level, const char *function, const char *path, const int& line, log_wrapper_type lambda_in) {
+    if (logjam::should_log(level)) {
+        auto when = std::chrono::system_clock::now();
+        auto tid = std::this_thread::get_id();
+        auto message = lambda_in();
+        logevent event(source, level, when, tid, function, path, line, message);
+        logengine::get_engine()->deliver(event);
+    }
 }
 
 void mutex::lock() {
