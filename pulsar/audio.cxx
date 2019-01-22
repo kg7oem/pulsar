@@ -145,7 +145,7 @@ void audio::input::reset_cycle()
     }
 
     auto waiting_things = links.size() + num_forwards_to_us;
-    // llog_trace({ return pulsar::util::to_string("resetting audio input ", parent->name, ":", name, "; waiting things: ", waiting_things);) ;
+    llog_trace({ return pulsar::util::to_string("resetting audio input ", to_str()); });
 
     links_waiting.store(waiting_things);
 }
@@ -199,7 +199,7 @@ void audio::input::forward_to(node::base * node_in, const string_type& port_name
 
 void audio::input::link_ready(audio::link * link_in, std::shared_ptr<audio::buffer> buffer_in)
 {
-    log_trace("in link_ready() for ", parent->name, ":", name);
+    llog_trace({ return pulsar::util::to_string("in link_ready() for ", to_str()); });
 
     assert(link_in != nullptr);
     assert(buffer_in != nullptr);
@@ -213,14 +213,14 @@ void audio::input::link_ready(audio::link * link_in, std::shared_ptr<audio::buff
 
     now_waiting = --links_waiting;
 
-    log_trace("waiting buffers: ", now_waiting, "; node: ", get_parent()->name);
+    llog_trace({ return pulsar::util::to_string("waiting buffers: ", now_waiting, "; node: ", get_parent()->name); });
 
     if (now_waiting == 0) {
         parent->audio.source_ready(this);
     }
 
     for(auto&& forward : forwards) {
-        log_trace("node ", parent->name, " forwarding to ", forward->to->get_parent()->name, ":", forward->to->name);
+        llog_trace({ return pulsar::util::to_string("node ", parent->name, " forwarding to ", forward->to->get_parent()->name, ":", forward->to->name); });
         forward->to->link_ready(link_in, buffer_in);
     }
 }
@@ -281,20 +281,27 @@ std::shared_ptr<audio::buffer> audio::input::mix_outputs()
     return mix_buffer;
 }
 
+const std::string audio::input::to_str()
+{
+    string_type buf = parent->name;
+    buf += ":input:" + name;
+    return buf;
+}
+
 audio::output::output(const string_type& name_in, node::base * parent_in)
 : audio::channel(name_in, parent_in)
 { }
 
 void audio::output::init_cycle()
 {
-    log_trace("creating output buffer for ", parent->name, ":", name);
+    llog_trace({ return pulsar::util::to_string("creating output buffer for ", parent->name, ":", name); });
     buffer = std::make_shared<audio::buffer>();
     buffer->init(parent->get_domain()->buffer_size);
 }
 
 void audio::output::reset_cycle()
 {
-    log_trace("reseting audio output buffer for ", parent->name, ":", name);
+    llog_trace({ return pulsar::util::to_string("reseting audio output buffer for ", to_str()); });
     buffer = nullptr;
 }
 
@@ -379,6 +386,13 @@ void audio::output::notify()
     }
 }
 
+const std::string audio::output::to_str()
+{
+    string_type buf = parent->name;
+    buf += ":output:" + name;
+    return buf;
+}
+
 audio::link::link(audio::output * sink_in, audio::input * source_in)
 : sink(sink_in), source(source_in)
 {
@@ -390,20 +404,20 @@ void audio::link::reset()
     // FIXME does this need a lock? The flag is atomic
     // and locks are not needed to wake up a condvar
     auto lock = lock_type(available_mutex);
-    log_trace("resetting link for ",  sink->get_parent()->name, ":", sink->name, " -> ", source->get_parent()->name, ":", source->name);
+    llog_trace({ return pulsar::util::to_string("resetting link for ",  to_str()); });
     available_flag = true;
     available_condition.notify_all();
 }
 
 void audio::link::notify(std::shared_ptr<audio::buffer> ready_buffer_in, const bool blocking_in)
 {
-    log_trace("got notification for ", source->get_parent()->name, ":", source->name);
+    llog_trace({ return pulsar::util::to_string("got notification for ", to_str()); });
 
     auto lock = lock_type(available_mutex);
 
     if (! available_flag) {
         if (blocking_in) {
-            log_debug("node ", source->get_parent()->name, ":", source->name, " is blocked notifying ", sink->get_parent()->name, ":", sink->name);
+            llog_trace({ return pulsar::util::to_string("node is blocked on link ", to_str()); });
             available_condition.wait(lock, [this]{ return available_flag.load(); });
         } else {
             system_fault("attempt to set link ready when it was already ready");
@@ -416,6 +430,14 @@ void audio::link::notify(std::shared_ptr<audio::buffer> ready_buffer_in, const b
 
     source->link_ready(this, ready_buffer_in);
 }
+
+const std::string audio::link::to_str()
+{
+    auto buf = source->to_str();
+    buf += " -> " + sink->to_str();
+    return buf;
+}
+
 
 audio::input_forward::input_forward(input * from_in, input * to_in)
 : from(from_in), to(to_in)

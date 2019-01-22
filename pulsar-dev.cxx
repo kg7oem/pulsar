@@ -20,7 +20,7 @@
 using namespace std;
 using namespace std::chrono_literals;
 
-#define LOG_LEVEL verbose
+#define LOG_LEVEL trace
 #define INFO_DELAY 50ms
 // Give valgrind lots of time
 #define ALARM_TIMEOUT 5
@@ -104,6 +104,8 @@ UNUSED static void process_audio()
     compressor_nodes.push_back(node_map["comp_left"]);
     compressor_nodes.push_back(node_map["tail_eater"]);
 
+    log_info(node_map["comp_right"]->audio.get_input("Audio Input 1")->to_str());
+
     auto info_timer = pulsar::async::timer::make(
         INFO_DELAY, INFO_DELAY, [compressor_nodes](pulsar::async::base_timer&) {
             for(UNUSED auto&& compressor : compressor_nodes) {
@@ -124,8 +126,6 @@ int main(void)
 
     log_info("pulsar-dev initialized");
     log_info("Using Boost ", pulsar::system::get_boost_version());
-
-    LOGJAM_LOG_LAMBDA(PULSAR_LOG_NAME, logjam::loglevel::info, { UNUSED bool foo = true; return "yep"; });
 
     process_audio();
 

@@ -70,7 +70,7 @@ void domain::add_ready_node(node::base * node_in)
 
     auto lock = lock_type(run_queue_mutex);
 
-    log_trace("adding ready node: ", node_in->name);
+    llog_trace({ return pulsar::util::to_string("adding ready node: ", node_in->name); });
 
     run_queue.push_back(node_in);
     run_queue_condition.notify_one();
@@ -88,9 +88,9 @@ void domain::be_thread()
 
         lock.unlock();
 
-        log_trace("running node: ", ready_node->name);
+        llog_trace({ return pulsar::util::to_string("running node: ", ready_node->name); });
         ready_node->execute();
-        log_trace("done running node: ", ready_node->name);
+        llog_trace({ return pulsar::util::to_string("done running node: ", ready_node->name); });
     }
 }
 

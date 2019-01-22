@@ -341,7 +341,7 @@ void node::activate()
 
 void node::run()
 {
-    log_trace("running LADSPA plugin");
+    log_trace("running LADSPA plugin for node ", name);
 
     for (auto&& port_name : audio.get_input_names()) {
         auto buffer = audio.get_input(port_name)->get_buffer();
@@ -367,7 +367,7 @@ void node::run()
         ladspa->connect(port_num, nullptr);
     }
 
-    log_trace("done running LADSPA plugin");
+    log_trace("done running LADSPA plugin for node ", name);
 
     pulsar::node::base::run();
 }
