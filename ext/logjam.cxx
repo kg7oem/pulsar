@@ -224,9 +224,11 @@ void logengine::add_destination(const std::shared_ptr<logdest>& destination_in) 
 void logengine::add_destination__lockex(const std::shared_ptr<logdest>& destination_in) {
     assert(caller_has_lockex());
 
+    std::cout << "got a new destination" << std::endl;
+
     for (auto&& i : destinations) {
         if (i->id == destination_in->id) {
-            return;
+            throw std::runtime_error("attempt to register duplicate log destination");
         }
     }
 
@@ -267,20 +269,21 @@ loglevel logengine::set_min_level__lockex(loglevel level_in) {
 void logengine::update_min_level__lockex() {
     assert(caller_has_lockex());
 
-    auto max_found = loglevel::none;
+    std::cout << "starting to update min log level" << std::endl;
+
+    auto min_found = loglevel::fatal;
+
     for (auto&& i : destinations) {
         auto dest_level = i->get_min_level();
-        if (dest_level > max_found) {
-            max_found = dest_level;
+        std::cout << "found destiation with level " << level_name(dest_level) << std::endl;
+        if (dest_level < min_found) {
+            min_found = dest_level;
         }
     }
 
-    auto known_level = get_min_level();
-    if (known_level == max_found) {
-        return;
-    }
+    std::cout << "found min level: " << level_name(min_found) << std::endl;
 
-    set_min_level__lockex(max_found);
+    set_min_level__lockex(min_found);
 }
 
 // THREAD this function is inherently thread safe
@@ -436,6 +439,23 @@ void logconsole::handle_output(const logevent& event_in) {
 
     auto lock = get_lock();
     write_stdio__lockreq(message);
+}
+
+void logmemory::handle_output(const logevent& event_in)
+{
+    auto lock = get_lock();
+    event_history.push_back(event_in);
+}
+
+void logmemory::cleanup() {
+    auto lock = get_lock();
+    auto now = std::chrono::system_clock::now();
+
+    // FIXME this should be optimized
+    event_history.remove_if([&](logevent& event_in) {
+        auto age = now - event_in.when;
+        return age >= max_age;
+    });
 }
 
 }

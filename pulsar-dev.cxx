@@ -20,17 +20,23 @@
 using namespace std;
 using namespace std::chrono_literals;
 
-#define LOG_LEVEL verbose
+#define LOG_LEVEL info
 #define INFO_DELAY 50ms
 // Give valgrind lots of time
 #define ALARM_TIMEOUT 5
 
+static std::shared_ptr<logjam::logmemory> memory_logger;
+
 static void init_logging()
 {
     auto logging = logjam::logengine::get_engine();
-    auto console = make_shared<logjam::logconsole>(logjam::loglevel::LOG_LEVEL);
 
+    auto console = make_shared<logjam::logconsole>(logjam::loglevel::LOG_LEVEL);
     logging->add_destination(console);
+
+    memory_logger = make_shared<logjam::logmemory>(logjam::loglevel::trace);
+    logging->add_destination(memory_logger);
+
     logging->start();
 }
 
@@ -38,7 +44,11 @@ UNUSED static void init_pulsar()
 {
     pulsar::system::bootstrap();
 
-    pulsar::system::register_alive_handler([] (void *) {
+    pulsar::system::register_alive_handler([&] (void *) {
+        assert(memory_logger != nullptr);
+
+        memory_logger->cleanup();
+
         alarm(ALARM_TIMEOUT);
     });
 
@@ -103,8 +113,6 @@ UNUSED static void process_audio()
     compressor_nodes.push_back(node_map["comp_right"]);
     compressor_nodes.push_back(node_map["comp_left"]);
     compressor_nodes.push_back(node_map["tail_eater"]);
-
-    log_info(node_map["comp_right"]->audio.get_input("Audio Input 1")->to_str());
 
     auto info_timer = pulsar::async::timer::make(
         INFO_DELAY, INFO_DELAY, [compressor_nodes](pulsar::async::base_timer&) {

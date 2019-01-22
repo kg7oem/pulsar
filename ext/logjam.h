@@ -37,6 +37,8 @@
 
 namespace logjam {
 
+using namespace std::chrono_literals;
+
 using log_wrapper_type = std::function<std::string ()>;
 
 enum class loglevel {
@@ -208,6 +210,21 @@ class logconsole : public logdest, lockable {
             : logdest(level_in) { }
         virtual ~logconsole() = default;
         virtual std::string format_event(const logevent& event) const;
+};
+
+class logmemory : public logdest, lockable {
+    private:
+        // ordered with oldest event at the start
+        std::list<logevent> event_history;
+        std::mutex event_history_mutex;
+        std::chrono::milliseconds max_age = 1s;
+        virtual void handle_output(const logevent& event_in) override;
+
+    public:
+        logmemory(const loglevel& level_in)
+            : logdest(level_in) { }
+        virtual ~logmemory() = default;
+        void cleanup();
 };
 
 const char* level_name(const loglevel& level_in);
