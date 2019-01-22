@@ -124,7 +124,7 @@ int main(void)
 
     llog_info({ bool foo = true; return "yep: " + std::to_string(foo); });
 
-    // process_audio();
+    process_audio();
 
     return 0;
 }

@@ -95,7 +95,7 @@ static void link_node_n_to_n(node::base * source_node_in, node::base * sink_node
 }
 
 static void link_channel_by_target(audio::output * source_channel_in, const node_map_type& node_map_in, const string_type& target_string_in) {
-    auto target_split = util::string::split(target_string_in, ':');
+    auto target_split = util::split(target_string_in, ':');
     auto split_size = target_split.size();
     string_type sink_node_name, sink_channel_name;
     node::base * sink_node;
@@ -179,7 +179,7 @@ static void connect_nodes(node_map_type& node_map_in, const YAML::Node& node_yam
             auto from_port_string = i.first.as<string_type>();
             auto from_port = source_node->audio.get_output(from_port_string);
             auto target_string = i.second.as<string_type>();
-            auto to_parts = util::string::split(target_string, ':');
+            auto to_parts = util::split(target_string, ':');
             auto target_node = node_map_in[to_parts[0]];
             // auto target_port = target_node->audio.get_output(to_parts[1]);
             from_port->forward_to(target_node, to_parts[1]);
@@ -343,7 +343,7 @@ pulsar::node::base * make_chain_node(const YAML::Node& node_yaml_in, const YAML:
         if (target_node.IsSequence()) {
             for(size_type i = 0; i < target_node.size(); i++) {
                 auto target_string = target_node[i].as<string_type>();
-                auto target_parts = util::string::split(target_string, ':');
+                auto target_parts = util::split(target_string, ':');
                 auto target_node = chain_nodes[target_parts[0]];
                 chain_root_node->audio.get_input(output_name)->forward_to(target_node, target_parts[1]);
             }
@@ -359,7 +359,7 @@ pulsar::node::base * make_chain_node(const YAML::Node& node_yaml_in, const YAML:
 
         for(size_type i = 0; i < state_node.size(); i++) {
             auto target_string = state_node[i].as<string_type>();
-            auto target_parts = util::string::split(target_string, ':');
+            auto target_parts = util::split(target_string, ':');
             assert(target_parts.size() == 2);
             auto target_node_name = target_parts[0];
             auto target_property_name = target_parts[1];
@@ -372,7 +372,7 @@ pulsar::node::base * make_chain_node(const YAML::Node& node_yaml_in, const YAML:
             } else {
                 for(auto&& i : target_node->get_properties()) {
                     auto property_name = i.first;
-                    auto property_parts = util::string::split(property_name, ':');
+                    auto property_parts = util::split(property_name, ':');
                     auto prefix = property_parts[0];
 
                     if (prefix != "state") {

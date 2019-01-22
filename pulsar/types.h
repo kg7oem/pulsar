@@ -11,22 +11,22 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
 
-#include <iterator>
-
-#include <pulsar/util.h>
+#pragma once
 
 namespace pulsar {
 
-namespace util {
+#include <chrono>
+#include <sstream>
+#include <string>
 
-// from https://stackoverflow.com/a/236803
-std::vector<string_type> split(const string_type& string_in, const char delim_in)
-{
-    std::vector<string_type> parts;
-    split(string_in, delim_in, std::back_inserter(parts));
-    return parts;
-}
+using duration_type = std::chrono::milliseconds;
+using integer_type = int;
+using real_type = float;
+using size_type = unsigned long;
+using string_type = std::string;
 
-} // namespace util
+// FIXME rename to audio_sample_type or move
+// into pulsar::audio::sample_type <-- probably best
+using sample_type = real_type;
 
-} //namespace pulsar
+} // namespace pulsar

@@ -20,6 +20,7 @@
 #include <pulsar/audio.util.h>
 #include <pulsar/logging.h>
 #include <pulsar/node.h>
+#include <pulsar/system.h>
 
 namespace pulsar {
 

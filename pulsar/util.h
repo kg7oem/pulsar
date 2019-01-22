@@ -17,13 +17,14 @@
 #include <string>
 #include <vector>
 
-#include <pulsar/system.h>
+// #include <pulsar/types.h>
+
+// FIXME why can't pulsar/types.h be included?
+using string_type = std::string;
 
 namespace pulsar {
 
 namespace util {
-
-namespace string {
 
 // from https://stackoverflow.com/a/236803
 template<typename Out>
@@ -37,7 +38,23 @@ void split(const string_type &string_in, const char delim_in, Out result) {
 
 std::vector<string_type> split(const string_type& string_in, const char delim_in);
 
-} // namespace string
+template <typename T>
+void sstream_accumulate_vaargs(std::stringstream& sstream, T&& t) {
+    sstream << t;
+}
+
+template <typename T, typename... Args>
+void sstream_accumulate_vaargs(std::stringstream& sstream, T&& t, Args&&... args) {
+    sstream_accumulate_vaargs(sstream, t);
+    sstream_accumulate_vaargs(sstream, args...);
+}
+
+template <typename... Args>
+std::string to_string(Args&&... args) {
+    std::stringstream buf;
+    sstream_accumulate_vaargs(buf, args...);
+    return buf.str();
+}
 
 } // namespace util
 

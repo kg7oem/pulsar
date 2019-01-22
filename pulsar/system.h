@@ -14,10 +14,12 @@
 #pragma once
 
 #include <chrono>
+#include <functional>
 #include <sstream>
 #include <string>
 
-#include "ext/logjam.h"
+#include <pulsar/types.h>
+#include <pulsar/util.h>
 
 // g++ 6.3.0 as it comes in debian/stretch does not support maybe_unused
 #ifdef __GNUC__
@@ -26,17 +28,9 @@
 #define UNUSED [[ maybe_unused ]]
 #endif
 
-#define system_fault(...) pulsar::system::fault(__FILE__, __LINE__, __PRETTY_FUNCTION__, logjam::vaargs_to_string(__VA_ARGS__))
+#define system_fault(...) pulsar::system::fault(__FILE__, __LINE__, __PRETTY_FUNCTION__, pulsar::util::to_string(__VA_ARGS__))
 
 namespace pulsar {
-
-using duration_type = std::chrono::milliseconds;
-using integer_type = int;
-using real_type = float;
-using size_type = unsigned long;
-using string_type = std::string;
-
-using sample_type = real_type;
 
 namespace system {
 

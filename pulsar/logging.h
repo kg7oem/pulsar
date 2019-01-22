@@ -17,6 +17,8 @@
 
 #include "ext/logjam.h"
 
+#include <pulsar/util.h>
+
 #define PULSAR_LOG_NAME "pulsar"
 
 #define log_error(...)    LOGJAM_LOG_VARGS(PULSAR_LOG_NAME, logjam::loglevel::error, __VA_ARGS__)
