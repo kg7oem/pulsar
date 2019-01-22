@@ -20,7 +20,7 @@
 using namespace std;
 using namespace std::chrono_literals;
 
-#define LOG_LEVEL info
+#define LOG_LEVEL verbose
 #define INFO_DELAY 50ms
 // Give valgrind lots of time
 #define ALARM_TIMEOUT 5
@@ -34,8 +34,9 @@ static void init_logging()
     auto console = make_shared<logjam::logconsole>(logjam::loglevel::LOG_LEVEL);
     logging->add_destination(console);
 
-    memory_logger = make_shared<logjam::logmemory>(logjam::loglevel::trace);
-    logging->add_destination(memory_logger);
+    // memory_logger = make_shared<logjam::logmemory>(logjam::loglevel::trace);
+    // memory_logger->set_max_age(10s);
+    // logging->add_destination(memory_logger);
 
     logging->start();
 }
@@ -45,10 +46,6 @@ UNUSED static void init_pulsar()
     pulsar::system::bootstrap();
 
     pulsar::system::register_alive_handler([&] (void *) {
-        assert(memory_logger != nullptr);
-
-        memory_logger->cleanup();
-
         alarm(ALARM_TIMEOUT);
     });
 

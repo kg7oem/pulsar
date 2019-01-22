@@ -217,14 +217,17 @@ class logmemory : public logdest, lockable {
         // ordered with oldest event at the start
         std::list<logevent> event_history;
         std::mutex event_history_mutex;
-        std::chrono::milliseconds max_age = 1s;
+        std::chrono::milliseconds max_age = 0ms;
         virtual void handle_output(const logevent& event_in) override;
+        void cleanup();
 
     public:
         logmemory(const loglevel& level_in)
             : logdest(level_in) { }
         virtual ~logmemory() = default;
-        void cleanup();
+        std::chrono::milliseconds get_max_age();
+        void set_max_age(std::chrono::milliseconds max_age_in);
+        std::list<logevent> get_event_history();
 };
 
 const char* level_name(const loglevel& level_in);

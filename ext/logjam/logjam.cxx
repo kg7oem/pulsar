@@ -438,17 +438,43 @@ void logmemory::handle_output(const logevent& event_in)
 {
     auto lock = get_lock();
     event_history.push_back(event_in);
+    cleanup();
+}
+
+std::chrono::milliseconds logmemory::get_max_age() {
+    auto lock = get_lock();
+    return max_age;
+}
+
+void logmemory::set_max_age(std::chrono::milliseconds max_age_in) {
+    auto lock = get_lock();
+    max_age = max_age_in;
+}
+
+std::list<logevent> logmemory::get_event_history() {
+    auto lock = get_lock();
+    return event_history;
 }
 
 void logmemory::cleanup() {
-    auto lock = get_lock();
     auto now = std::chrono::system_clock::now();
 
-    // FIXME this should be optimized
-    event_history.remove_if([&](logevent& event_in) {
-        auto age = now - event_in.when;
-        return age >= max_age;
-    });
+    auto i = event_history.begin();
+
+    while(1) {
+        if (i == event_history.end()) {
+            break;
+        }
+
+        auto current = i;
+        i++;
+
+        if (now - current->when >= max_age) {
+            event_history.erase(current);
+        } else {
+            break;
+        }
+    }
 }
 
 }
