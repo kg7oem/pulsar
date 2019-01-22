@@ -17,10 +17,12 @@
 #undef LOGJAM_NLOG
 
 #include <logjam/logjam.h>
+#include <mutex>
 
 #include <pulsar/util.h>
 
 #define PULSAR_LOG_NAME "pulsar"
+#define PULSAR_LOG_LOCK_NAME "pulsar.locking"
 
 #define log_error(...)    LOGJAM_LOG_VARGS(PULSAR_LOG_NAME, logjam::loglevel::error, __VA_ARGS__)
 #define log_info(...)     LOGJAM_LOG_VARGS(PULSAR_LOG_NAME, logjam::loglevel::info, __VA_ARGS__)
@@ -35,3 +37,23 @@
 #define llog_debug(block)   LOGJAM_LOG_LAMBDA(PULSAR_LOG_NAME, logjam::loglevel::debug, block)
 #define llog_trace(block)   LOGJAM_LOG_LAMBDA(PULSAR_LOG_NAME, logjam::loglevel::trace, block)
 #define llog_unknown(block) LOGJAM_LOG_LAMBDA(PULSAR_LOG_NAME, logjam::loglevel::unknown, block)
+
+
+#define log_get_lock(...)     pulsar::logging::log_get_lock_function(PULSAR_LOG_LOCK_NAME, logjam::loglevel::trace, __PRETTY_FUNCTION__, __FILE__, __LINE__, __VA_ARGS__)
+#define llog_locking(block)   LOGJAM_LOG_LAMBDA(PULSAR_LOG_LOCK_NAME, logjam::loglevel::trace, block)
+
+namespace pulsar {
+
+namespace logging {
+
+template <typename T>
+std::unique_lock<T> log_get_lock_function(const std::string& logname_in, const logjam::loglevel& level_in, const char *function_in, const char *path_in, const int& line_in, T& mutex_in) {
+    logjam::send_vargs_logevent(logname_in, level_in, function_in, path_in, line_in, "getting lock");
+    auto lock = std::unique_lock<T>(mutex_in);
+    logjam::send_vargs_logevent(logname_in, level_in, function_in, path_in, line_in, "got lock");
+    return lock;
+}
+
+} // logging
+
+} // pulsar

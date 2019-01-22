@@ -136,7 +136,7 @@ void audio::input::init_cycle()
 void audio::input::reset_cycle()
 {
     {
-        auto lock = lock_type(link_buffers_mutex);
+        auto lock = log_get_lock(link_buffers_mutex);
         link_buffers.empty();
     }
 
@@ -207,7 +207,7 @@ void audio::input::link_ready(audio::link * link_in, std::shared_ptr<audio::buff
     size_type now_waiting;
 
     {
-        auto lock = lock_type(link_buffers_mutex);
+        auto lock = log_get_lock(link_buffers_mutex);
         link_buffers[link_in] = buffer_in;
     }
 
@@ -255,7 +255,7 @@ std::shared_ptr<audio::buffer> audio::input::get_buffer()
         return parent->get_domain()->get_zero_buffer();
     } else if (num_links == 1) {
         log_trace("returning pointer to link's ready buffer for ", input_name);
-        auto lock = lock_type(link_buffers_mutex);
+        auto lock = log_get_lock(link_buffers_mutex);
         assert(link_buffers.begin() != link_buffers.end());
         assert(link_buffers.begin()->second != nullptr);
         return link_buffers.begin()->second;
@@ -405,7 +405,7 @@ void audio::link::reset()
 
     // FIXME does this need a lock? The flag is atomic
     // and locks are not needed to wake up a condvar
-    auto lock = lock_type(available_mutex);
+    auto lock = log_get_lock(available_mutex);
     available_flag = true;
     available_condition.notify_all();
 }
@@ -414,7 +414,7 @@ void audio::link::notify(std::shared_ptr<audio::buffer> ready_buffer_in, const b
 {
     llog_trace({ return pulsar::util::to_string("got notification for ", to_string()); });
 
-    auto lock = lock_type(available_mutex);
+    auto lock = log_get_lock(available_mutex);
 
     if (! available_flag) {
         if (blocking_in) {

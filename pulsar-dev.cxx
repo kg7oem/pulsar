@@ -26,6 +26,8 @@ using namespace std::chrono_literals;
 // Give valgrind lots of time
 #define ALARM_TIMEOUT 5
 
+#define DEFAULT_CONSOLE_LOG_LEVEL "info"
+// #define DEFAULT_MEMORY_LOG_LEVEL "debug"
 #define DEFAULT_MEMORY_LOG_AGE 5s
 
 static std::shared_ptr<logjam::logmemory> memory_logger;
@@ -63,7 +65,7 @@ static void init_logging(std::shared_ptr<pulsar::config::file> config_in)
     }
 
     if (log_level_name == "") {
-        log_level_name = "info";
+        log_level_name = DEFAULT_CONSOLE_LOG_LEVEL;
     }
 
     auto console = make_shared<logjam::logconsole>(logjam::level_from_name(log_level_name));

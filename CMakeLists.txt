@@ -7,8 +7,6 @@ project(pulsar)
 set(CMAKE_BUILD_TYPE RelWithDebInfo)
 set(CMAKE_VERBOSE_MAKEFILE On)
 
-add_definitions(-DLOGJAM_NDEBUG)
-
 # don't change anything below this line
 set(CMAKE_CXX_STANDARD 17)
 

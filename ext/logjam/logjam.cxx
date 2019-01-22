@@ -49,7 +49,10 @@ std::string format_event_detailed(const logevent& event_in) {
 
     buf << event_in.tid << " ";
     buf << event_in.source << "." << level_name(event_in.level) << " ";
-    buf << event_in.function << ": " << event_in.message;
+    buf << event_in.function << std::endl;
+
+    buf << event_in.file << ":" << event_in.line << " ";
+    buf << event_in.message;
 
     auto strbuf = buf.str();
     auto last_char_pos = strbuf.size() - 1;
@@ -252,8 +255,12 @@ bool logsource::operator==(const logsource& rhs) const {
 }
 
 logevent::logevent(const std::string& source_in, const loglevel& level_in, const timestamp& when_in, const std::thread::id& tid_in, const char* function_in, const char *file_in, const int& line_in, const std::string& message_in)
-: source(source_in), level(level_in), when(when_in), tid(tid_in), function(function_in), file(file_in), line(line_in), message(message_in) {
+: source(source_in), level(level_in), when(when_in), tid(tid_in), function(function_in), file(file_in), line(line_in), message(message_in)
+{
     assert(level >= loglevel::unknown);
+
+    if (function_in == nullptr) function_in = "void";
+    if (file_in == nullptr) file_in = "(unknown)";
 }
 
 // THREAD this function is thread safe

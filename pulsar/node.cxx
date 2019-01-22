@@ -74,7 +74,7 @@ string_type fully_qualify_property_name(const string_type& name_in)
 
 string_type base::peek(const string_type& name_in)
 {
-    auto lock = lock_type(node_mutex);
+    auto lock = log_get_lock(node_mutex);
     auto name = fully_qualify_property_name(name_in);
     return get_property(name).get();
 }
@@ -143,7 +143,7 @@ void base::init()
 void base::execute()
 {
     log_debug("execute() just called for node ", name);
-    auto lock = lock_type(node_mutex);
+    auto lock = log_get_lock(node_mutex);
 
     run();
     did_run();
@@ -166,7 +166,7 @@ void forwarder::will_run()
 {
     log_trace("forwarder node is short-circuting execute(): ", name);
 
-    auto lock = lock_type(node_mutex);
+    auto lock = log_get_lock(node_mutex);
 
     // a forwarder node does not use any CPU since all inputs and outputs
     // are forwarded but a full cycle still needs to happen so the

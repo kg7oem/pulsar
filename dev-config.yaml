@@ -2,7 +2,6 @@
 
 engine:
   logs:
-    console_level: debug
     memory_level: trace
 
 templates:
@@ -71,7 +70,7 @@ domain:
         client_name: pulsar
         # reduce sensitivity because of interrupt isues on test
         # hardware
-        watchdog_timeout_ms: 100
+        watchdog_timeout_ms: 2000
       inputs: [ left_out, right_out, demod_out, mono_out ]
       outputs: [ right_in, left_in, demod_in ]
       link:
