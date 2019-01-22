@@ -20,7 +20,7 @@
 using namespace std;
 using namespace std::chrono_literals;
 
-#define LOG_LEVEL trace
+#define LOG_LEVEL verbose
 #define INFO_DELAY 50ms
 // Give valgrind lots of time
 #define ALARM_TIMEOUT 5
