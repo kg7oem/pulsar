@@ -17,7 +17,7 @@
 #include <iostream>
 #include <sstream>
 
-#include "logjam.h"
+#include <logjam/logjam.h>
 
 // g++ 6.3.0 as it comes in debian/stretch does not support maybe_unused
 #ifdef __GNUC__
@@ -224,8 +224,6 @@ void logengine::add_destination(const std::shared_ptr<logdest>& destination_in) 
 void logengine::add_destination__lockex(const std::shared_ptr<logdest>& destination_in) {
     assert(caller_has_lockex());
 
-    std::cout << "got a new destination" << std::endl;
-
     for (auto&& i : destinations) {
         if (i->id == destination_in->id) {
             throw std::runtime_error("attempt to register duplicate log destination");
@@ -269,19 +267,14 @@ loglevel logengine::set_min_level__lockex(loglevel level_in) {
 void logengine::update_min_level__lockex() {
     assert(caller_has_lockex());
 
-    std::cout << "starting to update min log level" << std::endl;
-
     auto min_found = loglevel::fatal;
 
     for (auto&& i : destinations) {
         auto dest_level = i->get_min_level();
-        std::cout << "found destiation with level " << level_name(dest_level) << std::endl;
         if (dest_level < min_found) {
             min_found = dest_level;
         }
     }
-
-    std::cout << "found min level: " << level_name(min_found) << std::endl;
 
     set_min_level__lockex(min_found);
 }

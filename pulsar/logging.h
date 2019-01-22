@@ -16,7 +16,7 @@
 #define LOGJAM_LOG_MACROS
 #undef LOGJAM_NLOG
 
-#include "ext/logjam.h"
+#include <logjam/logjam.h>
 
 #include <pulsar/util.h>
 

@@ -1,4 +1,5 @@
 pulsar-dev
+liblogjam*.a
 libpulsar*.so
 libpulsar*.a
 docs/

@@ -20,6 +20,7 @@ add_definitions(-Wfatal-errors -Werror -Wall -Wextra)
 
 include_directories(${Boost_INCLUDE_DIRS})
 include_directories(.)
+include_directories(ext/)
 
 option(BUILD_DOC "Build documentation" ON)
 
@@ -41,9 +42,9 @@ add_library(
 )
 
 add_library(
-    pulsar-ext STATIC
+    logjam STATIC
 
-    ext/logjam.cxx
+    ext/logjam/logjam.cxx
 )
 
 add_executable(
@@ -56,7 +57,7 @@ target_link_libraries(pulsar ${CMAKE_THREAD_LIBS_INIT})
 target_link_libraries(pulsar ${Boost_LIBRARIES})
 target_link_libraries(pulsar dl)
 target_link_libraries(pulsar jack)
-target_link_libraries(pulsar pulsar-ext)
+target_link_libraries(pulsar logjam)
 target_link_libraries(pulsar yaml-cpp)
 
 target_link_libraries(pulsar-dev pulsar)
