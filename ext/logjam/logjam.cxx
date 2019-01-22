@@ -49,6 +49,10 @@ const char* level_name(const loglevel& level_in) {
     throw std::runtime_error("switch() failure");
 }
 
+loglevel level_from_name(const std::string& name_in) {
+    return level_from_name(name_in.c_str());
+}
+
 loglevel level_from_name(const char* name_in) {
     if (strcmp(name_in, "(uninitialized)") == 0) {
         return loglevel::uninit;

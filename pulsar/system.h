@@ -36,11 +36,12 @@ namespace system {
 
 using alive_handler_type = std::function<void (void *)>;
 
+[[noreturn]] void fault(const char* file_in, int line_in, const char* function_in, const string_type& message_in);
+
 void bootstrap();
 const std::string& get_boost_version();
 void register_alive_handler(alive_handler_type cb_in, void * arg_in = nullptr);
-
-[[noreturn]] void fault(const char* file_in, int line_in, const char* function_in, const std::string& message_in);
+void enable_memory_logging(const duration_type& max_age_in, const string_type& level_name_in);
 
 } // namespace system
 

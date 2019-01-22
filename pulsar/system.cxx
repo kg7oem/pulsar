@@ -13,6 +13,8 @@
 
 #include <boost/version.hpp>
 #include <iostream>
+#include <logjam/logjam.h>
+#include <memory>
 #include <stdexcept>
 #include <string>
 
@@ -32,6 +34,14 @@ namespace system {
 using namespace std::chrono_literals;
 
 static std::shared_ptr<async::timer> alive_timer;
+static std::shared_ptr<logjam::logmemory> memory_logger;
+
+[[noreturn]] void fault(const char* file_in, int line_in, const char* function_in, const string_type& message_in)
+{
+    std::cerr << "Pulsar faulted: " << message_in << " at " << file_in << ":" << line_in << std::endl;
+    logjam::send_vargs_logevent(PULSAR_LOG_NAME, logjam::loglevel::fatal, function_in, file_in, line_in, message_in);
+    abort();
+}
 
 void bootstrap()
 {
@@ -90,11 +100,15 @@ string_type make_boost_version()
     return buf;
 }
 
-[[noreturn]] void fault(const char* file_in, int line_in, const char* function_in, const string_type& message_in)
+void enable_memory_logging(const duration_type& max_age_in, const string_type& level_name_in)
 {
-    std::cerr << "Pulsar faulted: " << message_in << " at " << file_in << ":" << line_in << std::endl;
-    logjam::send_vargs_logevent(PULSAR_LOG_NAME, logjam::loglevel::fatal, function_in, file_in, line_in, message_in);
-    abort();
+    if (memory_logger != nullptr) {
+        system_fault("attempt to enable the memory logger twice");
+    }
+
+    memory_logger = std::make_shared<logjam::logmemory>(logjam::level_from_name(level_name_in));
+    memory_logger->set_max_age(max_age_in);
+    logjam::logengine::get_engine()->add_destination(memory_logger);
 }
 
 } // namespace system

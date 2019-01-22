@@ -232,6 +232,7 @@ class logmemory : public logdest, lockable {
 
 const char* level_name(const loglevel& level_in);
 loglevel level_from_name(const char* name_in);
+loglevel level_from_name(const std::string& name_in);
 bool should_log(const loglevel& level_in);
 
 template <typename T>

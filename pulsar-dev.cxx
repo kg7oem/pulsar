@@ -11,6 +11,8 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
 
+#include <iostream>
+
 #include <pulsar/async.h>
 #include <pulsar/config.h>
 #include <pulsar/logging.h>
@@ -27,16 +29,44 @@ using namespace std::chrono_literals;
 
 static std::shared_ptr<logjam::logmemory> memory_logger;
 
-static void init_logging()
+static void init_logging(std::shared_ptr<pulsar::config::file> config_in)
 {
     auto logging = logjam::logengine::get_engine();
+    auto engine = config_in->get_engine();
+    auto engine_logs = engine["logs"];
+    string_type log_level_name;
 
-    auto console = make_shared<logjam::logconsole>(logjam::loglevel::LOG_LEVEL);
+    if (engine_logs) {
+        auto memory_level_node = engine_logs["memory_level"];
+
+        if (memory_level_node) {
+            auto memory_age_node = engine_logs["memory_age"];
+            auto memory_level_name = memory_level_node.as<std::string>();
+            pulsar::duration_type duration;
+
+            if (memory_age_node) {
+                auto memory_age_num = memory_age_node.as<pulsar::size_type>();
+                duration = std::chrono::seconds(memory_age_num);
+            } else {
+                duration = 10s;
+            }
+
+            pulsar::system::enable_memory_logging(duration, memory_level_name);
+        }
+
+        auto console_level_node = engine_logs["console_level"];
+
+        if (console_level_node) {
+            log_level_name = console_level_node.as<std::string>();
+        }
+    }
+
+    if (log_level_name == "") {
+        log_level_name = "info";
+    }
+
+    auto console = make_shared<logjam::logconsole>(logjam::level_from_name(log_level_name));
     logging->add_destination(console);
-
-    // memory_logger = make_shared<logjam::logmemory>(logjam::loglevel::trace);
-    // memory_logger->set_max_age(10s);
-    // logging->add_destination(memory_logger);
 
     logging->start();
 }
@@ -52,9 +82,9 @@ UNUSED static void init_pulsar()
     alarm(ALARM_TIMEOUT);
 }
 
-UNUSED static void init()
+UNUSED static void init(std::shared_ptr<pulsar::config::file> config_in)
 {
-    init_logging();
+    init_logging(config_in);
     init_pulsar();
 }
 
@@ -89,12 +119,11 @@ std::string get_compressor_state(pulsar::node::base * node_in)
     return buf;
 }
 
-UNUSED static void process_audio()
+UNUSED static void process_audio(std::shared_ptr<pulsar::config::file> config_in)
 {
     log_info("Will start processing audio");
 
-    auto config = pulsar::config::file::make("dev-config.yaml");
-    auto domain_info = config->get_domain();
+    auto domain_info = config_in->get_domain();
     auto domain = pulsar::config::make_domain(domain_info);
     auto domain_num_threads = domain_info->get_config()["threads"].as<pulsar::size_type>();
     auto node_map = pulsar::config::make_nodes(domain_info, domain);
@@ -127,12 +156,14 @@ UNUSED static void process_audio()
 
 int main(void)
 {
-    init();
+    auto config = pulsar::config::file::make("dev-config.yaml");
+
+    init(config);
 
     log_info("pulsar-dev initialized");
     log_info("Using Boost ", pulsar::system::get_boost_version());
 
-    process_audio();
+    process_audio(config);
 
     return 0;
 }

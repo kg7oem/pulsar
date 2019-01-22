@@ -560,6 +560,16 @@ const YAML::Node file::get_chain(const string_type& name_in)
     return chain_node;
 }
 
+const YAML::Node file::get_engine()
+{
+    auto engine_node = yaml_root["engine"];
+
+    if (! engine_node) return YAML::Node();
+    if (! engine_node.IsMap()) system_fault("the engine section was not a map");
+
+    return engine_node;
+}
+
 domain::domain(const string_type name_in, const YAML::Node& yaml_in, std::shared_ptr<file> parent_in)
 : yaml_root(yaml_in), parent(parent_in), name(name_in)
 { }
