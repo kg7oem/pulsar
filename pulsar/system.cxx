@@ -40,6 +40,13 @@ static std::shared_ptr<logjam::logmemory> memory_logger;
 {
     std::cerr << "Pulsar faulted: " << message_in << " at " << file_in << ":" << line_in << std::endl;
     logjam::send_vargs_logevent(PULSAR_LOG_NAME, logjam::loglevel::fatal, function_in, file_in, line_in, message_in);
+
+    if (memory_logger != nullptr) {
+        for(auto&& log_message : memory_logger->format_event_history()) {
+            std::cerr << log_message;
+        }
+    }
+
     abort();
 }
 

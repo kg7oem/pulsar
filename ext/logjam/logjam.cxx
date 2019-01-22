@@ -28,6 +28,34 @@
 
 namespace logjam {
 
+std::string format_event_detailed(const logevent& event_in) {
+    std::stringstream buf;
+
+    buf << event_in.tid << " ";
+    buf << event_in.source << "." << level_name(event_in.level) << " ";
+    buf << event_in.function << ": " << event_in.message;
+
+    auto strbuf = buf.str();
+    auto last_char_pos = strbuf.size() - 1;
+    auto last_char = strbuf[last_char_pos];
+
+    // FIXME this should look for newlines inside the message and
+    // if the newline is not at the end of the message then put
+    // two spaces after every newline so the message is indented when
+    // the user views it - this makes it easier to read and prevents
+    // faking output from the log system to the end user with carefully
+    // crafted message lengths and line wrapping
+
+    // only add a new line if the message does not already have one
+    // FIXME this won't work right on Windows
+    // FIXME what about UTF-16 and UTF-32?
+    if (last_char != '\n') {
+        strbuf += "\n";
+    }
+
+    return strbuf;
+}
+
 bool should_log(const loglevel& level_in) {
     return logengine::get_engine()->should_log(level_in);
 }
@@ -208,7 +236,7 @@ bool logsource::operator==(const logsource& rhs) const {
 }
 
 logevent::logevent(const std::string& source_in, const loglevel& level_in, const timestamp& when_in, const std::thread::id& tid_in, const char* function_in, const char *file_in, const int& line_in, const std::string& message_in)
-: category(source_in.c_str()), level(level_in), when(when_in), tid(tid_in), function(function_in), file(file_in), line(line_in), message(message_in) {
+: source(source_in), level(level_in), when(when_in), tid(tid_in), function(function_in), file(file_in), line(line_in), message(message_in) {
     assert(level >= loglevel::unknown);
 }
 
@@ -396,31 +424,7 @@ void logdest::output(const logevent& event_in) {
 
 // THREAD this function is thread safe
 std::string logconsole::format_event(const logevent& event_in) const {
-    std::stringstream buf;
-
-    buf << event_in.tid << " ";
-    buf << "@" << event_in.category << "." << level_name(event_in.level) << " ";
-    buf << event_in.function << ": " << event_in.message;
-
-    auto strbuf = buf.str();
-    auto last_char_pos = strbuf.size() - 1;
-    auto last_char = strbuf[last_char_pos];
-
-    // FIXME this should look for newlines inside the message and
-    // if the newline is not at the end of the message then put
-    // two spaces after every newline so the message is indented when
-    // the user views it - this makes it easier to read and prevents
-    // faking output from the log system to the end user with carefully
-    // crafted message lengths and line wrapping
-
-    // only add a new line if the message does not already have one
-    // FIXME this won't work right on Windows
-    // FIXME what about UTF-16 and UTF-32?
-    if (last_char != '\n') {
-        strbuf += "\n";
-    }
-
-    return strbuf;
+    return format_event_detailed(event_in);
 }
 
 // THREAD this function asserts the required locking
@@ -458,6 +462,22 @@ void logmemory::set_max_age(std::chrono::milliseconds max_age_in) {
 std::list<logevent> logmemory::get_event_history() {
     auto lock = get_lock();
     return event_history;
+}
+
+std::vector<std::string> logmemory::format_event_history()
+{
+    auto lock = get_lock();
+    auto history_copy = event_history;
+    lock.unlock();
+
+    std::vector<std::string> retval;
+    retval.reserve(history_copy.size());
+
+    for (auto&& event : history_copy) {
+        retval.push_back(format_event_detailed(event));
+    }
+
+    return retval;
 }
 
 void logmemory::cleanup() {

@@ -145,7 +145,7 @@ void audio::input::reset_cycle()
     }
 
     auto waiting_things = links.size() + num_forwards_to_us;
-    llog_trace({ return pulsar::util::to_string("resetting audio input ", to_str()); });
+    llog_trace({ return pulsar::util::to_string("resetting audio input ", to_string()); });
 
     links_waiting.store(waiting_things);
 }
@@ -199,7 +199,7 @@ void audio::input::forward_to(node::base * node_in, const string_type& port_name
 
 void audio::input::link_ready(audio::link * link_in, std::shared_ptr<audio::buffer> buffer_in)
 {
-    llog_trace({ return pulsar::util::to_string("in link_ready() for ", to_str()); });
+    llog_trace({ return pulsar::util::to_string("in link_ready() for ", to_string()); });
 
     assert(link_in != nullptr);
     assert(buffer_in != nullptr);
@@ -267,7 +267,7 @@ std::shared_ptr<audio::buffer> audio::input::get_buffer()
 
 std::shared_ptr<audio::buffer> audio::input::mix_outputs()
 {
-    log_trace("mixing ", links.size(), " input buffers for ", parent->name, ":", name);
+    llog_trace({ return pulsar::util::to_string("mixing ", links.size(), " input buffers for ", parent->name, ":", name); });
 
     assert(links.size() + num_forwards_to_us > 1);
 
@@ -281,7 +281,7 @@ std::shared_ptr<audio::buffer> audio::input::mix_outputs()
     return mix_buffer;
 }
 
-const std::string audio::input::to_str()
+const std::string audio::input::to_string()
 {
     string_type buf = parent->name;
     buf += ":input:" + name;
@@ -294,14 +294,14 @@ audio::output::output(const string_type& name_in, node::base * parent_in)
 
 void audio::output::init_cycle()
 {
-    llog_trace({ return pulsar::util::to_string("creating output buffer for ", parent->name, ":", name); });
+    llog_trace({ return pulsar::util::to_string("starting cycle for ", to_string()); });
     buffer = std::make_shared<audio::buffer>();
     buffer->init(parent->get_domain()->buffer_size);
 }
 
 void audio::output::reset_cycle()
 {
-    llog_trace({ return pulsar::util::to_string("reseting audio output buffer for ", to_str()); });
+    llog_trace({ return pulsar::util::to_string("ending cycle for ", to_string()); });
     buffer = nullptr;
 }
 
@@ -386,7 +386,7 @@ void audio::output::notify()
     }
 }
 
-const std::string audio::output::to_str()
+const std::string audio::output::to_string()
 {
     string_type buf = parent->name;
     buf += ":output:" + name;
@@ -401,23 +401,24 @@ audio::link::link(audio::output * sink_in, audio::input * source_in)
 
 void audio::link::reset()
 {
+    llog_trace({ return pulsar::util::to_string("resetting link for ",  to_string()); });
+
     // FIXME does this need a lock? The flag is atomic
     // and locks are not needed to wake up a condvar
     auto lock = lock_type(available_mutex);
-    llog_trace({ return pulsar::util::to_string("resetting link for ",  to_str()); });
     available_flag = true;
     available_condition.notify_all();
 }
 
 void audio::link::notify(std::shared_ptr<audio::buffer> ready_buffer_in, const bool blocking_in)
 {
-    llog_trace({ return pulsar::util::to_string("got notification for ", to_str()); });
+    llog_trace({ return pulsar::util::to_string("got notification for ", to_string()); });
 
     auto lock = lock_type(available_mutex);
 
     if (! available_flag) {
         if (blocking_in) {
-            llog_trace({ return pulsar::util::to_string("node is blocked on link ", to_str()); });
+            llog_trace({ return pulsar::util::to_string("node is blocked on link ", to_string()); });
             available_condition.wait(lock, [this]{ return available_flag.load(); });
         } else {
             system_fault("attempt to set link ready when it was already ready");
@@ -431,10 +432,10 @@ void audio::link::notify(std::shared_ptr<audio::buffer> ready_buffer_in, const b
     source->link_ready(this, ready_buffer_in);
 }
 
-const std::string audio::link::to_str()
+const std::string audio::link::to_string()
 {
-    auto buf = source->to_str();
-    buf += " -> " + sink->to_str();
+    auto buf = source->to_string();
+    buf += " -> " + sink->to_string();
     return buf;
 }
 
@@ -469,6 +470,8 @@ audio::component::~component()
 
 void audio::component::init_cycle()
 {
+    log_trace("audio component is starting cycle for node ", parent->name);
+
     for(auto&& output : outputs) {
         output.second->init_cycle();
     }
@@ -480,6 +483,8 @@ void audio::component::init_cycle()
 
 void audio::component::reset_cycle()
 {
+    log_trace("audio component is ending cycle for node ", parent->name);
+
     pulsar::size_type inputs_with_links = 0;
 
     for(auto&& output : outputs) {

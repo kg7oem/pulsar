@@ -77,6 +77,11 @@ base_timer::base_timer(const duration_type& initial_in, handler_type handler_in)
     watch(handler_in);
 }
 
+base_timer::~base_timer()
+{
+    stop();
+}
+
 timer::timer(const duration_type& initial_in, const duration_type& repeat_in)
 : base_timer(initial_in, repeat_in)
 { }
@@ -135,21 +140,25 @@ void base_timer::start()
     boost_timer.async_wait(bound);
 }
 
-watchdog::watchdog(const duration_type& timeout_in)
-: base_timer(timeout_in, timeout_in)
-{ }
-
-void watchdog::start()
+void base_timer::reset()
 {
+    lock_type lock(mutex);
+
+    auto when = std::chrono::system_clock::now() + repeat;
+    boost_timer.expires_at(when);
     base_timer::start();
 }
 
-void watchdog::reset()
+void base_timer::stop()
 {
-    auto when = std::chrono::system_clock::now() + repeat;
-    boost_timer.expires_at(when);
-    start();
+    lock_type lock(mutex);
+
+    boost_timer.cancel();
 }
+
+watchdog::watchdog(const duration_type& timeout_in)
+: base_timer(timeout_in, timeout_in)
+{ }
 
 void watchdog::run()
 {

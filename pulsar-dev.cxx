@@ -22,10 +22,11 @@
 using namespace std;
 using namespace std::chrono_literals;
 
-#define LOG_LEVEL verbose
 #define INFO_DELAY 50ms
 // Give valgrind lots of time
 #define ALARM_TIMEOUT 5
+
+#define DEFAULT_MEMORY_LOG_AGE 5s
 
 static std::shared_ptr<logjam::logmemory> memory_logger;
 
@@ -48,7 +49,7 @@ static void init_logging(std::shared_ptr<pulsar::config::file> config_in)
                 auto memory_age_num = memory_age_node.as<pulsar::size_type>();
                 duration = std::chrono::seconds(memory_age_num);
             } else {
-                duration = 10s;
+                duration = DEFAULT_MEMORY_LOG_AGE;
             }
 
             pulsar::system::enable_memory_logging(duration, memory_level_name);

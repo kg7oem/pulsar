@@ -64,7 +64,7 @@ class channel {
     virtual void reset_cycle() = 0;
     void register_link(link * link_in);
     node::base * get_parent();
-    virtual const std::string to_str() = 0;
+    virtual const std::string to_string() = 0;
 };
 
 class input : public channel {
@@ -87,7 +87,7 @@ class input : public channel {
     std::shared_ptr<audio::buffer> get_buffer();
     std::shared_ptr<audio::buffer> mix_outputs();
     void link_ready(audio::link * link_in, std::shared_ptr<audio::buffer> buffer_in);
-    virtual const std::string to_str() override;
+    virtual const std::string to_string() override;
 };
 
 class output : public channel {
@@ -106,7 +106,7 @@ class output : public channel {
     std::shared_ptr<audio::buffer> get_buffer();
     void set_buffer(std::shared_ptr<audio::buffer> buffer_in);
     void notify();
-    virtual const std::string to_str() override;
+    virtual const std::string to_string() override;
 };
 
 struct link {
@@ -121,7 +121,7 @@ struct link {
     link(output * sink_in, input * source_in);
     void notify(std::shared_ptr<audio::buffer> ready_buffer_in, const bool blocking_in = true);
     void reset();
-    const std::string to_str();
+    const std::string to_string();
 };
 
 struct input_forward {

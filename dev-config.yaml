@@ -3,7 +3,7 @@
 engine:
   logs:
     console_level: info
-    # memory_level: trace
+    memory_level: trace
 
 templates:
   gain:
@@ -69,6 +69,7 @@ domain:
       class: pulsar::jackaudio::node
       config:
         client_name: pulsar
+        watchdog_timeout_ms: 100
       inputs: [ left_out, right_out, demod_out, mono_out ]
       outputs: [ right_in, left_in, demod_in ]
       link:

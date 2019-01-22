@@ -18,7 +18,7 @@
 #include <pulsar/logging.h>
 #include <pulsar/system.h>
 
-#define WATCHDOG_TIMEOUT 1500ms
+// #define WATCHDOG_TIMEOUT 1500ms
 
 namespace pulsar {
 
@@ -45,6 +45,7 @@ jackaudio::node::node(const string_type& name_in, std::shared_ptr<pulsar::domain
     add_property("node:class", property::value_type::string).set("pulsar::jackaudio::node");
     add_property("config:client_name", property::value_type::string).set(name_in);
     add_property("config:sample_rate", property::value_type::size);
+    add_property("config:watchdog_timeout_ms", property::value_type::size);
 }
 
 jackaudio::node::~node()
@@ -148,7 +149,8 @@ void jackaudio::node::activate()
 // work if it supplies audio only.
 void jackaudio::node::handle_jack_process(jack_nframes_t nframes_in)
 {
-    log_trace("********** jackaudio process callback invoked");
+    if (watchdog != nullptr) watchdog->start();
+    log_debug("********** jackaudio process callback invoked");
 
     auto lock = lock_type(node_mutex);
     auto done_lock = lock_type(done_mutex);
@@ -179,8 +181,8 @@ void jackaudio::node::handle_jack_process(jack_nframes_t nframes_in)
     done_cond.wait(done_lock, [this]{ return done_flag; });
 
     done_flag = false;
-    watchdog->reset();
-    log_trace("********** giving control back to jackaudio");
+    log_debug("********** giving control back to jackaudio");
+    if (watchdog != nullptr) watchdog->stop();
 }
 
 void jackaudio::node::run()
@@ -208,13 +210,16 @@ void jackaudio::node::notify()
 
 void jackaudio::node::start()
 {
-    watchdog = async::watchdog::make(WATCHDOG_TIMEOUT);
+    auto watchdog_timeout = get_property("config:watchdog_timeout_ms").get_size();
+
+    if (watchdog_timeout) {
+        watchdog = async::watchdog::make(std::chrono::milliseconds(watchdog_timeout));
+    }
 
     if (jack_activate(jack_client)) {
         system_fault("could not activate jack client");
     }
 
-    watchdog->start();
 }
 
 } // namespace pulsar

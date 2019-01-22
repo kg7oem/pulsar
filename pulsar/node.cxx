@@ -142,12 +142,15 @@ void base::init()
 
 void base::execute()
 {
+    log_debug("execute() just called for node ", name);
     auto lock = lock_type(node_mutex);
 
     run();
     did_run();
     notify();
     reset_cycle();
+
+    log_debug("execute() is done for node ", name);
 }
 
 bool base::is_ready()
@@ -161,6 +164,8 @@ forwarder::forwarder(const string_type& name_in, std::shared_ptr<pulsar::domain>
 
 void forwarder::will_run()
 {
+    log_trace("forwarder node is short-circuting execute(): ", name);
+
     auto lock = lock_type(node_mutex);
 
     // a forwarder node does not use any CPU since all inputs and outputs

@@ -40,15 +40,18 @@ struct base_timer {
     duration_type repeat;
     boost_timer_type boost_timer;
     std::vector<handler_type> watchers;
-    void boost_handler(const boost::system::error_code& error_in);
+    virtual void boost_handler(const boost::system::error_code& error_in);
     virtual void run();
 
     public:
     base_timer(const duration_type& initial_in, const duration_type& repeat_in = duration_type(0));
     base_timer(const duration_type& initial_in, const duration_type& repeat_in, handler_type handler_in);
     base_timer(const duration_type& initial_in, handler_type handler_in);
-    void start();
-    void watch(handler_type handler_in);
+    virtual ~base_timer();
+    virtual void start();
+    virtual void reset();
+    virtual void stop();
+    virtual void watch(handler_type handler_in);
 };
 
 struct timer : public base_timer, public std::enable_shared_from_this<timer> {
@@ -62,15 +65,13 @@ struct timer : public base_timer, public std::enable_shared_from_this<timer> {
     }
 };
 
-struct watchdog : protected base_timer, public std::enable_shared_from_this<watchdog> {
+struct watchdog : public base_timer, public std::enable_shared_from_this<watchdog> {
     watchdog(const duration_type& timeout_in);
     template <typename... Args>
     static std::shared_ptr<watchdog> make(Args&&... args)
     {
         return std::make_shared<watchdog>(args...);
     }
-    void start();
-    void reset();
     virtual void run() override;
 };
 

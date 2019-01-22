@@ -121,7 +121,7 @@ struct logsource {
 struct logevent {
     using timestamp = std::chrono::time_point<std::chrono::system_clock>;
 
-    const char* category = nullptr;
+    const std::string source;
     const loglevel level = loglevel::uninit;
     const timestamp when;
     const std::thread::id tid;
@@ -228,6 +228,7 @@ class logmemory : public logdest, lockable {
         std::chrono::milliseconds get_max_age();
         void set_max_age(std::chrono::milliseconds max_age_in);
         std::list<logevent> get_event_history();
+        std::vector<std::string> format_event_history();
 };
 
 const char* level_name(const loglevel& level_in);
@@ -268,6 +269,7 @@ void send_vargs_logevent(const std::string& source, const loglevel& level, const
     return;
 }
 
+std::string format_event_detailed(const logevent& event_in);
 void send_lambda_logevent(const std::string& source, const loglevel& level, const char *function, const char *path, const int& line, const log_wrapper_type& lambda_in);
 
 } // namespace logjam
