@@ -13,6 +13,7 @@
 
 #pragma once
 
+#include <atomic>
 #include <boost/asio.hpp>
 #include <boost/asio/system_timer.hpp>
 #include <chrono>
@@ -22,14 +23,16 @@
 #include <pulsar/system.h>
 #include <pulsar/thread.h>
 
+#define PULSAR_WATCHDOG_DEFAULT_MESSAGE "watchdog hit timeout"
+
 namespace pulsar {
 
 namespace async {
 
 using boost_timer_type = boost::asio::system_timer;
 
-void init(const size_type num_threads_in = 1);
-// boost::asio::io_service& get_global_io();
+void init();
+bool is_online();
 
 struct base_timer {
     using handler_type = std::function<void (base_timer&)>;
@@ -39,22 +42,24 @@ struct base_timer {
     duration_type initial;
     duration_type repeat;
     boost_timer_type boost_timer;
-    std::vector<handler_type> watchers;
     virtual void boost_handler(const boost::system::error_code& error_in);
-    virtual void run();
+    virtual void run() = 0;
 
     public:
     base_timer(const duration_type& initial_in, const duration_type& repeat_in = duration_type(0));
-    base_timer(const duration_type& initial_in, const duration_type& repeat_in, handler_type handler_in);
-    base_timer(const duration_type& initial_in, handler_type handler_in);
     virtual ~base_timer();
     virtual void start();
     virtual void reset();
     virtual void stop();
-    virtual void watch(handler_type handler_in);
 };
 
-struct timer : public base_timer, public std::enable_shared_from_this<timer> {
+class timer : public base_timer, public std::enable_shared_from_this<timer> {
+
+    protected:
+    virtual void run() override;
+    std::vector<handler_type> watchers;
+
+    public:
     timer(const duration_type& initial_in, const duration_type& repeat_in = duration_type(0));
     timer(const duration_type& initial_in, const duration_type& repeat_in, handler_type handler_in);
     timer(const duration_type& initial_in, handler_type handler_in);
@@ -63,16 +68,23 @@ struct timer : public base_timer, public std::enable_shared_from_this<timer> {
     {
         return std::make_shared<timer>(args...);
     }
+    virtual void watch(handler_type handler_in);
 };
 
-struct watchdog : public base_timer, public std::enable_shared_from_this<watchdog> {
+class watchdog : public base_timer, public std::enable_shared_from_this<watchdog> {
+    protected:
+    virtual void run() override;
+
+    public:
+    const std::string message = PULSAR_WATCHDOG_DEFAULT_MESSAGE;
     watchdog(const duration_type& timeout_in);
+    watchdog(const duration_type& timeout_in, const std::string& message_in);
+
     template <typename... Args>
     static std::shared_ptr<watchdog> make(Args&&... args)
     {
         return std::make_shared<watchdog>(args...);
     }
-    virtual void run() override;
 };
 
 } // namespace async

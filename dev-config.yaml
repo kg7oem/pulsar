@@ -2,7 +2,8 @@
 
 engine:
   logs:
-    memory_level: debug
+    console_level: verbose
+    memory_level: trace
 
 templates:
   gain:
@@ -62,7 +63,7 @@ domain:
   config:
     sample_rate: 48000
     buffer_size: 1024
-    threads: 4
+    threads: 1
   nodes:
     - name: jack
       class: pulsar::jackaudio::node

@@ -14,6 +14,7 @@
 #include <cassert>
 #include <functional>
 
+#include <pulsar/debug.h>
 #include <pulsar/domain.h>
 #include <pulsar/logging.h>
 #include <pulsar/node.h>
@@ -70,7 +71,7 @@ void domain::add_ready_node(node::base * node_in)
 
     assert(activated);
 
-    auto lock = log_get_lock(run_queue_mutex);
+    auto lock = debug_get_lock(run_queue_mutex);
 
     run_queue.push_back(node_in);
     run_queue_condition.notify_one();
@@ -81,7 +82,7 @@ void domain::add_ready_node(node::base * node_in)
 void domain::be_thread()
 {
     while(1) {
-        auto lock = log_get_lock(run_queue_mutex);
+        auto lock = debug_get_lock(run_queue_mutex);
 
         run_queue_condition.wait(lock, [this]{ return run_queue.size() > 0; });
 

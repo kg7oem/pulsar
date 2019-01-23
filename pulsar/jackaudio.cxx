@@ -14,6 +14,7 @@
 #include <chrono>
 
 #include <pulsar/audio.util.h>
+#include <pulsar/debug.h>
 #include <pulsar/jackaudio.h>
 #include <pulsar/logging.h>
 #include <pulsar/system.h>
@@ -153,8 +154,8 @@ void jackaudio::node::handle_jack_process(jack_nframes_t nframes_in)
 
     if (watchdog != nullptr) watchdog->start();
 
-    auto lock = log_get_lock(node_mutex);
-    auto done_lock = log_get_lock(done_mutex);
+    auto lock = debug_get_lock(node_mutex);
+    auto done_lock = debug_get_lock(done_mutex);
 
     if (done_flag) {
         system_fault("jackaudio handle_jack_process() went reentrant");
@@ -199,7 +200,7 @@ void jackaudio::node::run()
         audio::util::pcm_set(jack_buffer, channel_buffer->get_pointer(), buffer_size);
     }
 
-    auto done_lock = log_get_lock(done_mutex);
+    auto done_lock = debug_get_lock(done_mutex);
     done_flag = true;
     done_cond.notify_all();
 

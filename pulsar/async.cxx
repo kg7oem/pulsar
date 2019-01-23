@@ -20,6 +20,8 @@
 #include <pulsar/logging.h>
 #include <pulsar/system.h>
 
+#define NUM_ASYNC_THREADS 4
+
 namespace pulsar {
 
 namespace async {
@@ -28,11 +30,12 @@ using namespace std::chrono_literals;
 
 static boost::asio::io_service boost_io;
 static std::vector<thread_type> async_threads;
+static std::atomic<bool> is_online_flag = ATOMIC_VAR_INIT(false);
 
-// boost::asio::io_service& get_global_io()
-// {
-//     return boost_io;
-// }
+bool is_online()
+{
+    return is_online_flag.load();
+}
 
 static void async_thread()
 {
@@ -40,83 +43,46 @@ static void async_thread()
     system_fault("Boost io.run() returned");
 }
 
-// void init_tick()
-// {
-//     assert(tick_timer == nullptr);
-
-//     tick_timer = timer::make(0s, ASYNC_TICK_INTERVAL);
-//     tick_timer->start();
-// }
-
-void init(const size_type num_threads_in)
+void init()
 {
-#ifndef NDEBUG
-    static bool did_init = false;
-    assert(! did_init);
-    did_init = true;
-#endif
+    assert(! is_online_flag.load());
+
+    size_type num_threads_in = NUM_ASYNC_THREADS;
 
     for(size_type i = 0; i < num_threads_in; i++) {
         async_threads.emplace_back(async_thread);
     }
+
+    is_online_flag.store(true);
 }
 
 base_timer::base_timer(const duration_type& initial_in, const duration_type& repeat_in)
 : initial(initial_in), repeat(repeat_in), boost_timer(boost_io)
 { }
 
-base_timer::base_timer(const duration_type& initial_in, const duration_type& repeat_in, handler_type handler_in)
-: initial(initial_in), repeat(repeat_in), boost_timer(boost_io)
-{
-    watch(handler_in);
-}
-
-base_timer::base_timer(const duration_type& initial_in, handler_type handler_in)
-: initial(initial_in), repeat(0), boost_timer(boost_io)
-{
-    watch(handler_in);
-}
-
 base_timer::~base_timer()
 {
     stop();
 }
 
-timer::timer(const duration_type& initial_in, const duration_type& repeat_in)
-: base_timer(initial_in, repeat_in)
-{ }
-
-timer::timer(const duration_type& initial_in, const duration_type& repeat_in, handler_type handler_in)
-: base_timer(initial_in, repeat_in, handler_in)
-{ }
-
-timer::timer(const duration_type& initial_in, handler_type handler_in)
-: base_timer(initial_in, handler_in)
-{ }
-
-void base_timer::watch(timer::handler_type handler_in)
-{
-    lock_type lock(mutex);
-    watchers.push_back(handler_in);
-}
-
 void base_timer::boost_handler(const boost::system::error_code& error_in)
 {
+    log_trace("timer boost handler just started");
+
     lock_type lock(mutex);
 
     if (error_in) {
         if (error_in == boost::asio::error::operation_aborted) {
+            log_trace("boost indicated the timer was cancelled");
             return;
         }
 
         system_fault("there was an error");
     }
 
-    for(auto&& cb : watchers) {
-        cb(*this);
-    }
-
+    log_trace("invoking timer run() method");
     run();
+    log_trace("done running timer run() method");
 
     if (repeat == 0ms) {
         return;
@@ -127,9 +93,6 @@ void base_timer::boost_handler(const boost::system::error_code& error_in)
     auto bound = boost::bind(&timer::boost_handler, this, boost::asio::placeholders::error);
     boost_timer.async_wait(bound);
 }
-
-void base_timer::run()
-{ }
 
 void base_timer::start()
 {
@@ -156,13 +119,46 @@ void base_timer::stop()
     boost_timer.cancel();
 }
 
+timer::timer(const duration_type& initial_in, const duration_type& repeat_in)
+: base_timer(initial_in, repeat_in)
+{ }
+
+timer::timer(const duration_type& initial_in, const duration_type& repeat_in, handler_type handler_in)
+: base_timer(initial_in, repeat_in)
+{
+    watchers.push_back(handler_in);
+}
+
+timer::timer(const duration_type& initial_in, handler_type handler_in)
+: base_timer(initial_in)
+{
+    watchers.push_back(handler_in);
+}
+
+void timer::watch(timer::handler_type handler_in)
+{
+    lock_type lock(mutex);
+    watchers.push_back(handler_in);
+}
+
+void timer::run()
+{
+    for(auto&& cb : watchers) {
+        cb(*this);
+    }
+}
+
 watchdog::watchdog(const duration_type& timeout_in)
 : base_timer(timeout_in, timeout_in)
 { }
 
+watchdog::watchdog(const duration_type& timeout_in, const std::string& message_in)
+: base_timer(timeout_in, timeout_in), message(message_in)
+{ }
+
 void watchdog::run()
 {
-    system_fault("watchdog hit timeout");
+    system_fault(message);
 }
 
 } // namespace async

@@ -116,9 +116,9 @@ struct link {
     std::atomic<bool> available_flag = ATOMIC_VAR_INIT(true);
 
     public:
-    output * sink;
-    input * source;
-    link(output * sink_in, input * source_in);
+    output * from;
+    input * to;
+    link(output * from_in, input * to_in);
     void notify(std::shared_ptr<audio::buffer> ready_buffer_in, const bool blocking_in = true);
     void reset();
     const std::string to_string();

@@ -18,6 +18,7 @@
 
 #include <pulsar/audio.h>
 #include <pulsar/audio.util.h>
+#include <pulsar/debug.h>
 #include <pulsar/logging.h>
 #include <pulsar/node.h>
 #include <pulsar/system.h>
@@ -136,7 +137,7 @@ void audio::input::init_cycle()
 void audio::input::reset_cycle()
 {
     {
-        auto lock = log_get_lock(link_buffers_mutex);
+        auto lock = debug_get_lock(link_buffers_mutex);
         link_buffers.empty();
     }
 
@@ -207,7 +208,7 @@ void audio::input::link_ready(audio::link * link_in, std::shared_ptr<audio::buff
     size_type now_waiting;
 
     {
-        auto lock = log_get_lock(link_buffers_mutex);
+        auto lock = debug_get_lock(link_buffers_mutex);
         link_buffers[link_in] = buffer_in;
     }
 
@@ -216,6 +217,7 @@ void audio::input::link_ready(audio::link * link_in, std::shared_ptr<audio::buff
     llog_trace({ return pulsar::util::to_string("waiting buffers: ", now_waiting, "; node: ", get_parent()->name); });
 
     if (now_waiting == 0) {
+        log_trace(to_string(), " telling audio component we are ready");
         parent->audio.source_ready(this);
     }
 
@@ -255,7 +257,7 @@ std::shared_ptr<audio::buffer> audio::input::get_buffer()
         return parent->get_domain()->get_zero_buffer();
     } else if (num_links == 1) {
         log_trace("returning pointer to link's ready buffer for ", input_name);
-        auto lock = log_get_lock(link_buffers_mutex);
+        auto lock = debug_get_lock(link_buffers_mutex);
         assert(link_buffers.begin() != link_buffers.end());
         assert(link_buffers.begin()->second != nullptr);
         return link_buffers.begin()->second;
@@ -393,8 +395,8 @@ const std::string audio::output::to_string()
     return buf;
 }
 
-audio::link::link(audio::output * sink_in, audio::input * source_in)
-: sink(sink_in), source(source_in)
+audio::link::link(audio::output * from_in, audio::input * to_in)
+: from(from_in), to(to_in)
 {
 
 }
@@ -405,7 +407,7 @@ void audio::link::reset()
 
     // FIXME does this need a lock? The flag is atomic
     // and locks are not needed to wake up a condvar
-    auto lock = log_get_lock(available_mutex);
+    auto lock = debug_get_lock(available_mutex);
     available_flag = true;
     available_condition.notify_all();
 }
@@ -414,7 +416,7 @@ void audio::link::notify(std::shared_ptr<audio::buffer> ready_buffer_in, const b
 {
     llog_trace({ return pulsar::util::to_string("got notification for ", to_string()); });
 
-    auto lock = log_get_lock(available_mutex);
+    auto lock = debug_get_lock(available_mutex);
 
     if (! available_flag) {
         if (blocking_in) {
@@ -429,13 +431,13 @@ void audio::link::notify(std::shared_ptr<audio::buffer> ready_buffer_in, const b
 
     lock.unlock();
 
-    source->link_ready(this, ready_buffer_in);
+    to->link_ready(this, ready_buffer_in);
 }
 
 const std::string audio::link::to_string()
 {
-    auto buf = source->to_string();
-    buf += " -> " + sink->to_string();
+    auto buf = from->to_string();
+    buf += " -> " + to->to_string();
     return buf;
 }
 
@@ -526,7 +528,13 @@ void audio::component::source_ready(audio::input *)
 {
     // FIXME this should signal to the node that the component
     // is ready instead of running the parent
-    if (--inputs_waiting == 0 && parent->is_ready()) {
+
+    auto now_waiting = --inputs_waiting;
+    log_trace("node ", parent->name, " audio sources now waiting: ", now_waiting);
+
+    if (now_waiting == 0) {
+        // FIXME RACE is this the race condition causing deadlocks?
+        assert(parent->is_ready());
         parent->will_run();
     }
 }
