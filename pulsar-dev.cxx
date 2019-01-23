@@ -166,6 +166,8 @@ int main(void)
     log_info("pulsar-dev initialized");
     log_info("Using Boost ", pulsar::system::get_boost_version());
 
+    std::vector<std::shared_ptr<pulsar::async::timer>> timers;
+
     process_audio(config);
 
     return 0;

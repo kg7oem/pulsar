@@ -62,36 +62,31 @@ base_timer::base_timer(const duration_type& initial_in, const duration_type& rep
 
 base_timer::~base_timer()
 {
-    log_trace("timer is being stopped in deconstructor");
-
-    stop();
+    if (running_flag) {
+        system_fault("can not destroy a running timer");
+    }
 }
 
 void base_timer::boost_handler(const boost::system::error_code& error_in)
 {
-    log_trace("timer boost handler just started");
-
     lock_type lock(mutex);
 
-    if (error_in) {
-        if (error_in == boost::asio::error::operation_aborted) {
-            log_trace("boost indicated the timer was cancelled");
-            return;
-        }
+    if (error_in == boost::asio::error::operation_aborted) {
+        assert(running_flag);
 
-        system_fault("there was an error");
+        running_flag = false;
+        running_condition.notify_all();
+
+        return;
+    } else if (error_in) {
+        system_fault("boost reported an error to the timer handler");
     }
 
-    log_trace("invoking timer run() method");
     run();
-    log_trace("done running timer run() method");
 
     if (repeat == 0ms) {
-        log_trace("returning because the timer does not repeat");
         return;
     }
-
-    log_trace("scheduling next invocation of the timer");
 
     auto next_time = boost_timer.expires_at() + repeat;
     boost_timer.expires_at(next_time);
@@ -101,15 +96,15 @@ void base_timer::boost_handler(const boost::system::error_code& error_in)
 
 void base_timer::start()
 {
-    log_trace("timer is starting");
-
     lock_type lock(mutex);
 
     boost_timer.expires_at(std::chrono::system_clock::now() + initial);
     auto bound = boost::bind(&timer::boost_handler, this, boost::asio::placeholders::error);
+
+    running_flag = true;
     boost_timer.async_wait(bound);
 
-    log_trace("timer is scheduled");
+    running_condition.notify_all();
 }
 
 void base_timer::reset()
@@ -123,10 +118,9 @@ void base_timer::reset()
 
 void base_timer::stop()
 {
-    log_trace("stopping timer");
     lock_type lock(mutex);
-
     boost_timer.cancel();
+    running_condition.wait(lock, [this]{ return running_flag == false; });
 }
 
 timer::timer(const duration_type& initial_in, const duration_type& repeat_in)

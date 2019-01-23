@@ -13,11 +13,13 @@
 
 #pragma once
 
+#include <condition_variable>
 #include <mutex>
 #include <thread>
 
 namespace pulsar {
 
+using condition_type = std::condition_variable;
 using mutex_type = std::mutex;
 using lock_type = std::unique_lock<mutex_type>;
 

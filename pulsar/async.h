@@ -42,6 +42,8 @@ struct base_timer {
     duration_type initial;
     duration_type repeat;
     boost_timer_type boost_timer;
+    bool running_flag = false;
+    condition_type running_condition;
     virtual void boost_handler(const boost::system::error_code& error_in);
     virtual void run() = 0;
 

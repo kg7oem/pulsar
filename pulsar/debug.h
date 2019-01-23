@@ -31,27 +31,28 @@ namespace debug {
 using namespace std::chrono_literals;
 
 #define LOCK_LOGGING
-#undef LOCK_WATCHDOGS
-#define LOCK_WATCHDOG_DEFAULT 100ms
+#define LOCK_WATCHDOGS
+// FIXME this is probably way too sensitive
+#define LOCK_WATCHDOG_DEFAULT 20ms
 
 template <typename T>
 std::unique_lock<T> get_lock_wrapper(const std::string& logname_in, const logjam::loglevel& level_in, const char *function_in, const char *path_in, const int& line_in, T& mutex_in, UNUSED const duration_type timeout_in = LOCK_WATCHDOG_DEFAULT) {
 #ifdef LOCK_WATCHDOGS
-    thread_local bool watchdog_recursive = false;
+    thread_local bool went_recursive = false;
     std::shared_ptr<async::watchdog> lock_watchdog;
 
-    // FIXME check for 0 timeout and skip
-    if (! watchdog_recursive && async::is_online()) {
-        watchdog_recursive = true;
+    if (went_recursive) system_fault("aborting because of recursion");
+    went_recursive = true;
 
+    // FIXME check for 0 timeout and skip
+    if (async::is_online()) {
         log_trace("creating a lock watchdog");
         auto message = util::to_string("lock timeout at ", path_in, ":", line_in);
         lock_watchdog = async::watchdog::make(timeout_in, message);
-        // FIXME this will crash asio
         lock_watchdog->start();
-
-        watchdog_recursive = false;
     }
+
+    went_recursive = false;
 #endif
 
 #ifdef LOCK_LOGGING
