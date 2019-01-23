@@ -62,6 +62,8 @@ base_timer::base_timer(const duration_type& initial_in, const duration_type& rep
 
 base_timer::~base_timer()
 {
+    log_trace("timer is being stopped in deconstructor");
+
     stop();
 }
 
@@ -85,8 +87,11 @@ void base_timer::boost_handler(const boost::system::error_code& error_in)
     log_trace("done running timer run() method");
 
     if (repeat == 0ms) {
+        log_trace("returning because the timer does not repeat");
         return;
     }
+
+    log_trace("scheduling next invocation of the timer");
 
     auto next_time = boost_timer.expires_at() + repeat;
     boost_timer.expires_at(next_time);
@@ -96,11 +101,15 @@ void base_timer::boost_handler(const boost::system::error_code& error_in)
 
 void base_timer::start()
 {
+    log_trace("timer is starting");
+
     lock_type lock(mutex);
 
     boost_timer.expires_at(std::chrono::system_clock::now() + initial);
     auto bound = boost::bind(&timer::boost_handler, this, boost::asio::placeholders::error);
     boost_timer.async_wait(bound);
+
+    log_trace("timer is scheduled");
 }
 
 void base_timer::reset()
@@ -114,6 +123,7 @@ void base_timer::reset()
 
 void base_timer::stop()
 {
+    log_trace("stopping timer");
     lock_type lock(mutex);
 
     boost_timer.cancel();

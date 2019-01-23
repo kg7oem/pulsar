@@ -7,10 +7,12 @@ project(pulsar)
 set(CMAKE_BUILD_TYPE RelWithDebInfo)
 set(CMAKE_VERBOSE_MAKEFILE OFF)
 
+include_directories(${Boost_INCLUDE_DIRS})
+
 # don't change anything below this line
 set(CMAKE_CXX_STANDARD 17)
 
-find_package(Boost 1.5.8 COMPONENTS system)
+find_package(Boost 1.58.0 COMPONENTS system)
 find_package(Doxygen)
 find_package(Threads)
 find_package(yaml-cpp)
@@ -18,7 +20,6 @@ find_package(yaml-cpp)
 add_definitions(-fPIC)
 add_definitions(-Wfatal-errors -Werror -Wall -Wextra)
 
-include_directories(${Boost_INCLUDE_DIRS})
 include_directories(.)
 include_directories(ext/)
 

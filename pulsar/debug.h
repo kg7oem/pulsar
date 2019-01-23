@@ -48,7 +48,7 @@ std::unique_lock<T> get_lock_wrapper(const std::string& logname_in, const logjam
         auto message = util::to_string("lock timeout at ", path_in, ":", line_in);
         lock_watchdog = async::watchdog::make(timeout_in, message);
         // FIXME this will crash asio
-        // lock_watchdog->start();
+        lock_watchdog->start();
 
         watchdog_recursive = false;
     }
