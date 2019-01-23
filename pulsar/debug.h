@@ -44,7 +44,7 @@ std::unique_lock<T> get_lock_wrapper(const std::string& logname_in, const logjam
 
     // FIXME check for 0 timeout and skip
     if (async::is_online()) {
-        log_trace("creating a lock watchdog");
+        logjam::send_vargs_logevent(logname_in, level_in, function_in, path_in, line_in, "creating a lock watchdog");
         auto message = util::to_string("lock timeout at ", path_in, ":", line_in);
         lock_watchdog = async::watchdog::make(timeout_in, message);
         lock_watchdog->start();
