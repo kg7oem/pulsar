@@ -2,7 +2,7 @@
 
 engine:
   logs:
-    console_level: info
+    console_level: verbose
     memory_level: trace
 
 templates:

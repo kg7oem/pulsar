@@ -20,8 +20,6 @@
 #include <pulsar/types.h>
 #include <pulsar/util.h>
 
-#define PULSAR_DEFAULT_LOCK_TIMEOUT 250ms
-
 #define debug_get_lock(...) pulsar::debug::get_lock_wrapper(PULSAR_LOG_LOCK_NAME, logjam::loglevel::trace, __PRETTY_FUNCTION__, __FILE__, __LINE__, __VA_ARGS__)
 
 namespace pulsar {
@@ -31,7 +29,7 @@ namespace debug {
 using namespace std::chrono_literals;
 
 #define LOCK_LOGGING
-#define LOCK_WATCHDOGS
+#undef LOCK_WATCHDOGS
 // FIXME this is probably way too sensitive
 #define LOCK_WATCHDOG_DEFAULT 20ms
 

@@ -4,7 +4,7 @@ project(pulsar)
 
 # configuration
 # Debug, Release, RelWithDebInfo, MinSizeRel
-set(CMAKE_BUILD_TYPE RelWithDebInfo)
+set(CMAKE_BUILD_TYPE Debug)
 set(CMAKE_VERBOSE_MAKEFILE OFF)
 
 include_directories(${Boost_INCLUDE_DIRS})
