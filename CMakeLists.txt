@@ -17,6 +17,9 @@ find_package(Doxygen)
 find_package(Threads)
 find_package(yaml-cpp)
 
+# FIXME how to enable only in Debug build type?
+add_definitions(-Og)
+
 add_definitions(-fPIC)
 add_definitions(-Wfatal-errors -Werror -Wall -Wextra)
 
