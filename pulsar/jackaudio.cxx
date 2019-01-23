@@ -200,10 +200,6 @@ void jackaudio::node::run()
         audio::util::pcm_set(jack_buffer, channel_buffer->get_pointer(), buffer_size);
     }
 
-    auto done_lock = debug_get_lock(done_mutex);
-    done_flag = true;
-    done_cond.notify_all();
-
     pulsar::node::base::run();
 }
 
@@ -222,7 +218,17 @@ void jackaudio::node::start()
     if (jack_activate(jack_client)) {
         system_fault("could not activate jack client");
     }
+}
 
+void jackaudio::node::execute()
+{
+    log_trace("invoking parent execute() method first for jackaudio node");
+    node::base::execute();
+
+    log_trace("waking up jackaudio thread");
+    auto done_lock = debug_get_lock(done_mutex);
+    done_flag = true;
+    done_cond.notify_all();
 }
 
 } // namespace pulsar

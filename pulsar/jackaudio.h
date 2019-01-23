@@ -48,9 +48,12 @@ class node : public pulsar::node::base {
     sample_type * get_port_buffer(const string_type& port_name_in);
     void start();
     void open(const string_type& jack_name_in);
+    void handle_jack_process(jack_nframes_t nframes_in);
+
+    /* lifecycle methods */
     virtual void run() override;
     virtual void notify() override;
-    void handle_jack_process(jack_nframes_t nframes_in);
+    virtual void execute() override;
 
     public:
     node(const string_type& name_in, std::shared_ptr<pulsar::domain> domain_in);
