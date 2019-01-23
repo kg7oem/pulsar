@@ -29,7 +29,7 @@ namespace debug {
 using namespace std::chrono_literals;
 
 #define LOCK_LOGGING
-#undef LOCK_WATCHDOGS
+#define LOCK_WATCHDOGS
 // FIXME this is probably way too sensitive
 #define LOCK_WATCHDOG_DEFAULT 20ms
 

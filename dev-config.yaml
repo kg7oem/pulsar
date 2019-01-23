@@ -63,7 +63,7 @@ domain:
   config:
     sample_rate: 48000
     buffer_size: 1024
-    threads: 1
+    threads: 4
   nodes:
     - name: jack
       class: pulsar::jackaudio::node
