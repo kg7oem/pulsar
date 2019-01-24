@@ -11,23 +11,26 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
 
-#pragma once
+#include <pthread.h>
 
-#include <condition_variable>
-#include <mutex>
-#include <thread>
+#include <pulsar/system.h>
+#include <pulsar/thread.h>
+#include <pulsar/types.h>
 
 namespace pulsar {
 
-using condition_type = std::condition_variable;
-using mutex_type = std::mutex;
-using lock_type = std::unique_lock<mutex_type>;
-
-using thread_type = std::thread;
-
 namespace thread {
 
-void set_realtime_priority(thread_type& thread_in, const size_type priority_in);
+// from https://stackoverflow.com/a/31652324
+void set_realtime_priority(thread_type& thread_in, const size_type priority_in)
+{
+    sched_param sch_params;
+    sch_params.sched_priority = priority_in;
+
+    if (pthread_setschedparam(thread_in.native_handle(), SCHED_RR, &sch_params)) {
+        system_fault("could not set realtime priority for thread");
+    }
+}
 
 } // namespace thread
 
