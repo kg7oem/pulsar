@@ -36,3 +36,13 @@
 #define llog_debug(block)   LOGJAM_LOG_LAMBDA(PULSAR_LOG_NAME, logjam::loglevel::debug, block)
 #define llog_trace(block)   LOGJAM_LOG_LAMBDA(PULSAR_LOG_NAME, logjam::loglevel::trace, block)
 #define llog_unknown(block) LOGJAM_LOG_LAMBDA(PULSAR_LOG_NAME, logjam::loglevel::unknown, block)
+
+namespace pulsar {
+
+namespace logging {
+
+void init();
+
+} // namespace logging
+
+} // namespace pulsar

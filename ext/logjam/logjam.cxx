@@ -88,9 +88,9 @@ std::string format_event_detailed(const logevent& event_in) {
     return strbuf;
 }
 
-bool should_log(const loglevel& level_in) {
-    return logengine::get_engine()->should_log(level_in);
-}
+// bool should_log(const loglevel& level_in, std::string source_in) {
+//     return logengine::get_engine()->should_log(level_in, source_in);
+// }
 
 // THREAD this function is thread safe
 const char* level_name(const loglevel& level_in) {
@@ -140,7 +140,7 @@ loglevel level_from_name(const char* name_in) {
 }
 
 void send_lambda_logevent(const std::string& source, const loglevel& level, const char *function, const char *path, const int& line, const log_wrapper_type& lambda_in) {
-    if (logjam::should_log(level)) {
+    if (logengine::get_engine()->should_log(level, source)) {
         auto when = std::chrono::system_clock::now();
         auto tid = std::this_thread::get_id();
         auto message = lambda_in();
@@ -267,7 +267,7 @@ bool logsource::operator==(const logsource& rhs) const {
     return logsource_compare(c_str, rhs.c_str);
 }
 
-logevent::logevent(const std::string& source_in, const loglevel& level_in, const timestamp& when_in, const std::thread::id& tid_in, const char* function_in, const char *file_in, const int& line_in, const std::string& message_in)
+logevent::logevent(std::string source_in, const loglevel& level_in, const timestamp& when_in, const std::thread::id& tid_in, const char* function_in, const char *file_in, const int& line_in, const std::string& message_in)
 : source(source_in), level(level_in), when(when_in), tid(tid_in), function(function_in), file(file_in), line(line_in), message(message_in)
 {
     assert(level >= loglevel::unknown);
@@ -286,6 +286,9 @@ void logengine::add_destination(const std::shared_ptr<logdest>& destination_in) 
     auto lock = get_lockex();
     add_destination__lockex(destination_in);
 }
+
+void logengine::add_log_source(const std::string&)
+{ }
 
 // attempts to add a destination more than once silently return
 // THREAD this function asserts required locking
@@ -348,12 +351,23 @@ void logengine::update_min_level__lockex() {
 }
 
 // THREAD this function is inherently thread safe
-bool logengine::should_log(const loglevel& level_in) {
+bool logengine::should_log(const loglevel& level_in, const std::string& source_in) {
     auto current_level = get_min_level();
     assert(current_level != loglevel::uninit);
 
-    if (current_level == loglevel::none) return false;
-    return level_in >= current_level;
+    if (current_level == loglevel::none) {
+        return false;
+    } else if (! (level_in >= current_level)) {
+        return false;
+    }
+
+    for (auto&& destination : destinations) {
+        if (destination->should_log(level_in, source_in)) {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 void logengine::start() {
@@ -376,6 +390,7 @@ void logengine::start__lockex() {
 
 void logengine::deliver(const logevent& event_in) {
     auto lock = get_locksh();
+
     deliver__locksh(event_in);
 }
 
@@ -450,6 +465,11 @@ loglevel logdest::set_min_level__lockreq(const loglevel& min_level_in) {
     }
 
     return old;
+}
+
+bool logdest::should_log(const loglevel& level_in, const std::string&) {
+    if (min_level == loglevel::none) return false;
+    return level_in >= min_level;
 }
 
 // THREAD this function is inherently thread safe

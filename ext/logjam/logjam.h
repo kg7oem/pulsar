@@ -19,6 +19,7 @@
 #include <ctime>
 #include <list>
 #include <memory>
+#include <map>
 #include <shared_mutex>
 #include <sstream>
 #include <thread>
@@ -121,7 +122,7 @@ struct logsource {
 struct logevent {
     using timestamp = std::chrono::time_point<std::chrono::system_clock>;
 
-    const std::string source;
+    std::string source;
     const loglevel level = loglevel::uninit;
     const timestamp when;
     const std::thread::id tid;
@@ -130,7 +131,7 @@ struct logevent {
     const int32_t line = -1;
     const std::string message;
 
-    logevent(const std::string& source_in, const loglevel& level_in, const timestamp& when, const std::thread::id& tid_in, const char* function, const char *file, const int& line, const std::string& message_in);
+    logevent(std::string source_in, const loglevel& level_in, const timestamp& when, const std::thread::id& tid_in, const char* function, const char *file, const int& line, const std::string& message_in);
     ~logevent() = default;
 };
 
@@ -162,6 +163,7 @@ class logdest : public baseobj {
         logdest(const loglevel& min_level_in);
         virtual ~logdest() = default;
         loglevel set_min_level(const loglevel& min_level_in);
+        virtual bool should_log(const loglevel& level_in, const std::string& source_in);
         void output(const logevent& event_in);
 };
 
@@ -171,9 +173,12 @@ class logengine : public baseobj, shareable {
     friend loglevel logdest::set_min_level(const loglevel& min_level_in);
     friend loglevel logdest::set_min_level__lockreq(const loglevel& min_level_in);
 
-    private:
+    protected:
         std::vector<std::shared_ptr<logdest>> destinations;
         lockfree_queue event_buffer{0};
+        std::atomic<loglevel> min_log_level = ATOMIC_VAR_INIT(loglevel::none);
+        bool buffer_events = true;
+        bool started = false;
         loglevel get_min_level();
         loglevel set_min_level__lockex(loglevel level_in);
         void update_min_level__lockex(void);
@@ -182,12 +187,7 @@ class logengine : public baseobj, shareable {
         void deliver_to_one__locksh(const std::shared_ptr<logdest>& dest_in, const logevent& event_in);
         void deliver_to_all__locksh(const logevent& event_in);
         void start__lockex();
-
-    protected:
-        std::atomic<loglevel> min_log_level = ATOMIC_VAR_INIT(loglevel::none);
-        bool buffer_events = true;
         // messages will only be delivered when started
-        bool started = false;
 
     public:
         logengine() = default;
@@ -195,7 +195,8 @@ class logengine : public baseobj, shareable {
         static logengine* get_engine();
         void update_min_level(void);
         void add_destination(const std::shared_ptr<logdest>& destination_in);
-        bool should_log(const loglevel& level_in);
+        void add_log_source(const std::string& source_in);
+        bool should_log(const loglevel& level_in, const std::string& source_in);
         void deliver(const logevent& event);
         void start();
 };
@@ -234,7 +235,7 @@ class logmemory : public logdest, lockable {
 const char* level_name(const loglevel& level_in);
 loglevel level_from_name(const char* name_in);
 loglevel level_from_name(const std::string& name_in);
-bool should_log(const loglevel& level_in);
+// bool should_log(const loglevel& level_in, const std::string& source_in);
 
 template <typename T>
 void sstream_accumulate_vaargs(std::stringstream& sstream, T&& t) {
@@ -257,7 +258,7 @@ std::string vaargs_to_string(Args&&... args) {
 template<typename... Args>
 void send_vargs_logevent(const std::string& source, const loglevel& level, const char *function, const char *path, const int& line, Args&&... args)
 {
-    if (logjam::should_log(level)) {
+    if (logengine::get_engine()->should_log(level, source)) {
         auto when = std::chrono::system_clock::now();
 
         auto tid = std::this_thread::get_id();
