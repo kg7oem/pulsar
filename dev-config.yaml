@@ -3,9 +3,9 @@
 engine:
   logs:
     console_level: verbose
-    memory_level: trace
+    memory_level: debug
   debug:
-    lock_watchdogs: true
+    lock_watchdogs: false
 
 templates:
   gain:
@@ -73,7 +73,7 @@ domain:
         client_name: pulsar
         # reduce sensitivity because of interrupt isues on test
         # hardware
-        watchdog_timeout_ms: 2000
+        watchdog_timeout_ms: 100
       inputs: [ left_out, right_out, demod_out, mono_out ]
       outputs: [ right_in, left_in, demod_in ]
       link:

@@ -20,7 +20,7 @@
 #include <pulsar/types.h>
 #include <pulsar/util.h>
 
-#define debug_get_lock(...) pulsar::debug::get_lock_wrapper(PULSAR_LOG_LOCK_NAME, logjam::loglevel::trace, __PRETTY_FUNCTION__, __FILE__, __LINE__, __VA_ARGS__)
+#define debug_get_lock(mutex) pulsar::debug::get_lock_wrapper(PULSAR_LOG_LOCK_NAME, logjam::loglevel::trace, __PRETTY_FUNCTION__, __FILE__, __LINE__, mutex, #mutex)
 
 namespace pulsar {
 
@@ -37,7 +37,7 @@ bool get_lock_watchdogs_enabled();
 void set_lock_watchdogs_enabled(const bool enabled_in);
 
 template <typename T>
-std::unique_lock<T> get_lock_wrapper(const std::string& logname_in, const logjam::loglevel& level_in, const char *function_in, const char *path_in, const int& line_in, T& mutex_in, UNUSED const duration_type timeout_in = LOCK_WATCHDOG_DEFAULT) {
+std::unique_lock<T> get_lock_wrapper(const std::string& logname_in, const logjam::loglevel& level_in, const char *function_in, const char *path_in, const int& line_in, T& mutex_in, const std::string& name_in, UNUSED const duration_type timeout_in = LOCK_WATCHDOG_DEFAULT) {
 #ifdef LOCK_WATCHDOGS
     thread_local bool went_recursive = false;
     std::shared_ptr<async::watchdog> lock_watchdog;
@@ -48,7 +48,7 @@ std::unique_lock<T> get_lock_wrapper(const std::string& logname_in, const logjam
     // FIXME check for 0 timeout and skip
     if (timeout_in != 0ms && get_lock_watchdogs_enabled() && async::is_online()) {
         logjam::send_vargs_logevent(logname_in, level_in, function_in, path_in, line_in, "creating a lock watchdog");
-        auto message = util::to_string("lock timeout at ", path_in, ":", line_in);
+        auto message = util::to_string("lock timeout for ", name_in, " at ", path_in, ":", line_in);
         lock_watchdog = async::watchdog::make(timeout_in, message);
         lock_watchdog->start();
     }
@@ -57,9 +57,9 @@ std::unique_lock<T> get_lock_wrapper(const std::string& logname_in, const logjam
 #endif
 
 #ifdef LOCK_LOGGING
-    logjam::send_vargs_logevent(logname_in, level_in, function_in, path_in, line_in, "getting lock");
+    logjam::send_vargs_logevent(logname_in, level_in, function_in, path_in, line_in, "getting lock for ", name_in);
     auto lock = std::unique_lock<T>(mutex_in);
-    logjam::send_vargs_logevent(logname_in, level_in, function_in, path_in, line_in, "got lock");
+    logjam::send_vargs_logevent(logname_in, level_in, function_in, path_in, line_in, "got lock for ", name_in);
 #endif
 
 #ifdef LOCK_WATCHDOGS
