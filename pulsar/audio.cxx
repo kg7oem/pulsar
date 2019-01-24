@@ -311,7 +311,9 @@ void audio::output::init_cycle()
 void audio::output::reset_cycle()
 {
     llog_trace({ return pulsar::util::to_string("ending cycle for ", to_string()); });
-    buffer = nullptr;
+    // FIXME there needs to be a way to clear this buffer with out
+    // making it impossible to notify
+    // buffer = nullptr;
 }
 
 void audio::output::register_forward(UNUSED output_forward * forward_in)

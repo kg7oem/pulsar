@@ -6,7 +6,7 @@ engine:
     memory_level: trace
     memory_age: 3
   debug:
-    lock_watchdogs: false
+    lock_watchdogs: true
 
 templates:
   gain:

@@ -148,8 +148,8 @@ void base::execute()
 
     run();
     did_run();
-    notify();
     reset_cycle();
+    notify();
 
     log_debug("execute() is done for node ", name);
 }
