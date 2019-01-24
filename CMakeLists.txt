@@ -35,6 +35,7 @@ add_library(
     pulsar/audio.cxx
     pulsar/audio.util.cxx
     pulsar/config.cxx
+    pulsar/debug.cxx
     pulsar/domain.cxx
     pulsar/jackaudio.cxx
     pulsar/ladspa.cxx

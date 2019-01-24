@@ -2,8 +2,10 @@
 
 engine:
   logs:
-    console_level: debug
+    console_level: info
     memory_level: trace
+  debug:
+    lock_watchdogs: true
 
 templates:
   gain:

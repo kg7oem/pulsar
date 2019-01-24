@@ -33,6 +33,9 @@ using namespace std::chrono_literals;
 // FIXME this is probably way too sensitive
 #define LOCK_WATCHDOG_DEFAULT 20ms
 
+bool get_lock_watchdogs_enabled();
+void set_lock_watchdogs_enabled(const bool enabled_in);
+
 template <typename T>
 std::unique_lock<T> get_lock_wrapper(const std::string& logname_in, const logjam::loglevel& level_in, const char *function_in, const char *path_in, const int& line_in, T& mutex_in, UNUSED const duration_type timeout_in = LOCK_WATCHDOG_DEFAULT) {
 #ifdef LOCK_WATCHDOGS
@@ -43,7 +46,7 @@ std::unique_lock<T> get_lock_wrapper(const std::string& logname_in, const logjam
     went_recursive = true;
 
     // FIXME check for 0 timeout and skip
-    if (async::is_online()) {
+    if (timeout_in != 0ms && get_lock_watchdogs_enabled() && async::is_online()) {
         logjam::send_vargs_logevent(logname_in, level_in, function_in, path_in, line_in, "creating a lock watchdog");
         auto message = util::to_string("lock timeout at ", path_in, ":", line_in);
         lock_watchdog = async::watchdog::make(timeout_in, message);
