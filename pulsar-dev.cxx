@@ -29,8 +29,7 @@ using namespace std::chrono_literals;
 
 #define DEFAULT_CONSOLE_LOG_LEVEL "info"
 // #define DEFAULT_MEMORY_LOG_LEVEL "debug"
-// TODO 3 seconds might be better
-#define DEFAULT_MEMORY_LOG_AGE 5s
+#define DEFAULT_MEMORY_LOG_AGE 3s
 
 static std::shared_ptr<logjam::logmemory> memory_logger;
 
