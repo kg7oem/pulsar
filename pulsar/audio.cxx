@@ -23,6 +23,9 @@
 #include <pulsar/node.h>
 #include <pulsar/system.h>
 
+#define PULSAR_SANITY_CHECK_WAITING
+#define PULSAR_SANITY_CHECK_WAITING_LIMIT 1000000
+
 namespace pulsar {
 
 audio::buffer::~buffer()
@@ -215,6 +218,10 @@ void audio::input::link_ready(audio::link * link_in, std::shared_ptr<audio::buff
     now_waiting = --links_waiting;
 
     llog_trace({ return pulsar::util::to_string("waiting buffers: ", now_waiting, "; node: ", get_parent()->name); });
+
+#ifdef PULSAR_SANITY_CHECK_WAITING
+    if (now_waiting > PULSAR_SANITY_CHECK_WAITING_LIMIT) system_fault("sanity check failed; waiting for ", now_waiting, "for node", parent->name);
+#endif
 
     if (now_waiting == 0) {
         log_trace(to_string(), " telling audio component we are ready");
@@ -531,6 +538,12 @@ void audio::component::source_ready(audio::input *)
 
     auto now_waiting = --inputs_waiting;
     log_trace("node ", parent->name, " audio sources now waiting: ", now_waiting);
+
+#ifdef PULSAR_SANITY_CHECK_WAITING
+    if (now_waiting > PULSAR_SANITY_CHECK_WAITING_LIMIT) {
+        system_fault("sanity check failed: links now waiting is ", now_waiting, "for node ", parent->name);
+    }
+#endif
 
     if (now_waiting == 0) {
         // FIXME RACE is this the race condition causing deadlocks?
