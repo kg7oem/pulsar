@@ -21,9 +21,11 @@ namespace pulsar {
 
 namespace property {
 
-generic::generic(const string_type& name_in, const value_type& type_in)
-: name(name_in), type(type_in)
+generic::generic(node::base * parent_in, const string_type& name_in, const value_type& type_in)
+: parent(parent_in), name(name_in), type(type_in)
 {
+    assert(parent != nullptr);
+
     switch(type) {
         case value_type::unknown: system_fault("can not specify unknown as a parameter type");
         case value_type::size: value.size = 0; break;
@@ -91,6 +93,11 @@ void generic::set(const YAML::Node& value_in)
         case value_type::real: value.real = value_in.as<real_type>(); return;
         case value_type::string: *value.string = value_in.as<string_type>(); return;
     }
+}
+
+node::base * generic::get_parent()
+{
+    return parent;
 }
 
 size_type& generic::get_size()

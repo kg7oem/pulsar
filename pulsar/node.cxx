@@ -88,7 +88,7 @@ const std::map<string_type, property::generic *>& base::get_properties()
 property::generic& base::add_property(const string_type& name_in, const property::value_type& type_in)
 {
     // FIXME why doesn't emplace work?
-    auto new_property = new property::generic(name_in, type_in);
+    auto new_property = new property::generic(this, name_in, type_in);
     properties[new_property->name] = new_property;
     return *new_property;
 }

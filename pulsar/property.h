@@ -16,6 +16,7 @@
 #include <string>
 
 #include <pulsar/config.h>
+#include <pulsar/node.forward.h>
 #include <pulsar/system.h>
 
 namespace pulsar {
@@ -34,16 +35,18 @@ union value_container {
 class generic {
     protected:
     value_container value;
+    node::base * parent;
 
     public:
     const string_type name;
     const value_type type = value_type::unknown;
-    generic(const string_type& name_in, const value_type& type_in);
+    generic(node::base * parent_in, const string_type& name_in, const value_type& type_in);
     virtual ~generic();
     string_type get();
     void set(const double& value_in);
     void set(const string_type& value_in);
     void set(const YAML::Node& value_in);
+    node::base * get_parent();
     size_type& get_size();
     void set_size(const size_type& size_in);
     integer_type& get_integer();
