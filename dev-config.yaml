@@ -3,7 +3,8 @@
 engine:
   logs:
     console_level: verbose
-    memory_level: debug
+    # this will use a lot of CPU
+    memory_level: trace
   debug:
     lock_watchdogs: false
 
@@ -97,8 +98,6 @@ domain:
 
     - name: gain_left1
       template: gain
-      plugin:
-        filename: /usr/lib/ladspa/amp.so
       config:
         Gain: .5
       link:
