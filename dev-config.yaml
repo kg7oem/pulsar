@@ -22,7 +22,7 @@ templates:
   compressor:
     class: pulsar::ladspa::node
     plugin:
-      filename: /usr/lib/ladspa/ZamComp-ladspa.so
+      filename: /usr/local/lib/ladspa/ZamComp-ladspa.so
     config:
       Knee: 0
       Threshold: 0
@@ -31,7 +31,7 @@ templates:
   gate:
     class: pulsar::ladspa::node
     plugin:
-      filename: /usr/lib/ladspa/ZamGate-ladspa.so
+      filename: /usr/local/lib/ladspa/ZamGate-ladspa.so
   delay:
     class: pulsar::ladspa::node
     plugin:
@@ -40,7 +40,7 @@ templates:
   tube:
     class: pulsar::ladspa::node
     plugin:
-      filename: /usr/lib/ladspa/ZamTube-ladspa.so
+      filename: /usr/local/lib/ladspa/ZamTube-ladspa.so
 
 chains:
   remove_squelch_tail:
