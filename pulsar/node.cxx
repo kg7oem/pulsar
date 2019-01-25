@@ -148,7 +148,7 @@ void base::init()
 
 void base::execute()
 {
-    log_debug("execute() just called for node ", name);
+    log_debug("--------> node ", name, " started executing");
     auto lock = debug_get_lock(node_mutex);
 
     run();
@@ -156,7 +156,7 @@ void base::execute()
     reset_cycle();
     notify();
 
-    log_debug("execute() is done for node ", name);
+    log_debug("<-------- node ", name, " finished executing");
 }
 
 bool base::is_ready()
