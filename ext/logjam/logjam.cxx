@@ -468,6 +468,7 @@ loglevel logdest::set_min_level__lockreq(const loglevel& min_level_in) {
 }
 
 bool logdest::should_log(const loglevel& level_in, const std::string&) {
+    // std::cout << "in generic should_log()" << std::endl;
     if (min_level == loglevel::none) return false;
     return level_in >= min_level;
 }
@@ -478,23 +479,59 @@ void logdest::output(const logevent& event_in) {
     handle_output(event_in);
 }
 
+// THREAD this function acquires the needed locks
+bool logconsole::should_log(const loglevel& level_in, const std::string& source_in)
+{
+    // std::cout << "i'm here" << std::endl;
+
+    if (! logdest::should_log(level_in, source_in)) return false;
+
+    auto shared_lock = get_locksh();
+
+    // std::cout << "why?" << std::endl;
+
+    if (filter_source_names.size() == 0) return true;
+
+    // std::cout << "size was not zero" << std::endl;
+
+    auto i = filter_source_names.find(source_in);
+
+    if (i == filter_source_names.end()) return false;
+
+    // std::cout << "found an entry in the map: " << i->second << std::endl;
+
+    return i->second;
+}
+
+// THREAD this function acquires the needed locks
+void logconsole::add_source_filter(const std::string& source_name_in)
+{
+    auto exclusive_lock = get_lockex();
+
+    if (filter_source_names.find(source_name_in) != filter_source_names.end()) {
+        throw std::runtime_error("attempt to register source name twice for filtering");
+    }
+
+    filter_source_names[source_name_in] = true;
+}
+
 // THREAD this function is thread safe
 std::string logconsole::format_event(const logevent& event_in) const {
     return format_event_detailed(event_in);
 }
 
-// THREAD this function asserts the required locking
+// THREAD must have the stdio_mutex
 void logconsole::write_stdio__lockreq(const std::string& message_in) {
     // writing to stdio needs to be serialized so different threads don't overlap
-    assert_lock(caller_has_lock());
     std::cout <<  message_in;
 }
 
+// THREAD this method only needs the stdio_mutex
 void logconsole::handle_output(const logevent& event_in) {
     // do the string work before the object becomes locked
     auto message = format_event(event_in);
 
-    auto lock = get_lock();
+    auto stdio_lock = std::unique_lock<logjam::mutex>(stdio_mutex);
     write_stdio__lockreq(message);
 }
 

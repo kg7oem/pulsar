@@ -70,8 +70,22 @@ static void init_logging(std::shared_ptr<pulsar::config::file> config_in)
     }
 
     auto console = make_shared<logjam::logconsole>(logjam::level_from_name(log_level_name));
-    logging->add_destination(console);
 
+    auto log_sources_node = engine_logs["sources"];
+
+    if (log_sources_node) {
+        if (log_sources_node.IsScalar()) {
+            console->add_source_filter(log_sources_node.as<std::string>());
+        } else if (log_sources_node.IsSequence()) {
+            for(unsigned long i = 0; i < log_sources_node.size(); i++) {
+                console->add_source_filter(log_sources_node[i].as<std::string>());
+            }
+        } else {
+            system_fault("invalid node type for log sources section");
+        }
+    }
+
+    logging->add_destination(console);
     logging->start();
 }
 

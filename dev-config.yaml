@@ -4,7 +4,11 @@ engine:
   logs:
     console_level: verbose
     # this will use a lot of CPU
-    memory_level: trace
+    # memory_level: trace
+    memory_level: debug
+    sources:
+      - pulsar
+      # - pulsar.locking
   debug:
     lock_watchdogs: false
 

@@ -196,20 +196,24 @@ class logengine : public baseobj, shareable {
         void update_min_level(void);
         void add_destination(const std::shared_ptr<logdest>& destination_in);
         void add_log_source(const std::string& source_in);
-        bool should_log(const loglevel& level_in, const std::string& source_in);
+        virtual bool should_log(const loglevel& level_in, const std::string& source_in);
         void deliver(const logevent& event);
         void start();
 };
 
-class logconsole : public logdest, lockable {
+class logconsole : public logdest, shareable {
     private:
         virtual void handle_output(const logevent& event_in) override;
         void write_stdio__lockreq(const std::string& message_in);
+        logjam::mutex stdio_mutex;
+        std::map<std::string, bool> filter_source_names;
 
     public:
         logconsole(const loglevel& level_in = loglevel::debug)
             : logdest(level_in) { }
         virtual ~logconsole() = default;
+        virtual bool should_log(const loglevel& level_in, const std::string& source_in) override;
+        virtual void add_source_filter(const std::string& source_name_in);
         virtual std::string format_event(const logevent& event) const;
 };
 
