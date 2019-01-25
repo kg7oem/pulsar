@@ -71,7 +71,7 @@ static void init_logging(std::shared_ptr<pulsar::config::file> config_in)
 
     auto console = make_shared<logjam::logconsole>(logjam::level_from_name(log_level_name));
 
-    auto log_sources_node = engine_logs["sources"];
+    auto log_sources_node = engine_logs["console_sources"];
 
     if (log_sources_node) {
         if (log_sources_node.IsScalar()) {

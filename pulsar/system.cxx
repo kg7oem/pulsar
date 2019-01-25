@@ -42,6 +42,8 @@ static std::shared_ptr<logjam::logmemory> memory_logger;
     logjam::send_vargs_logevent(PULSAR_LOG_NAME, logjam::loglevel::fatal, function_in, file_in, line_in, message_in);
 
     if (memory_logger != nullptr) {
+        std::cerr << "Contents of in memory log:" << std::endl;
+
         for(auto&& log_message : memory_logger->format_event_history()) {
             std::cerr << log_message;
         }

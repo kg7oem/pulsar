@@ -44,6 +44,43 @@
 
 namespace logjam {
 
+static std::string& ensure_new_line(std::string& line_in)
+{
+    auto last_char_pos = line_in.size() - 1;
+    auto last_char = line_in[last_char_pos];
+
+    // FIXME this should look for newlines inside the message and
+    // if the newline is not at the end of the message then put
+    // two spaces after every newline so the message is indented when
+    // the user views it - this makes it easier to read and prevents
+    // faking output from the log system to the end user with carefully
+    // crafted message lengths and line wrapping
+
+    // only add a new line if the message does not already have one
+    // FIXME this won't work right on Windows
+    // FIXME what about UTF-16 and UTF-32?
+    if (last_char != '\n') {
+        line_in += "\n";
+    }
+
+    return line_in;
+}
+
+// THREAD this function is thread safe
+std::string format_event_console(const logevent& event_in)
+{
+    std::string buffer;
+
+    if (event_in.level != loglevel::info && event_in.level != loglevel::verbose) {
+        buffer += level_name(event_in.level);
+        buffer += " ";
+    }
+
+    buffer += event_in.message;
+    return ensure_new_line(buffer);
+}
+
+// THREAD this function is thread safe
 std::string format_event_detailed(const logevent& event_in) {
     std::stringstream buf;
 
@@ -64,33 +101,12 @@ std::string format_event_detailed(const logevent& event_in) {
 
     buf << event_in.tid << " ";
     buf << file_name << ":" << event_in.line << " ";
-    buf << event_in.message;
+    buf << level_name(event_in.level) << " " << event_in.message;
     #endif
 
-    auto strbuf = buf.str();
-    auto last_char_pos = strbuf.size() - 1;
-    auto last_char = strbuf[last_char_pos];
-
-    // FIXME this should look for newlines inside the message and
-    // if the newline is not at the end of the message then put
-    // two spaces after every newline so the message is indented when
-    // the user views it - this makes it easier to read and prevents
-    // faking output from the log system to the end user with carefully
-    // crafted message lengths and line wrapping
-
-    // only add a new line if the message does not already have one
-    // FIXME this won't work right on Windows
-    // FIXME what about UTF-16 and UTF-32?
-    if (last_char != '\n') {
-        strbuf += "\n";
-    }
-
-    return strbuf;
+    auto string = buf.str();
+    return ensure_new_line(string);
 }
-
-// bool should_log(const loglevel& level_in, std::string source_in) {
-//     return logengine::get_engine()->should_log(level_in, source_in);
-// }
 
 // THREAD this function is thread safe
 const char* level_name(const loglevel& level_in) {
@@ -468,7 +484,6 @@ loglevel logdest::set_min_level__lockreq(const loglevel& min_level_in) {
 }
 
 bool logdest::should_log(const loglevel& level_in, const std::string&) {
-    // std::cout << "in generic should_log()" << std::endl;
     if (min_level == loglevel::none) return false;
     return level_in >= min_level;
 }
@@ -517,7 +532,7 @@ void logconsole::add_source_filter(const std::string& source_name_in)
 
 // THREAD this function is thread safe
 std::string logconsole::format_event(const logevent& event_in) const {
-    return format_event_detailed(event_in);
+    return format_event_console(event_in);
 }
 
 // THREAD must have the stdio_mutex

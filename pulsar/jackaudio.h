@@ -48,6 +48,7 @@ class node : public pulsar::node::base {
     sample_type * get_port_buffer(const string_type& port_name_in);
     void start();
     void open(const string_type& jack_name_in);
+    void handle_jack_shutdown(jack_status_t status_in, const char * message_in);
     void handle_jack_process(jack_nframes_t nframes_in);
 
     /* lifecycle methods */

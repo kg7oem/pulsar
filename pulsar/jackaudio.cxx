@@ -19,7 +19,7 @@
 #include <pulsar/logging.h>
 #include <pulsar/system.h>
 
-// #define WATCHDOG_TIMEOUT 1500ms
+#define JACK_LOG_NAME "jackaudio"
 
 namespace pulsar {
 
@@ -27,8 +27,21 @@ using namespace std::chrono_literals;
 
 namespace jackaudio {
 
+static void log_jack_info(const char * jack_message_in)
+{
+    LOGJAM_LOG_VARGS(JACK_LOG_NAME, logjam::loglevel::info, jack_message_in);
+}
+
+static void log_jack_error(const char * jack_message_in)
+{
+    LOGJAM_LOG_VARGS(JACK_LOG_NAME, logjam::loglevel::error, jack_message_in);
+}
+
 void init()
 {
+    jack_set_error_function(log_jack_error);
+    jack_set_info_function(log_jack_info);
+
     library::register_node_factory("pulsar::jackaudio::node", make_node);
 }
 
@@ -105,13 +118,22 @@ pulsar::sample_type * jackaudio::node::get_port_buffer(const string_type& name_i
     return static_cast<pulsar::sample_type *>(buffer);
 }
 
-static int wrap_nframes_cb(jackaudio::jack_nframes_t nframes_in, void * arg_in)
+static int wrap_int_nframes_cb(jackaudio::jack_nframes_t arg_in, void * cb_pointer)
 {
     // FIXME what is the syntax to cast/dereference this well?
-    auto p = static_cast<std::function<int(jackaudio::jack_nframes_t)> *>(arg_in);
+    auto p = static_cast<std::function<int(jackaudio::jack_nframes_t)> *>(cb_pointer);
     auto cb = *p;
-    cb(nframes_in);
+    cb(arg_in);
     return 0;
+}
+
+static void wrap_void_status_string_cb(jackaudio::jack_status_t status_in, const char * message_in, void * cb_pointer)
+{
+    // FIXME what is the syntax to cast/dereference this well?
+    auto p = static_cast<std::function<void(jackaudio::jack_status_t, const char * message_in)> *>(cb_pointer);
+    auto cb = *p;
+    cb(status_in, message_in);
+    return;
 }
 
 void jackaudio::node::activate()
@@ -131,9 +153,16 @@ void jackaudio::node::activate()
         add_port(input->name, JACK_DEFAULT_AUDIO_TYPE, JackPortIsOutput);
     }
 
+    jack_on_info_shutdown(
+        jack_client,
+        wrap_void_status_string_cb,
+        static_cast<void *>(new std::function<void(jackaudio::jack_status_t, const char *)>([this](jackaudio::jack_status_t status_in, const char * message_in) -> void {
+            this->handle_jack_shutdown(status_in, message_in);
+    })));
+
     if (jack_set_process_callback(
         jack_client,
-        wrap_nframes_cb,
+        wrap_int_nframes_cb,
         static_cast<void *>(new std::function<void(jack_nframes_t)>([this](jack_nframes_t nframes_in) -> void {
             this->handle_jack_process(nframes_in);
     })))) {
@@ -186,6 +215,11 @@ void jackaudio::node::handle_jack_process(jack_nframes_t nframes_in)
     log_trace("going to reset watchdog for node", name);
     if (watchdog != nullptr) watchdog->stop();
     log_debug("********** giving control back to jackaudio");
+}
+
+void jackaudio::node::handle_jack_shutdown(jack_status_t, const char * message_in)
+{
+    system_fault("jackaudio server shut down: ", message_in);
 }
 
 void jackaudio::node::run()

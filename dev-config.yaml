@@ -3,12 +3,13 @@
 engine:
   logs:
     console_level: verbose
+    console_sources:
+      - pulsar
+      - pulsar.locking
+      - jackaudio
+    memory_level: debug
     # this will use a lot of CPU
     # memory_level: trace
-    memory_level: debug
-    sources:
-      - pulsar
-      # - pulsar.locking
   debug:
     lock_watchdogs: false
 
