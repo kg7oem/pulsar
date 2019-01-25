@@ -153,6 +153,11 @@ void base::execute()
 
     run();
     did_run();
+
+    // FIXME RACE There is still a race condition - after resetting new
+    // buffers can start coming in again. This needs to get all the things
+    // that will need to be notified into a list before the reset happens
+    // then reset then notify using that copy of the data.
     reset_cycle();
     notify();
 
