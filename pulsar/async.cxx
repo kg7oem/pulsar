@@ -51,6 +51,7 @@ void init()
 
     for(size_type i = 0; i < num_threads_in; i++) {
         async_threads.emplace_back(async_thread);
+        thread::set_realtime_priority(async_threads.back(), thread::rt_priorty::lowest);
     }
 
     is_online_flag.store(true);

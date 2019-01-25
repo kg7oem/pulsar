@@ -27,7 +27,13 @@ using thread_type = std::thread;
 
 namespace thread {
 
-void set_realtime_priority(thread_type& thread_in, const size_type priority_in);
+enum class rt_priorty : int {
+    lowest = 1,
+    normal = 5,
+    highest = 10,
+};
+
+void set_realtime_priority(thread_type& thread_in, const rt_priorty& priority_in);
 
 } // namespace thread
 

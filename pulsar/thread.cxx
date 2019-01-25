@@ -22,10 +22,10 @@ namespace pulsar {
 namespace thread {
 
 // from https://stackoverflow.com/a/31652324
-void set_realtime_priority(thread_type& thread_in, const size_type priority_in)
+void set_realtime_priority(thread_type& thread_in, const rt_priorty& priority_in)
 {
     sched_param sch_params;
-    sch_params.sched_priority = priority_in;
+    sch_params.sched_priority = static_cast<int>(priority_in);
 
     if (pthread_setschedparam(thread_in.native_handle(), SCHED_RR, &sch_params)) {
         system_fault("could not set realtime priority for thread");
