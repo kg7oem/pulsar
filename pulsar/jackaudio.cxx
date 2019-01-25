@@ -169,8 +169,6 @@ void jackaudio::node::activate()
         system_fault("could not set jackaudio process callback");
     }
 
-    start();
-
     pulsar::node::base::activate();
 }
 

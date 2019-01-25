@@ -58,6 +58,7 @@ struct base {
     * construct
     * init
     * activate
+    * start
     *
     * wait_inputs
     *
@@ -81,6 +82,7 @@ struct base {
     virtual void activate();
 
     protected:
+    virtual void start();
     virtual void init_cycle();
     virtual void will_run();
     virtual void run();

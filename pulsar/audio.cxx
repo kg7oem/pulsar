@@ -217,10 +217,10 @@ void audio::input::link_ready(audio::link * link_in, std::shared_ptr<audio::buff
 
     now_waiting = --links_waiting;
 
-    llog_trace({ return pulsar::util::to_string("waiting buffers: ", now_waiting, "; node: ", get_parent()->name); });
+    llog_trace({ return pulsar::util::to_string("waiting buffers: ", now_waiting, "; ", to_string()); });
 
 #ifdef PULSAR_SANITY_CHECK_WAITING
-    if (now_waiting > PULSAR_SANITY_CHECK_WAITING_LIMIT) system_fault("sanity check failed; waiting for ", now_waiting, "for node", parent->name);
+    if (now_waiting > PULSAR_SANITY_CHECK_WAITING_LIMIT) system_fault("sanity check failed; waiting for ", now_waiting, " buffers for node ", parent->name);
 #endif
 
     if (now_waiting == 0) {

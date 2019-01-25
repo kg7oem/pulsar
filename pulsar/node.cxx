@@ -101,9 +101,14 @@ property::generic& base::add_property(const string_type& name_in, property::gene
 
 void base::activate()
 {
+    log_debug("activating node ", name);
+
     audio.activate();
     reset_cycle();
 }
+
+void base::start()
+{ }
 
 void base::init_cycle()
 {

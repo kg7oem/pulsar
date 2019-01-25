@@ -64,6 +64,16 @@ void domain::activate(const size_type num_threads_in)
         threads.emplace_back(std::bind(&domain::be_thread, this));
         thread::set_realtime_priority(threads.back(), thread::rt_priorty::highest);
     }
+
+    // FIXME
+    // jackaudio exposed the race condition between start/activate/threads even
+    // with the ordering change because it brought it's own thread with it.
+    //
+    // start() should become a node command and start becomes a part of the lifecycle
+    // which will become important when topology changes come around.
+    for(auto&& node : nodes) {
+        node->start();
+    }
 }
 
 void domain::add_ready_node(node::base * node_in)

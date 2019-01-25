@@ -46,12 +46,12 @@ class node : public pulsar::node::base {
     bool done_flag = false;
     port_type * add_port(const string_type& port_name_in, const char * port_type_in, const flags_type flags_in, const size_type buffer_size_in = 0);
     sample_type * get_port_buffer(const string_type& port_name_in);
-    void start();
     void open(const string_type& jack_name_in);
     void handle_jack_shutdown(jack_status_t status_in, const char * message_in);
     void handle_jack_process(jack_nframes_t nframes_in);
 
     /* lifecycle methods */
+    void start() override;
     virtual void run() override;
     virtual void notify() override;
     virtual void execute() override;
