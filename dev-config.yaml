@@ -79,12 +79,15 @@ domain:
         # reduce sensitivity because of interrupt isues on test
         # hardware
         watchdog_timeout_ms: 100
-      inputs: [ left_out, right_out, demod_out, mono_out ]
+      inputs: [ left_out, right_out, demod_out, mono_out, left_loop_out, right_loop_out ]
       outputs: [ right_in, left_in, demod_in ]
       link:
-        right_in: jack:right_out
-        left_in: comp_left:*
-        right_in: comp_right:*
+        left_in:
+          - comp_left:*
+          - jack:left_loop_out
+        right_in:
+          - comp_right:*
+          - jack:right_loop_out
         demod_in: tail_eater:in_1
 
     - name: tail_eater
