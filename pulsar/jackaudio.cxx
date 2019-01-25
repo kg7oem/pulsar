@@ -212,7 +212,9 @@ void jackaudio::node::start()
     auto watchdog_timeout = get_property("config:watchdog_timeout_ms").get_size();
 
     if (watchdog_timeout) {
-        watchdog = async::watchdog::make(std::chrono::milliseconds(watchdog_timeout));
+        auto message = util::to_string("jackaudio node ", name, " was not ready fast enough");
+        auto duration = std::chrono::milliseconds(watchdog_timeout);
+        watchdog = async::watchdog::make(duration, message);
     }
 
     if (jack_activate(jack_client)) {
