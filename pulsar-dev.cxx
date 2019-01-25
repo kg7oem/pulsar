@@ -188,9 +188,13 @@ UNUSED static void process_audio(std::shared_ptr<pulsar::config::file> config_in
     }
 }
 
-int main(void)
+int main(int argc_in, const char ** argv_in)
 {
-    auto config = pulsar::config::file::make("dev-config.yaml");
+    if (argc_in != 2) {
+        system_fault("must specify a configuration file on the command line");
+    }
+
+    auto config = pulsar::config::file::make(argv_in[1]);
 
     init(config);
 
