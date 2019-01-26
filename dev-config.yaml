@@ -83,7 +83,7 @@ domain:
         client_name: pulsar
         # reduce sensitivity because of interrupt isues on test
         # hardware
-        watchdog_timeout_ms: 100
+        watchdog_timeout_ms: 500
       inputs:
         - left_out
         - right_out
@@ -107,8 +107,12 @@ domain:
 
     - name: tail_eater
       chain: remove_squelch_tail
+      link: tail_tube
+
+    - name: tail_tube
+      template: tube
       link:
-        out_1: jack:demod_out
+        Audio Output 1: jack:demod_out
 
     - name: comp_left
       template: compressor
