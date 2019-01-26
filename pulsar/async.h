@@ -21,7 +21,6 @@
 #include <memory>
 
 #include <pulsar/system.h>
-#include <pulsar/thread.h>
 
 #define PULSAR_WATCHDOG_DEFAULT_MESSAGE "watchdog hit timeout"
 
@@ -68,7 +67,9 @@ class timer : public base_timer, public std::enable_shared_from_this<timer> {
     template <typename... Args>
     static std::shared_ptr<timer> make(Args&&... args)
     {
-        return std::make_shared<timer>(args...);
+        static system::allocator<timer>::pool_type pool;
+        static system::allocator<timer> allocator(pool);
+        return std::allocate_shared<timer>(allocator, args...);
     }
     virtual void watch(handler_type handler_in);
 };
@@ -85,7 +86,9 @@ class watchdog : public base_timer, public std::enable_shared_from_this<watchdog
     template <typename... Args>
     static std::shared_ptr<watchdog> make(Args&&... args)
     {
-        return std::make_shared<watchdog>(args...);
+        static system::allocator<watchdog>::pool_type pool;
+        static system::allocator<watchdog> allocator(pool);
+        return std::allocate_shared<watchdog>(allocator, args...);
     }
 };
 

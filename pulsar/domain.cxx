@@ -62,7 +62,7 @@ void domain::activate(const size_type num_threads_in)
 
     for(size_type i = 0; i < num_threads_in; i++) {
         threads.emplace_back(std::bind(&domain::be_thread, this));
-        thread::set_realtime_priority(threads.back(), thread::rt_priorty::highest);
+        system::set_realtime_priority(threads.back(), system::rt_priorty::highest);
     }
 
     // FIXME

@@ -22,7 +22,6 @@
 
 #include <pulsar/node.forward.h>
 #include <pulsar/system.h>
-#include <pulsar/thread.h>
 
 namespace pulsar {
 

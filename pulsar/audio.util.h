@@ -13,8 +13,6 @@
 
 #pragma once
 
-#include <memory>
-
 #include <pulsar/system.h>
 
 namespace pulsar {

@@ -11,7 +11,7 @@ engine:
     # this will use a lot of CPU
     # memory_level: trace
   debug:
-    lock_watchdogs: false
+    lock_watchdogs: true
 
 templates:
   gain:

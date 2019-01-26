@@ -43,7 +43,6 @@ add_library(
     pulsar/node.cxx
     pulsar/property.cxx
     pulsar/system.cxx
-    pulsar/thread.cxx
     pulsar/util.cxx
 )
 

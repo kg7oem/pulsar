@@ -120,6 +120,17 @@ void enable_memory_logging(const duration_type& max_age_in, const string_type& l
     logjam::logengine::get_engine()->add_destination(memory_logger);
 }
 
+// from https://stackoverflow.com/a/31652324
+void set_realtime_priority(thread_type& thread_in, const rt_priorty& priority_in)
+{
+    sched_param sch_params;
+    sch_params.sched_priority = static_cast<int>(priority_in);
+
+    if (pthread_setschedparam(thread_in.native_handle(), SCHED_RR, &sch_params)) {
+        system_fault("could not set realtime priority for thread");
+    }
+}
+
 } // namespace system
 
 } // namespace pulsar

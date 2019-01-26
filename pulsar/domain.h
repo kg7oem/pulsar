@@ -18,13 +18,11 @@
 #include <list>
 #include <memory>
 #include <string>
-#include <thread>
 #include <vector>
 
 #include <pulsar/audio.h>
 #include <pulsar/node.forward.h>
 #include <pulsar/system.h>
-#include <pulsar/thread.h>
 
 namespace pulsar {
 
