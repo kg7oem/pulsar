@@ -1,3 +1,7 @@
+author-*
+
+# things in here have to be
+# added explicitly
 ext/
 
 pulsar-dev
