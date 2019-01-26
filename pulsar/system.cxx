@@ -35,6 +35,7 @@ using namespace std::chrono_literals;
 
 static std::shared_ptr<async::timer> alive_timer;
 static std::shared_ptr<logjam::logmemory> memory_logger;
+static allocator_pool * global_allocator_pool = new allocator_pool();
 
 [[noreturn]] void fault(const char* file_in, int line_in, const char* function_in, const string_type& message_in)
 {
@@ -129,6 +130,21 @@ void set_realtime_priority(thread_type& thread_in, const rt_priorty& priority_in
     if (pthread_setschedparam(thread_in.native_handle(), SCHED_RR, &sch_params)) {
         system_fault("could not set realtime priority for thread");
     }
+}
+
+allocator_pool::allocator_pool()
+{
+    std::cout << "pool is being constructed" << std::endl;
+}
+
+allocator_pool::~allocator_pool()
+{
+    std::cout << "pool is being destroyed" << std::endl;
+}
+
+allocator_pool& get_allocator_pool()
+{
+    return *global_allocator_pool;
 }
 
 } // namespace system

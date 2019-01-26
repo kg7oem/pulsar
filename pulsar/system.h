@@ -13,6 +13,7 @@
 
 #pragma once
 
+#include <cassert>
 #include <chrono>
 #include <condition_variable>
 #include <functional>
@@ -51,16 +52,22 @@ enum class rt_priorty : int {
     highest = 10,
 };
 
+struct allocator_pool {
+    std::map<std::size_t, std::vector<void *>> pointers_by_size;
+    std::mutex mutex;
+
+    allocator_pool();
+    ~allocator_pool();
+};
+
 // this should use std::size_t instead of the pulsar size_type
 template <class T>
 struct allocator {
     using value_type = T;
-    using pool_type = std::map<std::size_t, std::vector<void *>>;
 
-    pool_type &pool;
-    mutex_type pool_mutex;
+    allocator_pool &pool;
 
-    allocator(pool_type &pool_in)
+    allocator(allocator_pool &pool_in)
     : pool(pool_in)
     { }
 
@@ -71,7 +78,7 @@ struct allocator {
     template<class U, class... Args>
     void construct(U * p, Args&&... args)
     {
-        std::cout << "allocator: construct object" << std::endl;
+        // std::cout << "allocator: construct object" << std::endl;
         // placement new operator
         new (p) U(args...);
         return;
@@ -80,7 +87,7 @@ struct allocator {
     template<class U>
     void destroy(U * p)
     {
-        std::cout << "allocator: destroy object" << std::endl;
+        // std::cout << "allocator: destroy object" << std::endl;
         // from https://stackoverflow.com/a/3763887
         // Do not release the memory allocated by a call to the placement new operator using
         // the delete keyword. You will destroy the object by calling the destructor directly.
@@ -92,26 +99,57 @@ struct allocator {
     {
         auto requested_bytes = num_things_in * sizeof(T);
         auto fit_bytes = requested_bytes + requested_bytes % PULSAR_ALLOCATOR_BLOCK_SIZE;
-        std::cout << "allocator: requested = " << requested_bytes << "; got " << fit_bytes << std::endl;
+        // std::cout << "allocator: requested = " << requested_bytes << "; got " << fit_bytes << std::endl;
         return fit_bytes;
     }
 
     T* allocate(std::size_t num_things_in) {
-        // lock_type lock(pool_mutex);
-
         std::size_t size = bytes_fit_to_blocks(num_things_in);
-        std::cout << "allocator: allocate memory: " << size << std::endl;
-        auto p = std::malloc(size);
+
+        lock_type lock(pool.mutex);
+        auto found = pool.pointers_by_size.find(size);
+        void * p = nullptr;
+
+        if (found == pool.pointers_by_size.end()) {
+            std::cout << "allocator: no entries found for size " << size << std::endl;
+            p = std::malloc(size);
+        } else if (found->second.size() == 0) {
+            std::cout << "allocator: free list was empty for size " << size << std::endl;
+            p = std::malloc(size);
+        } else {
+            std::cout << "allocator: getting memory from free list: " << size << std::endl;
+            p = found->second.back();
+            found->second.pop_back();
+        }
+
+        assert(p != nullptr);
         return static_cast<T *>(p);
     }
 
-    void deallocate(T * p, std::size_t UNUSED num_things_in) noexcept
+    void deallocate(T * p, std::size_t num_things_in) noexcept
     {
-        // lock_type lock(pool_mutex);
+        auto size = bytes_fit_to_blocks(num_things_in);
 
-        UNUSED std::size_t size = bytes_fit_to_blocks(num_things_in);
-        std::cout << "allocator: free memory: " << size << std::endl;
-        std::free(p);
+        lock_type lock(pool.mutex);
+
+        auto found = pool.pointers_by_size.find(size);
+
+        if (found == pool.pointers_by_size.end()) {
+            std::cout << "deallocator: no list available for " << size << std::endl;
+        } else {
+            std::cout << "deallocator: list was available for " << size << std::endl;
+            std::cout << "dealloctor: list size: " << pool.pointers_by_size.size() << std::endl;
+        }
+
+        auto free_list = pool.pointers_by_size[size];
+
+        if (free_list.size() > PULSAR_ALLOCATOR_MAX_ITEMS) {
+            std::cout << "deallocator: giving memory back to the system: " << size << std::endl;
+            std::free(p);
+        } else {
+            std::cout << "deallocator: putting memory into free list: " << size << std::endl;
+            free_list.push_back(p);
+        }
     }
 };
 
@@ -125,6 +163,7 @@ const std::string& get_boost_version();
 void register_alive_handler(alive_handler_type cb_in, void * arg_in = nullptr);
 void enable_memory_logging(const duration_type& max_age_in, const string_type& level_name_in);
 void set_realtime_priority(thread_type& thread_in, const rt_priorty& priority_in);
+allocator_pool& get_allocator_pool();
 
 } // namespace system
 
