@@ -19,10 +19,6 @@
 #include <pulsar/logging.h>
 #include <pulsar/node.h>
 
-// it's not yet clear if FIFO or LIFO is best when handling
-// the ready node list
-#define NODE_DEQUEUE_FIFO
-
 namespace pulsar {
 
 domain::domain(const string_type& name_in, const pulsar::size_type sample_rate_in, const pulsar::size_type buffer_size_in)
@@ -103,13 +99,13 @@ void domain::be_thread()
 
         node::base * ready_node;
 
-#ifdef NODE_DEQUEUE_FIFO
+        // Dequeue strategy needs to be LIFO so any previous
+        // task that was scheduled to run is removed before a
+        // new one is removed. Topologies exist that are valid
+        // but include leafs that would wind up in a list that
+        // continues to grow if FIFO is used.
         ready_node = run_queue.front();
         run_queue.pop_front();
-#else // NODE_DEQUEUE_FIFO
-        ready_node = run_queue.back();
-        run_queue.pop_back();
-#endif // NODE_DEQUEUE_FIFO
 
         lock.unlock();
 
