@@ -99,11 +99,11 @@ void domain::be_thread()
 
         node::base * ready_node;
 
-        // Dequeue strategy needs to be LIFO so any previous
+        // Dequeue strategy needs to be FIFO so any previous
         // task that was scheduled to run is removed before a
         // new one is removed. Topologies exist that are valid
         // but include leafs that would wind up in a list that
-        // continues to grow if FIFO is used.
+        // continues to grow if LIFO is used.
         ready_node = run_queue.front();
         run_queue.pop_front();
 
