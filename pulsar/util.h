@@ -17,10 +17,7 @@
 #include <string>
 #include <vector>
 
-// #include <pulsar/types.h>
-
-// FIXME why can't pulsar/types.h be included?
-using string_type = std::string;
+#include <pulsar/types.h>
 
 namespace pulsar {
 

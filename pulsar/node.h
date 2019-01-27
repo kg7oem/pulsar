@@ -20,6 +20,7 @@
 #include <string>
 
 #include <pulsar/audio.h>
+#include <pulsar/dbus.adaptor.h>
 #include <pulsar/domain.h>
 #include <pulsar/node.forward.h>
 #include <pulsar/property.h>
@@ -33,6 +34,10 @@ namespace node {
 void init();
 string_type fully_qualify_property_name(const string_type& name_in);
 base * make_chain_node(const string_type& name_in, std::shared_ptr<pulsar::domain> domain_in);
+
+struct dbus {
+
+};
 
 struct base {
     friend void audio::component::source_ready(audio::input *);

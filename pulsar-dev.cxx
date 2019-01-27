@@ -38,7 +38,7 @@ static void init_logging(std::shared_ptr<pulsar::config::file> config_in)
     auto logging = logjam::logengine::get_engine();
     auto engine = config_in->get_engine();
     auto engine_logs = engine["logs"];
-    string_type log_level_name;
+    std::string log_level_name;
 
     if (engine_logs) {
         auto memory_level_node = engine_logs["memory_level"];

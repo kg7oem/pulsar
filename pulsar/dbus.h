@@ -13,19 +13,31 @@
 
 #pragma once
 
-#include <chrono>
-#include <string>
+#include <dbus-cxx.h>
+
+#include <pulsar/system.h>
+#include <pulsar/thread.h>
+
+#define PULSAR_DBUS_NAME "audio.pulsar"
 
 namespace pulsar {
 
-using duration_type = std::chrono::milliseconds;
-using integer_type = int;
-using real_type = float;
-using size_type = unsigned long;
-using string_type = std::string;
+namespace dbus {
 
-// FIXME rename to audio_sample_type or move
-// into pulsar::audio::sample_type <-- probably best
-using sample_type = real_type;
+class server : public std::enable_shared_from_this<server> {
+    DBus::Dispatcher::pointer dispatcher = DBus::Dispatcher::create();
+    DBus::Connection::pointer connection;
+
+    public:
+    const std::string bus_name;
+    server(const std::string bus_name_in);
+    ~server();
+    void start();
+};
+
+void init();
+std::shared_ptr<server> get_server();
+
+} // namespace dbus
 
 } // namespace pulsar

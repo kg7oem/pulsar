@@ -9,6 +9,7 @@ liblogjam*.a
 libpulsar*.so
 libpulsar*.a
 docs/
+pulsar/dbus.adaptor.h
 
 CMakeCache.txt
 CMakeFiles/

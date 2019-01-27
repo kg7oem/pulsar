@@ -13,10 +13,7 @@
 
 #pragma once
 
-#include <chrono>
-#include <functional>
-#include <sstream>
-#include <string>
+#include <memory>
 
 #include <pulsar/types.h>
 #include <pulsar/util.h>

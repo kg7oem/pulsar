@@ -1,0 +1,10 @@
+<?xml version="1.0" ?>
+
+<node>
+    <interface name="audio.pulsar.node">
+        <method name="peek">
+            <arg name="value" type="s" direction="out"/>
+            <arg name="name" type="s" direction="in"/>
+        </method>
+    </interface>
+</node>

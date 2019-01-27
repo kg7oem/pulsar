@@ -13,9 +13,12 @@ include_directories(${Boost_INCLUDE_DIRS})
 set(CMAKE_CXX_STANDARD 17)
 
 find_package(Boost 1.58.0 COMPONENTS system)
-find_package(Doxygen)
-find_package(Threads)
-find_package(yaml-cpp)
+
+find_package(PkgConfig REQUIRED)
+find_package(Threads REQUIRED)
+find_package(yaml-cpp REQUIRED)
+
+pkg_check_modules(DBUS_CXX REQUIRED dbus-cxx-1.0)
 
 # FIXME how to enable only in Debug build type?
 add_definitions(-Og)
@@ -35,6 +38,7 @@ add_library(
     pulsar/audio.cxx
     pulsar/audio.util.cxx
     pulsar/config.cxx
+    pulsar/dbus.cxx
     pulsar/debug.cxx
     pulsar/domain.cxx
     pulsar/jackaudio.cxx
@@ -46,6 +50,18 @@ add_library(
     pulsar/thread.cxx
     pulsar/util.cxx
 )
+
+add_custom_target(
+    dbus-adaptor
+
+    COMMAND dbus-cxx-xml2cpp --xml=pulsar/dbus.adaptor.xml --adapter > pulsar/dbus.adaptor.h
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+)
+
+add_dependencies(pulsar dbus-adaptor)
+
+target_include_directories(pulsar PUBLIC ${DBUS_CXX_INCLUDE_DIRS})
+target_compile_options(pulsar PUBLIC ${DBUS_CXX_CFLAGS_OTHER})
 
 add_library(
     logjam STATIC
@@ -61,12 +77,15 @@ add_executable(
 
 target_link_libraries(pulsar ${CMAKE_THREAD_LIBS_INIT})
 target_link_libraries(pulsar ${Boost_LIBRARIES})
+target_link_libraries(pulsar ${DBUS_CXX_LIBRARIES})
 target_link_libraries(pulsar dl)
 target_link_libraries(pulsar jack)
 target_link_libraries(pulsar logjam)
 target_link_libraries(pulsar yaml-cpp)
 
 target_link_libraries(pulsar-dev pulsar)
+
+find_package(Doxygen)
 
 if (DOXYGEN_FOUND)
     set(DOXYGEN_IN ${CMAKE_CURRENT_SOURCE_DIR}/pulsar/Doxyfile.in)
