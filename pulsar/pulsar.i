@@ -27,8 +27,8 @@ struct pulsar_domain {
 %rename(bootstrap) pulsar_bootstrap;
 void pulsar_bootstrap();
 
-%rename(create_domain) pulsar_create_domain();
-pulsar_domain * pulsar_create_domain();
+%rename(create_domain) pulsar_create_domain;
+pulsar_domain * pulsar_create_domain(const char * name_in, const pulsar_size_type sample_rate_in, const pulsar_size_type buffer_size_in);
 
-%rename(destroy_domain) pulsar_destroy_domain();
-void pulsar_destroy_domain();
+%rename(destroy_domain) pulsar_destroy_domain;
+void pulsar_destroy_domain(pulsar_domain * domain_in);

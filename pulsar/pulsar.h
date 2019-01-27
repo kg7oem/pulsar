@@ -15,13 +15,15 @@
 
 extern "C" {
 
+typedef unsigned long pulsar_size_type;
+
 struct pulsar_domain {
     void * ptr;
 };
 
 void pulsar_bootstrap();
 
-pulsar_domain * pulsar_create_domain();
-void pulsar_destroy_domain();
+pulsar_domain * pulsar_create_domain(const char * name_in, const pulsar_size_type sample_rate_in, const pulsar_size_type buffer_size_in);
+void pulsar_destroy_domain(pulsar_domain * domain_in);
 
 } // extern "C"
