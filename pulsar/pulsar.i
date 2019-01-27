@@ -19,14 +19,7 @@
 
 %{
 
-#include <memory>
-
-#include <pulsar/domain.h>
 #include <pulsar/pulsar.h>
-#include <pulsar/types.h>
-
-typedef pulsar::size_type size_type;
-typedef pulsar::string_type string_type;
 
 %}
 
@@ -38,6 +31,5 @@ struct pulsar::domain {
     const unsigned long buffer_size;
     domain(const char * name_in, const unsigned long sample_rate_in, const unsigned long buffer_size_in);
     virtual ~domain();
-    std::shared_ptr<audio::buffer> get_zero_buffer();
     void activate(const unsigned long num_threads_in = 1);
 };

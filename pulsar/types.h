@@ -19,21 +19,12 @@
 
 namespace pulsar {
 
-// using duration_type = std::chrono::milliseconds;
-// using integer_type = int;
-// using real_type = float;
+using duration_type = std::chrono::milliseconds;
+using integer_type = int;
+using real_type = float;
 using size_type = unsigned long;
-// using string_type = std::string;
+using string_type = std::string;
 
-typedef std::chrono::milliseconds duration_type;
-typedef int integer_type;
-typedef float real_type;
-// typedef unsigned long size_type;
-typedef std::string string_type;
-
-// FIXME rename to audio_sample_type or move
-// into pulsar::audio::sample_type <-- probably best
-// using sample_type = real_type;
-typedef real_type sample_type;
+using sample_type = real_type;
 
 } // namespace pulsar

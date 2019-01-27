@@ -14,14 +14,13 @@
 #include <cassert>
 #include <cstdlib>
 
-#include <pulsar/domain.h>
 #include <pulsar/pulsar.h>
 
 struct pulsar_domain
 {
     std::shared_ptr<pulsar::domain> ptr;
 
-    pulsar_domain(const char * name_in, const pulsar_size_type sample_rate_in, const pulsar_size_type buffer_size_in);
+    pulsar_domain(const char * name_in, const unsigned long sample_rate_in, const unsigned long buffer_size_in);
 };
 
 extern "C" {
@@ -31,7 +30,7 @@ void pulsar_bootstrap()
     pulsar::system::bootstrap();
 }
 
-pulsar_domain * pulsar_create_domain(const char * name_in, const pulsar_size_type sample_rate_in, const pulsar_size_type buffer_size_in)
+pulsar_domain * pulsar_create_domain(const char * name_in, const unsigned long sample_rate_in, const unsigned long buffer_size_in)
 {
     return new pulsar_domain(name_in, sample_rate_in, buffer_size_in);
 }
