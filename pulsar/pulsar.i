@@ -29,7 +29,7 @@ struct pulsar::domain {
     const std::string name;
     const unsigned long sample_rate;
     const unsigned long buffer_size;
-    domain(const char * name_in, const unsigned long sample_rate_in, const unsigned long buffer_size_in);
+    domain(const std::string& name_in, const unsigned long sample_rate_in, const unsigned long buffer_size_in);
     virtual ~domain();
     void activate(const unsigned long num_threads_in = 1);
 };
