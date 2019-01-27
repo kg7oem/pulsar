@@ -16,6 +16,7 @@ pulsarPERL_*
 pulsar.py
 pulsar.pyc
 pulsarPYTHON_*
+__pycache__/
 
 CMakeCache.txt
 CMakeFiles/
