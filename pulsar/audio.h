@@ -20,6 +20,7 @@
 #include <mutex>
 #include <vector>
 
+#include <pulsar/audio.forward.h>
 #include <pulsar/node.forward.h>
 #include <pulsar/system.h>
 #include <pulsar/thread.h>
@@ -27,12 +28,6 @@
 namespace pulsar {
 
 namespace audio {
-
-struct input;
-struct input_forward;
-struct link;
-struct output;
-struct output_forward;
 
 class buffer {
     pulsar::size_type size = 0;
