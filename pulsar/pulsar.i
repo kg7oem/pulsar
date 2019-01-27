@@ -13,8 +13,7 @@
 
 %module pulsar
 
-// shared ptr library does not work with perl
-// %include "shared_ptr.i"
+%include "std_shared_ptr.i"
 %include "std_map.i"
 %include "std_string.i"
 %include "std_vector.i"
@@ -25,7 +24,7 @@
 
 %}
 
-// %shared_ptr(pulsar::domain)
+%shared_ptr(pulsar::domain)
 
 #include <pulsar/forward.h>
 

@@ -15,7 +15,7 @@ option(BUILD_DOC "Build documentation" ON)
 
 find_package(Boost 1.58.0 COMPONENTS system)
 find_package(Doxygen)
-find_package(PerlLibs)
+# find_package(PerlLibs)
 find_package(PythonLibs)
 find_package(SWIG REQUIRED)
 find_package(Threads)
@@ -36,13 +36,16 @@ include(${SWIG_USE_FILE})
 set_source_files_properties(pulsar/pulsar.i PROPERTIES CPLUSPLUS ON)
 set_source_files_properties(pulsar/pulsar.i PROPERTIES SWIG_FLAGS "-includeall")
 
-swig_add_library(pulsar-perl LANGUAGE perl SOURCES pulsar/pulsar.i pulsar/pulsar.cxx)
-swig_link_libraries(pulsar-perl pulsar)
-include_directories(SYSTEM ${PERL_INCLUDE_PATH})
+# shared ptr library does not work with perl
+# swig_add_library(pulsar-perl LANGUAGE perl SOURCES pulsar/pulsar.i pulsar/pulsar.cxx)
+# swig_link_libraries(pulsar-perl pulsar)
+# include_directories(SYSTEM ${PERL_INCLUDE_PATH})
 
+if (PYTHONLIBS_FOUND)
 swig_add_library(pulsar-python LANGUAGE python SOURCES pulsar/pulsar.i pulsar/pulsar.cxx)
 swig_link_libraries(pulsar-python pulsar)
 include_directories(SYSTEM ${PYTHON_INCLUDE_PATH})
+endif (PYTHONLIBS_FOUND)
 
 add_library(
     pulsar SHARED
