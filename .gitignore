@@ -4,11 +4,18 @@ author-*
 # added explicitly
 ext/
 
+*.a
+*.so
+
 pulsar-dev
-liblogjam*.a
-libpulsar*.so
-libpulsar*.a
 docs/
+
+pulsar.pm
+pulsarPERL_*
+
+pulsar.py
+pulsar.pyc
+pulsarPYTHON_*
 
 CMakeCache.txt
 CMakeFiles/
