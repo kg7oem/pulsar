@@ -13,13 +13,15 @@
 
 #pragma once
 
-#include <memory>
-
-#include <pulsar/domain.h>
-#include <pulsar/system.h>
+extern "C" {
 
 struct pulsar_domain {
-    std::shared_ptr<pulsar::domain> real_domain;
+    void * ptr;
 };
 
 void pulsar_bootstrap();
+
+pulsar_domain * pulsar_create_domain();
+void pulsar_destroy_domain();
+
+} // extern "C"

@@ -14,7 +14,21 @@
 #include <pulsar/domain.h>
 #include <pulsar/pulsar.h>
 
+extern "C" {
+
 void pulsar_bootstrap()
 {
     pulsar::system::bootstrap();
 }
+
+pulsar_domain * pulsar_create_domain()
+{
+
+}
+
+void pulsar_destroy_domain()
+{
+
+}
+
+} // extern "C"

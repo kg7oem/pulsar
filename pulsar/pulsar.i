@@ -21,8 +21,14 @@
 
 %rename(domain) pulsar_domain;
 struct pulsar_domain {
-    std::shared_ptr<pulsar::domain> real_domain;
+    void * ptr;
 };
 
 %rename(bootstrap) pulsar_bootstrap;
 void pulsar_bootstrap();
+
+%rename(create_domain) pulsar_create_domain();
+pulsar_domain * pulsar_create_domain();
+
+%rename(destroy_domain) pulsar_destroy_domain();
+void pulsar_destroy_domain();
