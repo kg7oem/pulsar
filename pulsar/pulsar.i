@@ -15,7 +15,15 @@
 
 %{
 
+#include "pulsar/pulsar.h"
+
 %}
 
-struct pulsar::domain;
-struct pulsar::node;
+namespace pulsar {
+
+class domain {
+    domain(const string_type& name_in, const pulsar::size_type sample_rate_in, const pulsar::size_type buffer_size_in);
+    virtual ~domain();
+};
+
+} // namespace pulsar

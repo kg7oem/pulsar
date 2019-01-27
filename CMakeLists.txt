@@ -33,9 +33,8 @@ include_directories(SYSTEM ext/)
 
 include(${SWIG_USE_FILE})
 
-set_source_files_properties(pulsar.i PROPERTIES CPLUSPLUS ON)
-set_source_files_properties(pulsar.i PROPERTIES SWIG_FLAGS "-includeall")
-set_source_files_properties(${swig_generated_file_fullname} PROPERTIES COMPILE_FLAGS "-Werror=no-unused-variable -Werror=no-unused-function")
+set_source_files_properties(pulsar/pulsar.i PROPERTIES CPLUSPLUS ON)
+set_source_files_properties(pulsar/pulsar.i PROPERTIES SWIG_FLAGS "-includeall")
 
 swig_add_library(pulsar-perl LANGUAGE perl SOURCES pulsar/pulsar.i)
 swig_link_libraries(pulsar-perl pulsar)
