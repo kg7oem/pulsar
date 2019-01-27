@@ -19,20 +19,10 @@
 
 %}
 
-namespace pulsar {
-
-namespace system {
-
-void bootstrap();
-
-} // namespace system
-
-class domain {
-    const string_type name;
-
-    domain(const string_type& name_in, const pulsar::size_type sample_rate_in, const pulsar::size_type buffer_size_in);
-    virtual ~domain();
-    void activate(const size_type num_threads_in = 1);
+%rename(domain) pulsar_domain;
+struct pulsar_domain {
+    std::shared_ptr<pulsar::domain> real_domain;
 };
 
-} // namespace pulsar
+%rename(bootstrap) pulsar_bootstrap;
+void pulsar_bootstrap();

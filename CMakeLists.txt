@@ -36,11 +36,11 @@ include(${SWIG_USE_FILE})
 set_source_files_properties(pulsar/pulsar.i PROPERTIES CPLUSPLUS ON)
 set_source_files_properties(pulsar/pulsar.i PROPERTIES SWIG_FLAGS "-includeall")
 
-swig_add_library(pulsar-perl LANGUAGE perl SOURCES pulsar/pulsar.i)
+swig_add_library(pulsar-perl LANGUAGE perl SOURCES pulsar/pulsar.i pulsar/pulsar.cxx)
 swig_link_libraries(pulsar-perl pulsar)
 include_directories(SYSTEM ${PERL_INCLUDE_PATH})
 
-swig_add_library(pulsar-python LANGUAGE python SOURCES pulsar/pulsar.i)
+swig_add_library(pulsar-python LANGUAGE python SOURCES pulsar/pulsar.i pulsar/pulsar.cxx)
 swig_link_libraries(pulsar-python pulsar)
 include_directories(SYSTEM ${PYTHON_INCLUDE_PATH})
 

@@ -11,15 +11,10 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
 
-#pragma once
-
-#include <memory>
-
 #include <pulsar/domain.h>
-#include <pulsar/system.h>
+#include <pulsar/pulsar.h>
 
-struct pulsar_domain {
-    std::shared_ptr<pulsar::domain> real_domain;
-};
-
-void pulsar_bootstrap();
+void pulsar_bootstrap()
+{
+    pulsar::system::bootstrap();
+}
