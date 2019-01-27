@@ -19,11 +19,15 @@
 
 #include <pulsar/domain.h>
 #include <pulsar/pulsar.h>
+#include <pulsar/types.h>
+
+typedef pulsar::size_type size_type;
 
 %}
 
 #include <pulsar/audio.forward.h>
 #include <pulsar/domain.forward.h>
+#include <pulsar/node.forward.h>
 
 struct pulsar::domain
 #ifndef SWIG
