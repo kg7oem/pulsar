@@ -5,28 +5,45 @@ project(pulsar)
 # configuration
 # Debug, Release, RelWithDebInfo, MinSizeRel
 set(CMAKE_BUILD_TYPE Debug)
-set(CMAKE_VERBOSE_MAKEFILE OFF)
-
-include_directories(${Boost_INCLUDE_DIRS})
+set(CMAKE_VERBOSE_MAKEFILE ON)
 
 # don't change anything below this line
 set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_SWIG_FLAGS "")
+
+option(BUILD_DOC "Build documentation" ON)
 
 find_package(Boost 1.58.0 COMPONENTS system)
 find_package(Doxygen)
+find_package(PerlLibs)
+find_package(PythonLibs)
+find_package(SWIG REQUIRED)
 find_package(Threads)
 find_package(yaml-cpp)
 
 # FIXME how to enable only in Debug build type?
 add_definitions(-Og)
 
-add_definitions(-fPIC)
-add_definitions(-Wfatal-errors -Werror -Wall -Wextra)
+add_definitions(-fPIC -Doff64_t=__off64_t)
+#add_definitions(-Wfatal-errors -Werror -Wall -Wextra)
 
 include_directories(.)
-include_directories(ext/)
+include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
+include_directories(SYSTEM ext/)
 
-option(BUILD_DOC "Build documentation" ON)
+include(${SWIG_USE_FILE})
+
+set_source_files_properties(pulsar.i PROPERTIES CPLUSPLUS ON)
+set_source_files_properties(pulsar.i PROPERTIES SWIG_FLAGS "-includeall")
+set_source_files_properties(${swig_generated_file_fullname} PROPERTIES COMPILE_FLAGS "-Werror=no-unused-variable -Werror=no-unused-function")
+
+swig_add_library(pulsar-perl LANGUAGE perl SOURCES pulsar/pulsar.i)
+swig_link_libraries(pulsar-perl pulsar)
+include_directories(SYSTEM ${PERL_INCLUDE_PATH})
+
+swig_add_library(pulsar-python LANGUAGE python SOURCES pulsar/pulsar.i)
+swig_link_libraries(pulsar-python pulsar)
+include_directories(SYSTEM ${PYTHON_INCLUDE_PATH})
 
 add_library(
     pulsar SHARED
