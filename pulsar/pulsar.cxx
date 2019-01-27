@@ -23,11 +23,14 @@ struct pulsar_domain
     pulsar_domain(const char * name_in, const unsigned long sample_rate_in, const unsigned long buffer_size_in);
 };
 
-extern "C" {
-
 void pulsar_bootstrap()
 {
     pulsar::system::bootstrap();
+}
+
+std::shared_ptr<pulsar::domain> pulsar_make_domain(const std::string& name_in, const unsigned long sample_rate_in, const unsigned long buffer_size_in)
+{
+    return pulsar::make_domain(name_in, sample_rate_in, buffer_size_in);
 }
 
 pulsar_domain * pulsar_create_domain(const char * name_in, const unsigned long sample_rate_in, const unsigned long buffer_size_in)
@@ -44,5 +47,3 @@ const char * pulsar_domain_get_name(pulsar_domain * domain_in)
 {
     return domain_in->ptr->name.c_str();
 }
-
-} // extern "C"

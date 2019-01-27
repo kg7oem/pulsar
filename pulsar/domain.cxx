@@ -21,6 +21,11 @@
 
 namespace pulsar {
 
+std::shared_ptr<domain> make_domain(const string_type& name_in, const size_type sample_rate_in, const size_type buffer_size_in)
+{
+    return std::make_shared<domain>(name_in, sample_rate_in, buffer_size_in);
+}
+
 domain::domain(const string_type& name_in, const pulsar::size_type sample_rate_in, const pulsar::size_type buffer_size_in)
 : name(name_in), sample_rate(sample_rate_in), buffer_size(buffer_size_in)
 {

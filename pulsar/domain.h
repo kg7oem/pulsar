@@ -71,4 +71,6 @@ struct domain : public std::enable_shared_from_this<domain> {
     }
 };
 
+std::shared_ptr<domain> make_domain(const string_type& name_in, const size_type sample_rate_in, const size_type buffer_size_in);
+
 } // namespace pulsar
