@@ -17,6 +17,13 @@
 #include <pulsar/domain.h>
 #include <pulsar/pulsar.h>
 
+struct pulsar_domain
+{
+    std::shared_ptr<pulsar::domain> ptr;
+
+    pulsar_domain(const char * name_in, const pulsar_size_type sample_rate_in, const pulsar_size_type buffer_size_in);
+};
+
 extern "C" {
 
 void pulsar_bootstrap()
@@ -26,24 +33,17 @@ void pulsar_bootstrap()
 
 pulsar_domain * pulsar_create_domain(const char * name_in, const pulsar_size_type sample_rate_in, const pulsar_size_type buffer_size_in)
 {
-    auto new_domain = new pulsar::domain(name_in, sample_rate_in, buffer_size_in);
-    auto new_shared_ptr = new std::shared_ptr<pulsar::domain>(new_domain);
-    struct pulsar_domain * new_wrapper = static_cast<pulsar_domain *>(std::malloc(sizeof(struct pulsar_domain)));
-
-    if (new_wrapper == nullptr) {
-        system_fault("could not allocate memory for wrapper");
-    }
-
-    new_wrapper->ptr = static_cast<void *>(new_domain);
+    return new pulsar_domain(name_in, sample_rate_in, buffer_size_in);
 }
 
 void pulsar_destroy_domain(pulsar_domain * domain_in)
 {
-    assert(domain_in != nullptr);
-    assert(domain_in->ptr != nullptr);
+    delete domain_in;
+}
 
-    delete static_cast<std::shared_ptr<pulsar::domain> *>(domain_in->ptr);
-    free(domain_in);
+const char * pulsar_domain_get_name(pulsar_domain * domain_in)
+{
+    return domain_in->ptr->name.c_str();
 }
 
 } // extern "C"

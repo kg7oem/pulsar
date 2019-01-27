@@ -15,13 +15,26 @@
 
 %{
 
-#include "pulsar/pulsar.h"
+#include <memory>
+
+#include <pulsar/domain.h>
+#include <pulsar/pulsar.h>
+
+struct pulsar_domain
+{
+    std::shared_ptr<pulsar::domain> ptr;
+
+    pulsar_domain(const char * name_in, const pulsar_size_type sample_rate_in, const pulsar_size_type buffer_size_in);
+};
 
 %}
 
 %rename(domain) pulsar_domain;
-struct pulsar_domain {
-    void * ptr;
+struct pulsar_domain
+{
+    std::shared_ptr<pulsar::domain> ptr;
+
+    pulsar_domain(const char * name_in, const pulsar_size_type sample_rate_in, const pulsar_size_type buffer_size_in);
 };
 
 %rename(bootstrap) pulsar_bootstrap;
