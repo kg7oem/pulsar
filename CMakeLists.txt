@@ -36,12 +36,17 @@ include_directories(SYSTEM ext/)
 
 option(BUILD_DOC "Build documentation" ON)
 
-# FIXME this should only run when needed
+# FIXME this isn't working
+# add_custom_command(
+#    OUTPUT pulsar/dbus.adaptor.h
+#    COMMAND dbusxx-xml2cpp pulsar/dbus.adaptor.xml --adaptor=pulsar/dbus.adaptor.h
+#    DEPENDS pulsar/dbus.adaptor.xml
+#    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+#)
+
 add_custom_target(
     dbus-adaptor
-
     COMMAND dbusxx-xml2cpp pulsar/dbus.adaptor.xml --adaptor=pulsar/dbus.adaptor.h
-    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
 
 add_library(
@@ -51,6 +56,7 @@ add_library(
     pulsar/audio.cxx
     pulsar/audio.util.cxx
     pulsar/config.cxx
+    pulsar/dbus.adaptor.h
     pulsar/dbus.cxx
     pulsar/debug.cxx
     pulsar/domain.cxx
@@ -63,6 +69,14 @@ add_library(
     pulsar/thread.cxx
     pulsar/util.cxx
 )
+
+
+# FIXME there has got to be a better way and this doesn't work
+# set_source_files_properties(pulsar/dbus.adaptor.h PROPERTIES HEADER_FILE_ONLY TRUE)
+# How is a dep on a header set?
+# set_source_files_properties(pulsar/dbus.cxx OBJECT_DEPENDS pulsar/dbus.adaptor.h)
+# set_source_files_properties(pulsar/node.cxx OBJECT_DEPENDS pulsar/dbus.adaptor.h)
+# set_source_files_properties(pulsar/domain.cxx OBJECT_DEPENDS pulsar/dbus.adaptor.h)
 
 add_library(
     logjam STATIC
