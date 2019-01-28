@@ -13,11 +13,29 @@
 
 #pragma once
 
+#include <dbus-c++/dbus.h>
+
 #include <pulsar/dbus.adaptor.h>
+#include <pulsar/thread.h>
+#include <pulsar/types.h>
+
+#define PULSAR_DBUS_NAME "audio.pulsar"
 
 namespace pulsar {
 
 namespace dbus {
+
+void init();
+DBus::Connection & get_connection();
+
+struct server {
+    const string_type bus_name;
+    std::thread * dispatcher_thread = nullptr;
+    DBus::Connection connection = DBus::Connection::SessionBus();
+
+    server(const string_type& bus_name_in);
+    void start();
+};
 
 } // namespace dbus
 

@@ -35,6 +35,14 @@ void init();
 string_type fully_qualify_property_name(const string_type& name_in);
 base * make_chain_node(const string_type& name_in, std::shared_ptr<pulsar::domain> domain_in);
 
+struct dbus_node : public ::audio::pulsar::node_adaptor, public DBus::IntrospectableAdaptor, public DBus::ObjectAdaptor {
+    base& parent;
+
+    dbus_node(base& parent_in, const string_type& domain_name_in, const string_type& node_name_in);
+    virtual std::vector<string_type> property_names() override;
+    virtual std::string peek(const string_type& name_in) override;
+};
+
 struct base {
     friend void audio::component::source_ready(audio::input *);
     friend audio::input * audio::component::add_input(const string_type& name_in);
@@ -42,8 +50,10 @@ struct base {
     friend base * config::make_chain_node(const YAML::Node& node_yaml_in, const YAML::Node& chain_yaml_in, std::shared_ptr<pulsar::config::domain> config_in, std::shared_ptr<pulsar::domain> domain_in);
     // FIXME only run() is needed but run() is static and friend didn't like that
     friend pulsar::domain;
+    friend dbus_node;
 
     protected:
+    dbus_node dbus;
     mutex_type node_mutex;
     std::shared_ptr<pulsar::domain> domain;
     // FIXME pointer because I can't figure out how to make emplace() work

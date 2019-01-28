@@ -19,6 +19,7 @@
 #include <string>
 
 #include <pulsar/async.h>
+#include <pulsar/dbus.h>
 #include <pulsar/jackaudio.h>
 #include <pulsar/ladspa.h>
 #include <pulsar/logging.h>
@@ -54,6 +55,7 @@ static std::shared_ptr<logjam::logmemory> memory_logger;
 
 void bootstrap()
 {
+    pulsar::dbus::init();
     pulsar::node::init();
     pulsar::jackaudio::init();
     pulsar::ladspa::init();

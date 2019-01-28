@@ -13,11 +13,11 @@
 
 #pragma once
 
-namespace pulsar {
-
 #include <chrono>
 #include <sstream>
 #include <string>
+
+namespace pulsar {
 
 using duration_type = std::chrono::milliseconds;
 using integer_type = int;

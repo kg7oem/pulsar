@@ -36,8 +36,38 @@ base * make_chain_node(const string_type& name_in, std::shared_ptr<pulsar::domai
     return domain_in->make_node<chain>(name_in);
 }
 
+static std::string make_dbus_path(const string_type& domain_name_in, const string_type& node_name_in)
+{
+    string_type buf;
+    buf += "/Domain/" + domain_name_in;
+    buf += "/Node/" + node_name_in;
+    return buf;
+}
+
+dbus_node::dbus_node(base& parent_in, const string_type& domain_name_in, const string_type& node_name_in)
+:
+    DBus::ObjectAdaptor(dbus::get_connection(), make_dbus_path(domain_name_in, node_name_in)),
+    parent(parent_in)
+{ }
+
+std::vector<string_type> dbus_node::property_names()
+{
+    std::vector<string_type> retval;
+
+    for (auto&& i : parent.properties) {
+        retval.push_back(i.first);
+    }
+
+    return retval;
+}
+
+string_type dbus_node::peek(const string_type& name_in)
+{
+    return parent.peek(name_in);
+}
+
 base::base(const string_type& name_in, std::shared_ptr<pulsar::domain> domain_in, const bool is_forwarder_in)
-: domain(domain_in), name(name_in), is_forwarder(is_forwarder_in), audio(this)
+: dbus(*this, domain_in->name, name_in), domain(domain_in), name(name_in), is_forwarder(is_forwarder_in), audio(this)
 {
     assert(domain != nullptr);
 
