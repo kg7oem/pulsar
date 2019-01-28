@@ -61,6 +61,17 @@ std::vector<string_type> dbus_node::property_names()
     return retval;
 }
 
+std::map<string_type, string_type> dbus_node::properties()
+{
+    std::map<string_type, string_type> retval;
+
+    for(auto&& i : parent.properties) {
+        retval[i.first] = i.second->get();
+    }
+
+    return retval;
+}
+
 string_type dbus_node::peek(const string_type& name_in)
 {
     return parent.peek(name_in);

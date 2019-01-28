@@ -5,6 +5,9 @@
         <method name="property_names">
             <arg name="names" type="as" direction="out"/>
         </method>
+        <method name="properties">
+            <arg name="properties" type="a{ss}" direction="out"/>
+        </method>
         <method name="peek">
             <arg name="value" type="s" direction="out"/>
             <arg name="name" type="s" direction="in"/>

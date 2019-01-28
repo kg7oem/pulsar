@@ -40,6 +40,7 @@ struct dbus_node : public ::audio::pulsar::node_adaptor, public DBus::Introspect
 
     dbus_node(base& parent_in, const string_type& domain_name_in, const string_type& node_name_in);
     virtual std::vector<string_type> property_names() override;
+    virtual std::map<string_type, string_type> properties() override;
     virtual std::string peek(const string_type& name_in) override;
 };
 
