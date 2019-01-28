@@ -44,6 +44,8 @@ option(BUILD_DOC "Build documentation" ON)
 #    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 #)
 
+# FIXME this always runs and causes false positives for change
+# detection which causes too much stuff to recompile for no reason
 add_custom_target(
     dbus-adaptor
     COMMAND dbusxx-xml2cpp pulsar/dbus.adaptor.xml --adaptor=pulsar/dbus.adaptor.h
@@ -69,7 +71,6 @@ add_library(
     pulsar/thread.cxx
     pulsar/util.cxx
 )
-
 
 # FIXME there has got to be a better way and this doesn't work
 # set_source_files_properties(pulsar/dbus.adaptor.h PROPERTIES HEADER_FILE_ONLY TRUE)
