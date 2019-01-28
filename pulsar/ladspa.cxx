@@ -289,7 +289,9 @@ void node::init()
     auto ladspa_id = get_property("plugin:id").get_size();
 
     ladspa = make_instance(ladspa_file, ladspa_id, domain->sample_rate);
+
     get_property("plugin:label").set(ladspa->get_descriptor()->Label);
+    get_property("plugin:id").set(ladspa->get_descriptor()->UniqueID);
 
     auto port_count = ladspa->get_port_count();
 
