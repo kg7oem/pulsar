@@ -22,14 +22,26 @@
 #include <vector>
 
 #include <pulsar/audio.h>
+#include <pulsar/domain.forward.h>
+#include <pulsar/dbus.h>
 #include <pulsar/node.forward.h>
 #include <pulsar/system.h>
 #include <pulsar/thread.h>
 
 namespace pulsar {
 
+std::vector<std::shared_ptr<domain>> get_domains();
+
+struct dbus_node : public ::audio::pulsar::domain_adaptor, public DBus::IntrospectableAdaptor, public DBus::ObjectAdaptor {
+    std::shared_ptr<domain> parent;
+
+    dbus_node(std::shared_ptr<domain> parent_in);
+    virtual string_type name() override;
+};
+
 struct domain : public std::enable_shared_from_this<domain> {
     private:
+    dbus_node * dbus = nullptr;
     std::shared_ptr<audio::buffer> zero_buffer = std::make_shared<audio::buffer>();
     std::vector<node::base *> nodes;
     std::list<node::base *> run_queue;
@@ -48,10 +60,13 @@ struct domain : public std::enable_shared_from_this<domain> {
     template <typename... Args>
     static std::shared_ptr<domain> make(Args&&... args)
     {
-        return std::make_shared<domain>(args...);
+        auto new_domain = std::make_shared<domain>(args...);
+        new_domain->init();
+        return new_domain;
     }
     domain(const string_type& name_in, const pulsar::size_type sample_rate_in, const pulsar::size_type buffer_size_in);
     virtual ~domain();
+    void init();
     std::shared_ptr<audio::buffer> get_zero_buffer();
     void activate(const size_type num_threads_in = 1);
     void step();

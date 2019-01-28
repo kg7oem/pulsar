@@ -21,6 +21,7 @@
 #include <pulsar/logging.h>
 #include <pulsar/node.h>
 #include <pulsar/system.h>
+#include <pulsar/util.h>
 
 namespace pulsar {
 
@@ -43,14 +44,19 @@ size_type next_node_id()
     return ++current_node_id;
 }
 
-static std::string make_dbus_path(const size_type node_id_in)
+static std::string make_dbus_path(const string_type& domain_name_in, const size_type node_id_in)
 {
-    return "/Node/" + std::to_string(node_id_in);
+
+    return util::to_string(
+        PULSAR_DBUS_DOMAIN_PREFIX,
+        domain_name_in,
+        PULSAR_DBUS_NODE_PREFIX,
+        node_id_in);
 }
 
 dbus_node::dbus_node(base * parent_in)
 :
-    DBus::ObjectAdaptor(dbus::get_connection(), make_dbus_path(parent_in->id)),
+    DBus::ObjectAdaptor(dbus::get_connection(), make_dbus_path(parent_in->domain->name, parent_in->id)),
     parent(parent_in)
 { }
 

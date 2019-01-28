@@ -21,6 +21,23 @@
 
 namespace pulsar {
 
+static string_type make_dbus_path(const string_type& domain_name_in)
+{
+
+    return util::to_string(PULSAR_DBUS_DOMAIN_PREFIX, domain_name_in);
+}
+
+dbus_node::dbus_node(std::shared_ptr<domain> parent_in)
+:
+    DBus::ObjectAdaptor(dbus::get_connection(), make_dbus_path(parent_in->name)),
+    parent(parent_in)
+{ }
+
+std::string dbus_node::name()
+{
+    return parent->name;
+}
+
 domain::domain(const string_type& name_in, const pulsar::size_type sample_rate_in, const pulsar::size_type buffer_size_in)
 : name(name_in), sample_rate(sample_rate_in), buffer_size(buffer_size_in)
 {
@@ -30,7 +47,17 @@ domain::domain(const string_type& name_in, const pulsar::size_type sample_rate_i
 }
 
 domain::~domain()
-{ }
+{
+    if (dbus != nullptr) {
+        delete dbus;
+        dbus = nullptr;
+    }
+}
+
+void domain::init()
+{
+    dbus = new dbus_node(this->shared_from_this());
+}
 
 std::shared_ptr<audio::buffer> domain::get_zero_buffer()
 {

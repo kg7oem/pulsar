@@ -20,6 +20,8 @@
 #include <pulsar/types.h>
 
 #define PULSAR_DBUS_NAME "audio.pulsar"
+#define PULSAR_DBUS_DOMAIN_PREFIX "/Domain/"
+#define PULSAR_DBUS_NODE_PREFIX "/Node/"
 
 namespace pulsar {
 
