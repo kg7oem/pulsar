@@ -94,6 +94,7 @@ base::base(const string_type& name_in, std::shared_ptr<pulsar::domain> domain_in
 
     add_property("node:name", property::value_type::string).set(name);
     add_property("node:domain", pulsar::property::value_type::string).set(domain->name);
+    add_property("node:id", pulsar::property::value_type::size).set(id);
 }
 
 base::~base()
