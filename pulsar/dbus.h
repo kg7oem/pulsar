@@ -15,9 +15,10 @@
 
 #include <dbus-c++/dbus.h>
 
-#include <pulsar/dbus.adaptor.h>
 #include <pulsar/thread.h>
 #include <pulsar/types.h>
+
+#include "pulsar/dbus.adaptor.h"
 
 #define PULSAR_DBUS_NAME "audio.pulsar"
 #define PULSAR_DBUS_DOMAIN_PREFIX "/Domain/"
