@@ -77,6 +77,11 @@ string_type dbus_node::peek(const string_type& name_in)
     return parent.peek(name_in);
 }
 
+void dbus_node::poke(const string_type& name_in, const string_type& value_in)
+{
+    parent.poke(name_in, value_in);
+}
+
 base::base(const string_type& name_in, std::shared_ptr<pulsar::domain> domain_in, const bool is_forwarder_in)
 : dbus(*this, domain_in->name, name_in), domain(domain_in), name(name_in), is_forwarder(is_forwarder_in), audio(this)
 {
@@ -119,6 +124,13 @@ string_type base::peek(const string_type& name_in)
     auto lock = debug_get_lock(node_mutex);
     auto name = fully_qualify_property_name(name_in);
     return get_property(name).get();
+}
+
+void base::poke(const string_type& name_in, const string_type& value_in)
+{
+    auto lock = debug_get_lock(node_mutex);
+    auto name = fully_qualify_property_name(name_in);
+    get_property(name).set(value_in);
 }
 
 const std::map<string_type, property::generic *>& base::get_properties()

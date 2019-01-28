@@ -12,5 +12,9 @@
             <arg name="value" type="s" direction="out"/>
             <arg name="name" type="s" direction="in"/>
         </method>
+        <method name="poke">
+            <arg name="name" type="s" direction="in"/>
+            <arg name="value" type="s" direction="in"/>
+        </method>
     </interface>
 </node>

@@ -42,6 +42,7 @@ struct dbus_node : public ::audio::pulsar::node_adaptor, public DBus::Introspect
     virtual std::vector<string_type> property_names() override;
     virtual std::map<string_type, string_type> properties() override;
     virtual std::string peek(const string_type& name_in) override;
+    virtual void poke(const string_type& name_in, const string_type& value_in) override;
 };
 
 struct base {
@@ -116,6 +117,7 @@ struct base {
     const std::map<string_type, property::generic *>& get_properties();
     property::generic& get_property(const string_type& name_in);
     string_type peek(const string_type& name_in);
+    void poke(const string_type& name_in, const string_type& value_in);
     virtual void init();
     virtual bool is_ready();
 };
