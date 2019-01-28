@@ -71,6 +71,7 @@ struct domain : public std::enable_shared_from_this<domain> {
     void activate(const size_type num_threads_in = 1);
     void step();
     void add_ready_node(node::base * node_in);
+    void add_public_node(node::base * node_in);
     template<class T, typename... Args>
     T * make_node(Args&&... args)
     {

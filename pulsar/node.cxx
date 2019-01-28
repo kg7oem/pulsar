@@ -44,14 +44,14 @@ size_type next_node_id()
     return ++current_node_id;
 }
 
-static std::string make_dbus_path(const size_type node_id_in)
+static std::string make_dbus_path(const std::string& name_in)
 {
-    return util::to_string(PULSAR_DBUS_NODE_PREFIX, node_id_in);
+    return util::to_string(PULSAR_DBUS_NODE_PREFIX, name_in);
 }
 
-dbus_node::dbus_node(base * parent_in)
+dbus_node::dbus_node(base * parent_in, const std::string& path_in)
 :
-    DBus::ObjectAdaptor(dbus::get_connection(), make_dbus_path(parent_in->id)),
+    DBus::ObjectAdaptor(dbus::get_connection(), path_in),
     parent(parent_in)
 { }
 
@@ -98,10 +98,17 @@ base::base(const string_type& name_in, std::shared_ptr<pulsar::domain> domain_in
 
 base::~base()
 {
-    if (dbus != nullptr) {
+    for(auto&& dbus : dbus_nodes) {
+        assert(dbus != nullptr);
         delete dbus;
-        dbus = nullptr;
     }
+
+    dbus_nodes.empty();
+}
+
+void base::add_dbus(const std::string path_in)
+{
+    dbus_nodes.push_back(new dbus_node(this, path_in));
 }
 
 std::shared_ptr<domain> base::get_domain()
@@ -208,7 +215,7 @@ void base::deactivate()
 
 void base::init()
 {
-    dbus = new dbus_node(this);
+    add_dbus(make_dbus_path(std::to_string(id)));
 }
 
 void base::execute()

@@ -39,7 +39,7 @@ size_type next_node_id();
 struct dbus_node : public ::audio::pulsar::node_adaptor, public DBus::IntrospectableAdaptor, public DBus::ObjectAdaptor {
     base * parent;
 
-    dbus_node(base * parent_in);
+    dbus_node(base * parent_in, const std::string& path_in);
     virtual std::vector<string_type> property_names() override;
     virtual std::map<string_type, string_type> properties() override;
     virtual std::string peek(const string_type& name_in) override;
@@ -56,12 +56,13 @@ struct base {
     friend dbus_node;
 
     protected:
-    dbus_node * dbus = nullptr;
+    std::list<dbus_node *> dbus_nodes{0, nullptr};
     mutex_type node_mutex;
     std::shared_ptr<pulsar::domain> domain;
     // FIXME pointer because I can't figure out how to make emplace() work
     std::map<string_type, property::generic *> properties;
     base(const string_type& name_in, std::shared_ptr<pulsar::domain> domain_in, const bool is_forwarder_in = false);
+    void add_dbus(const std::string path_in);
 
     /*
     * FIXME init_cycle should happen immediately before run but that does not

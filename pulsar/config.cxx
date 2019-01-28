@@ -27,6 +27,7 @@ namespace config {
 using node_map_type = std::map<string_type, node::base *>;
 
 static pulsar::node::base * make_node(const YAML::Node& node_yaml_in, std::shared_ptr<pulsar::config::domain> config_in, std::shared_ptr<pulsar::domain> domain_in);
+
 std::shared_ptr<pulsar::domain> make_domain(std::shared_ptr<pulsar::config::domain> domain_info_in)
 {
     auto domain_config = domain_info_in->get_config();
@@ -447,6 +448,7 @@ std::map<string_type, pulsar::node::base *> make_nodes(std::shared_ptr<pulsar::c
         }
 
         node_map[new_node->name] = new_node;
+        domain_in->add_public_node(new_node);
     }
 
     for (auto&& node_yaml : config_in->get_nodes()) {

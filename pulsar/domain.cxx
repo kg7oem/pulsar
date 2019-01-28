@@ -27,6 +27,15 @@ static string_type make_dbus_path(const string_type& domain_name_in)
     return util::to_string(PULSAR_DBUS_DOMAIN_PREFIX, domain_name_in);
 }
 
+static string_type make_dbus_public_node_path(const string_type& domain_name_in, const string_type& node_name_in)
+{
+    return util::to_string(
+        make_dbus_path(domain_name_in),
+        PULSAR_DBUS_NODE_PREFIX,
+        node_name_in
+    );
+}
+
 dbus_node::dbus_node(std::shared_ptr<domain> parent_in)
 :
     DBus::ObjectAdaptor(dbus::get_connection(), make_dbus_path(parent_in->name)),
@@ -115,6 +124,11 @@ void domain::add_ready_node(node::base * node_in)
     run_queue_condition.notify_one();
 
     log_trace("done adding ready node ", node_in->name);
+}
+
+void domain::add_public_node(node::base * node_in)
+{
+    node_in->add_dbus(make_dbus_public_node_path(name, node_in->name));
 }
 
 void domain::be_thread()
