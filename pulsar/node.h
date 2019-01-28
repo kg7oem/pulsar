@@ -34,11 +34,12 @@ namespace node {
 void init();
 string_type fully_qualify_property_name(const string_type& name_in);
 base * make_chain_node(const string_type& name_in, std::shared_ptr<pulsar::domain> domain_in);
+size_type next_node_id();
 
 struct dbus_node : public ::audio::pulsar::node_adaptor, public DBus::IntrospectableAdaptor, public DBus::ObjectAdaptor {
-    base& parent;
+    base * parent;
 
-    dbus_node(base& parent_in, const string_type& domain_name_in, const string_type& node_name_in);
+    dbus_node(base * parent_in);
     virtual std::vector<string_type> property_names() override;
     virtual std::map<string_type, string_type> properties() override;
     virtual std::string peek(const string_type& name_in) override;
@@ -55,7 +56,7 @@ struct base {
     friend dbus_node;
 
     protected:
-    dbus_node dbus;
+    dbus_node * dbus = nullptr;
     mutex_type node_mutex;
     std::shared_ptr<pulsar::domain> domain;
     // FIXME pointer because I can't figure out how to make emplace() work
@@ -109,6 +110,7 @@ struct base {
     property::generic& add_property(const string_type& name_in, property::generic * property_in);
 
     public:
+    const size_type id = next_node_id();
     const string_type name;
     const bool is_forwarder = false;
     audio::component audio;

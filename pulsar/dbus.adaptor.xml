@@ -1,6 +1,8 @@
 <?xml version="1.0" ?>
 
 <node>
+
+
     <interface name="audio.pulsar.node">
         <method name="property_names">
             <arg name="names" type="as" direction="out"/>

@@ -26,6 +26,8 @@ namespace pulsar {
 
 namespace node {
 
+static std::atomic<size_type> current_node_id = ATOMIC_VAR_INIT(0);
+
 void init()
 {
     library::register_node_factory("pulsar::node::chain", make_chain_node);
@@ -36,17 +38,19 @@ base * make_chain_node(const string_type& name_in, std::shared_ptr<pulsar::domai
     return domain_in->make_node<chain>(name_in);
 }
 
-static std::string make_dbus_path(const string_type& domain_name_in, const string_type& node_name_in)
+size_type next_node_id()
 {
-    string_type buf;
-    buf += "/Domain/" + domain_name_in;
-    buf += "/Node/" + node_name_in;
-    return buf;
+    return ++current_node_id;
 }
 
-dbus_node::dbus_node(base& parent_in, const string_type& domain_name_in, const string_type& node_name_in)
+static std::string make_dbus_path(const size_type node_id_in)
+{
+    return "/Node/" + std::to_string(node_id_in);
+}
+
+dbus_node::dbus_node(base * parent_in)
 :
-    DBus::ObjectAdaptor(dbus::get_connection(), make_dbus_path(domain_name_in, node_name_in)),
+    DBus::ObjectAdaptor(dbus::get_connection(), make_dbus_path(parent_in->id)),
     parent(parent_in)
 { }
 
@@ -54,7 +58,7 @@ std::vector<string_type> dbus_node::property_names()
 {
     std::vector<string_type> retval;
 
-    for (auto&& i : parent.properties) {
+    for (auto&& i : parent->properties) {
         retval.push_back(i.first);
     }
 
@@ -65,7 +69,7 @@ std::map<string_type, string_type> dbus_node::properties()
 {
     std::map<string_type, string_type> retval;
 
-    for(auto&& i : parent.properties) {
+    for(auto&& i : parent->properties) {
         retval[i.first] = i.second->get();
     }
 
@@ -74,16 +78,16 @@ std::map<string_type, string_type> dbus_node::properties()
 
 string_type dbus_node::peek(const string_type& name_in)
 {
-    return parent.peek(name_in);
+    return parent->peek(name_in);
 }
 
 void dbus_node::poke(const string_type& name_in, const string_type& value_in)
 {
-    parent.poke(name_in, value_in);
+    parent->poke(name_in, value_in);
 }
 
 base::base(const string_type& name_in, std::shared_ptr<pulsar::domain> domain_in, const bool is_forwarder_in)
-: dbus(*this, domain_in->name, name_in), domain(domain_in), name(name_in), is_forwarder(is_forwarder_in), audio(this)
+: domain(domain_in), name(name_in), is_forwarder(is_forwarder_in), audio(this)
 {
     assert(domain != nullptr);
 
@@ -92,7 +96,12 @@ base::base(const string_type& name_in, std::shared_ptr<pulsar::domain> domain_in
 }
 
 base::~base()
-{ }
+{
+    if (dbus != nullptr) {
+        delete dbus;
+        dbus = nullptr;
+    }
+}
 
 std::shared_ptr<domain> base::get_domain()
 {
@@ -197,7 +206,9 @@ void base::deactivate()
 }
 
 void base::init()
-{ }
+{
+    dbus = new dbus_node(this);
+}
 
 void base::execute()
 {
