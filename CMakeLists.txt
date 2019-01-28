@@ -12,12 +12,12 @@ include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 # don't change anything below this line
 set(CMAKE_CXX_STANDARD 17)
 
-find_package(Boost 1.58.0 COMPONENTS system)
+find_package(Boost 1.58.0 COMPONENTS system REQUIRED)
 find_package(PkgConfig REQUIRED)
 find_package(Threads REQUIRED)
 find_package(yaml-cpp REQUIRED)
 
-pkg_check_modules(DBUSLIB dbus-c++-1)
+pkg_check_modules(DBUSLIB dbus-c++-1 REQUIRED)
 
 # FIXME how to enable only in Debug build type?
 add_definitions(-Og)
