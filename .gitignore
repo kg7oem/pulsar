@@ -4,6 +4,8 @@ author-*
 # added explicitly
 ext/
 
+pulsar/dbus.adaptor.h
+
 pulsar-dev
 liblogjam*.a
 libpulsar*.so

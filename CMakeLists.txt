@@ -7,15 +7,17 @@ project(pulsar)
 set(CMAKE_BUILD_TYPE Debug)
 set(CMAKE_VERBOSE_MAKEFILE OFF)
 
-include_directories(${Boost_INCLUDE_DIRS})
+include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 
 # don't change anything below this line
 set(CMAKE_CXX_STANDARD 17)
 
 find_package(Boost 1.58.0 COMPONENTS system)
-find_package(Doxygen)
-find_package(Threads)
-find_package(yaml-cpp)
+find_package(PkgConfig REQUIRED)
+find_package(Threads REQUIRED)
+find_package(yaml-cpp REQUIRED)
+
+pkg_check_modules(DBUSLIB dbus-c++-1)
 
 # FIXME how to enable only in Debug build type?
 add_definitions(-Og)
@@ -23,10 +25,19 @@ add_definitions(-Og)
 add_definitions(-fPIC)
 add_definitions(-Wfatal-errors -Werror -Wall -Wextra)
 
+# . gives us pulsar/ so it is not a system directory
 include_directories(.)
-include_directories(ext/)
+include_directories(SYSTEM ${DBUSLIB_INCLUDE_DIRS})
+include_directories(SYSTEM ext/)
 
 option(BUILD_DOC "Build documentation" ON)
+
+add_custom_target(
+    dbus-adaptor
+
+    COMMAND dbusxx-xml2cpp pulsar/dbus.adaptor.xml --adaptor=pulsar/dbus.adaptor.h
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+)
 
 add_library(
     pulsar SHARED
@@ -35,6 +46,7 @@ add_library(
     pulsar/audio.cxx
     pulsar/audio.util.cxx
     pulsar/config.cxx
+    pulsar/dbus.cxx
     pulsar/debug.cxx
     pulsar/domain.cxx
     pulsar/jackaudio.cxx
@@ -59,6 +71,10 @@ add_executable(
     pulsar-dev.cxx
 )
 
+add_dependencies(pulsar dbus-adaptor)
+
+target_compile_options(pulsar PUBLIC ${DBUSLIB_CFLAGS_OTHER})
+
 target_link_libraries(pulsar ${CMAKE_THREAD_LIBS_INIT})
 target_link_libraries(pulsar ${Boost_LIBRARIES})
 target_link_libraries(pulsar dl)
@@ -67,6 +83,8 @@ target_link_libraries(pulsar logjam)
 target_link_libraries(pulsar yaml-cpp)
 
 target_link_libraries(pulsar-dev pulsar)
+
+find_package(Doxygen)
 
 if (DOXYGEN_FOUND)
     set(DOXYGEN_IN ${CMAKE_CURRENT_SOURCE_DIR}/pulsar/Doxyfile.in)

@@ -20,6 +20,7 @@
 #include <string>
 
 #include <pulsar/audio.h>
+#include <pulsar/dbus.h>
 #include <pulsar/domain.h>
 #include <pulsar/node.forward.h>
 #include <pulsar/property.h>
