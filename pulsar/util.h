@@ -36,19 +36,19 @@ void split(const string_type &string_in, const char delim_in, Out result) {
 std::vector<string_type> split(const string_type& string_in, const char delim_in);
 
 template <typename T>
-void sstream_accumulate_vaargs(std::stringstream& sstream, T&& t) {
+void sstream_accumulate_vaargs(stringstream_type& sstream, T&& t) {
     sstream << t;
 }
 
 template <typename T, typename... Args>
-void sstream_accumulate_vaargs(std::stringstream& sstream, T&& t, Args&&... args) {
+void sstream_accumulate_vaargs(stringstream_type& sstream, T&& t, Args&&... args) {
     sstream_accumulate_vaargs(sstream, t);
     sstream_accumulate_vaargs(sstream, args...);
 }
 
 template <typename... Args>
 string_type to_string(Args&&... args) {
-    std::stringstream buf;
+    stringstream_type buf;
     sstream_accumulate_vaargs(buf, args...);
     return buf.str();
 }
