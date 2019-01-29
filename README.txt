@@ -16,7 +16,8 @@ did not like any existing software for doing this.
 Dependencies
 
 This project requires cmake 3.8.2 but Debian/Stretch has only
-3.7.2 available. You can get a compatible version from backports:
+3.7.2 available. This will generate warnings but it seems to
+work anyway. You can get a fully compatible version from backports:
 
   apt-get install -t stretch-backports cmake
 
@@ -36,7 +37,7 @@ date release from https://github.com/zamaudio/zam-plugins
 
 To build the documentation you'll need
 
-  doxygen
+  doxygen graphviz
 
 
 Building
@@ -45,6 +46,7 @@ Once all the dependencies are installed the project can be built
 something like this:
 
   cmake . && make
+
 
 *********************** THIS IS EXPERIMENTAL ***********************
 
