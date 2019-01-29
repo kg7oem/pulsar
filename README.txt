@@ -13,6 +13,39 @@ than I could put together with rack mount audio processing gear but
 did not like any existing software for doing this.
 
 
+Dependencies
+
+This project requires cmake 3.8.2 but Debian/Stretch has only
+3.7.2 available. You can get a compatible version from backports:
+
+  apt-get install -t stretch-backports cmake
+
+You'll need these packages to compile on Debian or Ubuntu
+
+  cmake ladspa-sdk libboost-system-dev libjack-jackd2-dev
+  libyaml-cpp-dev pkg-config libdbus-c++-dev libdbus-1-dev
+
+You'll need these packages to use dev-config.yaml
+
+  swh-plugins zam-plugins
+
+It is possible the version of ZamPlugins in your distro is too old
+to work at all. Also the quality of older plugins is not as good
+as the most recent versions. It is best to install the most up to
+date release from https://github.com/zamaudio/zam-plugins
+
+To build the documentation you'll need
+
+  doxygen
+
+
+Building
+
+Once all the dependencies are installed the project can be built
+something like this:
+
+  cmake . && make
+
 *********************** THIS IS EXPERIMENTAL ***********************
 
 That's not a joke. If this software is used, it dead locks, and

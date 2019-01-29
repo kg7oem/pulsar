@@ -1,3 +1,6 @@
+# FIXME
+# * Does not check for ladspa
+
 cmake_minimum_required(VERSION 3.8.2)
 
 project(pulsar)
@@ -96,7 +99,7 @@ if (DOXYGEN_FOUND)
 
     # request to configure the file
     configure_file(${DOXYGEN_IN} ${DOXYGEN_OUT} @ONLY)
-    message("Doxygen build started")
+    message("Setting up Doxygen")
 
     # note the option ALL which allows to build the docs together with the application
     add_custom_target(docs
@@ -105,5 +108,5 @@ if (DOXYGEN_FOUND)
         COMMENT "Generating API documentation with Doxygen"
         VERBATIM )
 else (DOXYGEN_FOUND)
-  message("Doxygen need to be installed to generate the doxygen documentation")
+  message("Doxygen missing: documentation will not be built")
 endif (DOXYGEN_FOUND)
