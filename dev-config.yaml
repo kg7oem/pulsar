@@ -83,7 +83,7 @@ domain:
         client_name: pulsar
         # reduce sensitivity because of interrupt isues on test
         # hardware
-        watchdog_timeout_ms: 500
+        watchdog_timeout_ms: 1500
       inputs:
         - left_out
         - right_out
