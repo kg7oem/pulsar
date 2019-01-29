@@ -112,6 +112,13 @@ domain:
     - name: tail_tube
       template: tube
       link:
+        Audio Output 1: tail_enable_gate:Audio Input 1
+
+    - name: tail_enable_gate
+      template: gate
+      config:
+        Threshold: +.inf
+      link:
         Audio Output 1: jack:demod_out
 
     - name: comp_left
