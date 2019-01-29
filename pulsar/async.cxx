@@ -157,7 +157,7 @@ watchdog::watchdog(const duration_type& timeout_in)
 : base_timer(timeout_in, timeout_in)
 { }
 
-watchdog::watchdog(const duration_type& timeout_in, const std::string& message_in)
+watchdog::watchdog(const duration_type& timeout_in, const string_type& message_in)
 : base_timer(timeout_in, timeout_in), message(message_in)
 { }
 

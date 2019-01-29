@@ -29,7 +29,7 @@
 #ifdef LOGJAM_LOG_MACROS
 #ifndef LOGJAM_NLOG
 #define LOGJAM_LOG_VARGS(logname, loglevel, ...) logjam::send_vargs_logevent(logname, loglevel, __PRETTY_FUNCTION__, __FILE__, __LINE__, __VA_ARGS__)
-#define LOGJAM_LOG_LAMBDA(logname, loglevel, block) logjam::send_lambda_logevent(logname, loglevel, __PRETTY_FUNCTION__, __FILE__, __LINE__, [&]() -> std::string block)
+#define LOGJAM_LOG_LAMBDA(logname, loglevel, block) logjam::send_lambda_logevent(logname, loglevel, __PRETTY_FUNCTION__, __FILE__, __LINE__, [&]() -> logjam::string_type block)
 #else // LOGJAM_NLOG
 #define LOGJAM_LOG_VARGS(logname, loglevel, ...) ((void)0)
 #define LOGJAM_LOG_LAMBDA(logname, loglevel, block) ((void)0)
@@ -40,7 +40,9 @@ namespace logjam {
 
 using namespace std::chrono_literals;
 
-using log_wrapper_type = std::function<std::string ()>;
+using string_type = std::string;
+
+using log_wrapper_type = std::function<string_type ()>;
 
 enum class loglevel {
     uninit = -2,
@@ -122,16 +124,16 @@ struct logsource {
 struct logevent {
     using timestamp = std::chrono::time_point<std::chrono::system_clock>;
 
-    std::string source;
+    string_type source;
     const loglevel level = loglevel::uninit;
     const timestamp when;
     const std::thread::id tid;
     const char *function = nullptr;
     const char *file = nullptr;
     const int32_t line = -1;
-    const std::string message;
+    const string_type message;
 
-    logevent(std::string source_in, const loglevel& level_in, const timestamp& when, const std::thread::id& tid_in, const char* function, const char *file, const int& line, const std::string& message_in);
+    logevent(string_type source_in, const loglevel& level_in, const timestamp& when, const std::thread::id& tid_in, const char* function, const char *file, const int& line, const string_type& message_in);
     ~logevent() = default;
 };
 
@@ -163,7 +165,7 @@ class logdest : public baseobj {
         logdest(const loglevel& min_level_in);
         virtual ~logdest() = default;
         loglevel set_min_level(const loglevel& min_level_in);
-        virtual bool should_log(const loglevel& level_in, const std::string& source_in);
+        virtual bool should_log(const loglevel& level_in, const string_type& source_in);
         void output(const logevent& event_in);
 };
 
@@ -195,8 +197,8 @@ class logengine : public baseobj, shareable {
         static logengine* get_engine();
         void update_min_level(void);
         void add_destination(const std::shared_ptr<logdest>& destination_in);
-        void add_log_source(const std::string& source_in);
-        virtual bool should_log(const loglevel& level_in, const std::string& source_in);
+        void add_log_source(const string_type& source_in);
+        virtual bool should_log(const loglevel& level_in, const string_type& source_in);
         void deliver(const logevent& event);
         void start();
 };
@@ -204,17 +206,17 @@ class logengine : public baseobj, shareable {
 class logconsole : public logdest, shareable {
     private:
         virtual void handle_output(const logevent& event_in) override;
-        void write_stdio__lockreq(const std::string& message_in);
+        void write_stdio__lockreq(const string_type& message_in);
         logjam::mutex stdio_mutex;
-        std::map<std::string, bool> filter_source_names;
+        std::map<string_type, bool> filter_source_names;
 
     public:
         logconsole(const loglevel& level_in = loglevel::debug)
             : logdest(level_in) { }
         virtual ~logconsole() = default;
-        virtual bool should_log(const loglevel& level_in, const std::string& source_in) override;
-        virtual void add_source_filter(const std::string& source_name_in);
-        virtual std::string format_event(const logevent& event) const;
+        virtual bool should_log(const loglevel& level_in, const string_type& source_in) override;
+        virtual void add_source_filter(const string_type& source_name_in);
+        virtual string_type format_event(const logevent& event) const;
 };
 
 class logmemory : public logdest, lockable {
@@ -233,13 +235,13 @@ class logmemory : public logdest, lockable {
         std::chrono::milliseconds get_max_age();
         void set_max_age(std::chrono::milliseconds max_age_in);
         std::list<logevent> get_event_history();
-        std::vector<std::string> format_event_history();
+        std::vector<string_type> format_event_history();
 };
 
 const char* level_name(const loglevel& level_in);
 loglevel level_from_name(const char* name_in);
-loglevel level_from_name(const std::string& name_in);
-// bool should_log(const loglevel& level_in, const std::string& source_in);
+loglevel level_from_name(const string_type& name_in);
+// bool should_log(const loglevel& level_in, const string_type& source_in);
 
 template <typename T>
 void sstream_accumulate_vaargs(std::stringstream& sstream, T&& t) {
@@ -253,14 +255,14 @@ void sstream_accumulate_vaargs(std::stringstream& sstream, T&& t, Args&&... args
 }
 
 template <typename... Args>
-std::string vaargs_to_string(Args&&... args) {
+string_type vaargs_to_string(Args&&... args) {
     std::stringstream buf;
     sstream_accumulate_vaargs(buf, args...);
     return buf.str();
 }
 
 template<typename... Args>
-void send_vargs_logevent(const std::string& source, const loglevel& level, const char *function, const char *path, const int& line, Args&&... args)
+void send_vargs_logevent(const string_type& source, const loglevel& level, const char *function, const char *path, const int& line, Args&&... args)
 {
     if (logengine::get_engine()->should_log(level, source)) {
         auto when = std::chrono::system_clock::now();
@@ -274,9 +276,9 @@ void send_vargs_logevent(const std::string& source, const loglevel& level, const
     return;
 }
 
-void send_lambda_logevent(const std::string& source, const loglevel& level, const char *function, const char *path, const int& line, const log_wrapper_type& lambda_in);
+void send_lambda_logevent(const string_type& source, const loglevel& level, const char *function, const char *path, const int& line, const log_wrapper_type& lambda_in);
 
-std::string format_event_detailed(const logevent& event_in);
-std::string format_event_console(const logevent& event_in);
+string_type format_event_detailed(const logevent& event_in);
+string_type format_event_console(const logevent& event_in);
 
 } // namespace logjam

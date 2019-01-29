@@ -79,9 +79,9 @@ class watchdog : public base_timer, public std::enable_shared_from_this<watchdog
     virtual void run() override;
 
     public:
-    const std::string message = PULSAR_WATCHDOG_DEFAULT_MESSAGE;
+    const string_type message = PULSAR_WATCHDOG_DEFAULT_MESSAGE;
     watchdog(const duration_type& timeout_in);
-    watchdog(const duration_type& timeout_in, const std::string& message_in);
+    watchdog(const duration_type& timeout_in, const string_type& message_in);
 
     template <typename... Args>
     static std::shared_ptr<watchdog> make(Args&&... args)

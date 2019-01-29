@@ -298,7 +298,7 @@ std::shared_ptr<audio::buffer> audio::input::mix_outputs()
     return mix_buffer;
 }
 
-const std::string audio::input::to_string()
+const string_type audio::input::to_string()
 {
     string_type buf = parent->name;
     buf += ":input:" + name;
@@ -405,7 +405,7 @@ void audio::output::notify()
     }
 }
 
-const std::string audio::output::to_string()
+const string_type audio::output::to_string()
 {
     string_type buf = parent->name;
     buf += ":output:" + name;
@@ -452,7 +452,7 @@ void audio::link::notify(std::shared_ptr<audio::buffer> ready_buffer_in, const b
     to->link_ready(this, ready_buffer_in);
 }
 
-const std::string audio::link::to_string()
+const string_type audio::link::to_string()
 {
     auto buf = from->to_string();
     buf += " -> " + to->to_string();

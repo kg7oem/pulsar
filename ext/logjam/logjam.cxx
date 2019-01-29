@@ -44,7 +44,7 @@
 
 namespace logjam {
 
-static std::string& ensure_new_line(std::string& line_in)
+static string_type& ensure_new_line(string_type& line_in)
 {
     auto last_char_pos = line_in.size() - 1;
     auto last_char = line_in[last_char_pos];
@@ -67,9 +67,9 @@ static std::string& ensure_new_line(std::string& line_in)
 }
 
 // THREAD this function is thread safe
-std::string format_event_console(const logevent& event_in)
+string_type format_event_console(const logevent& event_in)
 {
-    std::string buffer;
+    string_type buffer;
 
     if (event_in.level != loglevel::info && event_in.level != loglevel::verbose) {
         buffer += level_name(event_in.level);
@@ -81,7 +81,7 @@ std::string format_event_console(const logevent& event_in)
 }
 
 // THREAD this function is thread safe
-std::string format_event_detailed(const logevent& event_in) {
+string_type format_event_detailed(const logevent& event_in) {
     std::stringstream buf;
 
     #if 0
@@ -92,10 +92,10 @@ std::string format_event_detailed(const logevent& event_in) {
 
     #if 1
     // might be a full path name
-    auto file_name = std::string(event_in.file);
+    auto file_name = string_type(event_in.file);
     auto pos = file_name.find_last_of("/");
 
-    if (pos != std::string::npos) {
+    if (pos != string_type::npos) {
         file_name = file_name.substr(pos + 1);
     }
 
@@ -125,7 +125,7 @@ const char* level_name(const loglevel& level_in) {
     throw std::runtime_error("switch() failure");
 }
 
-loglevel level_from_name(const std::string& name_in) {
+loglevel level_from_name(const string_type& name_in) {
     return level_from_name(name_in.c_str());
 }
 
@@ -150,12 +150,12 @@ loglevel level_from_name(const char* name_in) {
         return loglevel::fatal;
     }
 
-    std::string buf("no match for loglevel name: ");
+    string_type buf("no match for loglevel name: ");
     buf += name_in;
     throw std::runtime_error(buf);
 }
 
-void send_lambda_logevent(const std::string& source, const loglevel& level, const char *function, const char *path, const int& line, const log_wrapper_type& lambda_in) {
+void send_lambda_logevent(const string_type& source, const loglevel& level, const char *function, const char *path, const int& line, const log_wrapper_type& lambda_in) {
     if (logengine::get_engine()->should_log(level, source)) {
         auto when = std::chrono::system_clock::now();
         auto tid = std::this_thread::get_id();
@@ -283,7 +283,7 @@ bool logsource::operator==(const logsource& rhs) const {
     return logsource_compare(c_str, rhs.c_str);
 }
 
-logevent::logevent(std::string source_in, const loglevel& level_in, const timestamp& when_in, const std::thread::id& tid_in, const char* function_in, const char *file_in, const int& line_in, const std::string& message_in)
+logevent::logevent(string_type source_in, const loglevel& level_in, const timestamp& when_in, const std::thread::id& tid_in, const char* function_in, const char *file_in, const int& line_in, const string_type& message_in)
 : source(source_in), level(level_in), when(when_in), tid(tid_in), function(function_in), file(file_in), line(line_in), message(message_in)
 {
     assert(level >= loglevel::unknown);
@@ -303,7 +303,7 @@ void logengine::add_destination(const std::shared_ptr<logdest>& destination_in) 
     add_destination__lockex(destination_in);
 }
 
-void logengine::add_log_source(const std::string&)
+void logengine::add_log_source(const string_type&)
 { }
 
 // attempts to add a destination more than once silently return
@@ -367,7 +367,7 @@ void logengine::update_min_level__lockex() {
 }
 
 // THREAD this function is inherently thread safe
-bool logengine::should_log(const loglevel& level_in, const std::string& source_in) {
+bool logengine::should_log(const loglevel& level_in, const string_type& source_in) {
     auto current_level = get_min_level();
     assert(current_level != loglevel::uninit);
 
@@ -483,7 +483,7 @@ loglevel logdest::set_min_level__lockreq(const loglevel& min_level_in) {
     return old;
 }
 
-bool logdest::should_log(const loglevel& level_in, const std::string&) {
+bool logdest::should_log(const loglevel& level_in, const string_type&) {
     if (min_level == loglevel::none) return false;
     return level_in >= min_level;
 }
@@ -495,7 +495,7 @@ void logdest::output(const logevent& event_in) {
 }
 
 // THREAD this function acquires the needed locks
-bool logconsole::should_log(const loglevel& level_in, const std::string& source_in)
+bool logconsole::should_log(const loglevel& level_in, const string_type& source_in)
 {
     // std::cout << "i'm here" << std::endl;
 
@@ -519,7 +519,7 @@ bool logconsole::should_log(const loglevel& level_in, const std::string& source_
 }
 
 // THREAD this function acquires the needed locks
-void logconsole::add_source_filter(const std::string& source_name_in)
+void logconsole::add_source_filter(const string_type& source_name_in)
 {
     auto exclusive_lock = get_lockex();
 
@@ -531,12 +531,12 @@ void logconsole::add_source_filter(const std::string& source_name_in)
 }
 
 // THREAD this function is thread safe
-std::string logconsole::format_event(const logevent& event_in) const {
+string_type logconsole::format_event(const logevent& event_in) const {
     return format_event_console(event_in);
 }
 
 // THREAD must have the stdio_mutex
-void logconsole::write_stdio__lockreq(const std::string& message_in) {
+void logconsole::write_stdio__lockreq(const string_type& message_in) {
     // writing to stdio needs to be serialized so different threads don't overlap
     std::cout <<  message_in;
 }
@@ -572,13 +572,13 @@ std::list<logevent> logmemory::get_event_history() {
     return event_history;
 }
 
-std::vector<std::string> logmemory::format_event_history()
+std::vector<string_type> logmemory::format_event_history()
 {
     auto lock = get_lock();
     auto history_copy = event_history;
     lock.unlock();
 
-    std::vector<std::string> retval;
+    std::vector<string_type> retval;
     retval.reserve(history_copy.size());
 
     for (auto&& event : history_copy) {
