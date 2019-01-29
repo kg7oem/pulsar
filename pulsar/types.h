@@ -18,7 +18,7 @@
 #include <sstream>
 #include <string>
 
-#define PULSAR_STRING_POOLS
+#undef PULSAR_STRING_POOLS
 
 namespace pulsar {
 
