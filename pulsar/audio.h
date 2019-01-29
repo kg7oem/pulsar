@@ -42,6 +42,12 @@ class buffer {
     public:
     ~buffer();
     void init(const pulsar::size_type buffer_size_in, pulsar::sample_type * pointer_in = nullptr);
+    template <typename... Args>
+    static std::shared_ptr<buffer> make(Args&&... args)
+    {
+        static pool_allocator_type<buffer> allocator;
+        return std::allocate_shared<buffer>(allocator, args...);
+    }
     pulsar::size_type get_size();
     pulsar::sample_type * get_pointer();
     void zero();

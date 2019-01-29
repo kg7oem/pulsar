@@ -197,7 +197,7 @@ void jackaudio::node::handle_jack_process(jack_nframes_t nframes_in)
     for(auto&& name : audio.get_output_names()) {
         auto output = audio.get_output(name);
         auto jack_buffer = get_port_buffer(name);
-        auto buffer = std::make_shared<audio::buffer>();
+        auto buffer = audio::buffer::make();
 
         buffer->init(nframes_in, jack_buffer);
         output->set_buffer(buffer);

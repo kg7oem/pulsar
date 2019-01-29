@@ -68,7 +68,8 @@ class timer : public base_timer, public std::enable_shared_from_this<timer> {
     template <typename... Args>
     static std::shared_ptr<timer> make(Args&&... args)
     {
-        return std::make_shared<timer>(args...);
+        static pool_allocator_type<timer> allocator;
+        return std::allocate_shared<timer>(allocator, args...);
     }
     virtual void watch(handler_type handler_in);
 };
@@ -85,7 +86,8 @@ class watchdog : public base_timer, public std::enable_shared_from_this<watchdog
     template <typename... Args>
     static std::shared_ptr<watchdog> make(Args&&... args)
     {
-        return std::make_shared<watchdog>(args...);
+        static pool_allocator_type<watchdog> allocator;
+        return std::allocate_shared<watchdog>(allocator, args...);
     }
 };
 

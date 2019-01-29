@@ -28,11 +28,17 @@
 
 namespace pulsar {
 
+namespace audio {
+
+static pool_allocator_type<pulsar::sample_type> sample_buffer_allocator;
+
+} // namespace audio
+
 audio::buffer::~buffer()
 {
     if (own_memory) {
         assert(pointer != nullptr);
-        std::free(pointer);
+        sample_buffer_allocator.deallocate(pointer, size);
         pointer = nullptr;
     }
 }
@@ -47,7 +53,9 @@ void audio::buffer::init(const pulsar::size_type buffer_size_in, pulsar::sample_
         pointer = pointer_in;
     } else {
         own_memory = true;
-        pointer = static_cast<pulsar::sample_type *>(std::calloc(size, sizeof(pulsar::sample_type)));
+
+        pointer = sample_buffer_allocator.allocate(buffer_size_in);
+        zero();
 
         if (pointer == nullptr) {
             system_fault("could not allocate memory for audio buffer");
@@ -280,7 +288,7 @@ std::shared_ptr<audio::buffer> audio::input::mix_outputs()
 
     assert(links.size() + num_forwards_to_us > 1);
 
-    auto mix_buffer = std::make_shared<audio::buffer>();
+    auto mix_buffer = audio::buffer::make();
     mix_buffer->init(parent->get_domain()->buffer_size);
 
     for(auto&& buffer : link_buffers) {
@@ -304,7 +312,7 @@ audio::output::output(const string_type& name_in, node::base * parent_in)
 void audio::output::init_cycle()
 {
     llog_trace({ return pulsar::util::to_string("starting cycle for ", to_string()); });
-    buffer = std::make_shared<audio::buffer>();
+    buffer = audio::buffer::make();
     buffer->init(parent->get_domain()->buffer_size);
 }
 

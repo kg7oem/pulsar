@@ -312,7 +312,7 @@ pulsar::node::base * make_chain_node(const YAML::Node& node_yaml_in, const YAML:
         auto num_channels = chain_channels_node.as<size_type>();
         // channel counting starts at 1
         for(size_type i = 1; i < num_channels + 1; i++) {
-            auto channel_number = std::to_string(i);
+            auto channel_number = pulsar::util::to_string(i);
             auto input_name = "in_" + channel_number;
             auto output_name = "out_" + channel_number;
 

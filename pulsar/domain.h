@@ -36,13 +36,13 @@ struct dbus_node : public ::audio::pulsar::domain_adaptor, public DBus::Introspe
     std::shared_ptr<domain> parent;
 
     dbus_node(std::shared_ptr<domain> parent_in);
-    virtual string_type name() override;
+    virtual std::string name() override;
 };
 
 struct domain : public std::enable_shared_from_this<domain> {
     private:
     dbus_node * dbus = nullptr;
-    std::shared_ptr<audio::buffer> zero_buffer = std::make_shared<audio::buffer>();
+    std::shared_ptr<audio::buffer> zero_buffer = audio::buffer::make();
     std::vector<node::base *> nodes;
     std::list<node::base *> run_queue;
     mutex_type run_queue_mutex;

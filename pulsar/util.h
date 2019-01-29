@@ -17,10 +17,7 @@
 #include <string>
 #include <vector>
 
-// #include <pulsar/types.h>
-
-// FIXME why can't pulsar/types.h be included?
-using string_type = std::string;
+#include <pulsar/types.h>
 
 namespace pulsar {
 
@@ -50,7 +47,7 @@ void sstream_accumulate_vaargs(std::stringstream& sstream, T&& t, Args&&... args
 }
 
 template <typename... Args>
-std::string to_string(Args&&... args) {
+string_type to_string(Args&&... args) {
     std::stringstream buf;
     sstream_accumulate_vaargs(buf, args...);
     return buf.str();
