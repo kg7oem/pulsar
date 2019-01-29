@@ -1,5 +1,7 @@
 #!/usr/bin/env pulsar -f
 #
+# This is an idea of where I'd like to see config files wind up.
+#
 # read a file specified on the command line, compress the audio
 # in it, and save the result to a second file specified on the
 # command line

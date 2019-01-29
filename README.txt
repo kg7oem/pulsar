@@ -21,15 +21,15 @@ a tragic experiment. This software should not be used with any
 audio equipment unless that equipment is ok being damaged.
 
 Warnings aside the reliability is pretty good at this point with
-the software routinely running for 12 hours with out an issue.
+the software routinely running for several days with out an issue
+in the development enviornment.
 
 Limitations
 
   * Only built and tested on Debian/GNU Linux and Ubuntu
-  * Not all connection forms work
-    * Mixing from multiple outputs to one input
-    * N:N connections from a node's output channels to another
-      node's input channels
+  * No cycles allowed in the graph that defines the signal
+    processing. They are not impossible but right now will
+    cause a deadlock.
 
 
 Implemented features
@@ -38,7 +38,8 @@ Implemented features
   * Configuration driven - YAML files define the signal processing chain and configuration
   * JACK audio client - participates in the whole JACK ecosystem
   * Load, configure and use any LADSPA plugin
-  * Change effect configuration while audio processing is running
+  * Change effect configuration while audio engine is running.
+  * Query and adjust plugin configuration via DBUS.
 
 
 Planned features
