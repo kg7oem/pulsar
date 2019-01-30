@@ -60,16 +60,21 @@ class node : public pulsar::node::base {
 };
 
 class connections : public daemon::base {
+    using list_type = std::list<std::pair<string_type, string_type>>;
+
+    mutex_type jack_mutex;
     string_type client_name = "";
     client_type * jack_client = nullptr;
     const options_type jack_options = JackNoStartServer;
-    std::list<std::pair<string_type, string_type>> connection_list;
+    list_type connection_list;
 
     public:
     connections(const string_type& name_in);
     virtual ~connections();
     virtual void init(const YAML::Node& yaml_in) override;
     virtual void start() override;
+    void check_port_connections(const string_type& name_in);
+    std::map<string_type, bool> get_connection_lookup(const string_type& port_name_in);
 };
 
 void init();

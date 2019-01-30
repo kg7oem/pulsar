@@ -30,9 +30,7 @@ namespace pulsar {
 namespace async {
 
 using boost_timer_type = boost::asio::system_timer;
-
-void init();
-bool is_online();
+using job_cb_type = std::function<void ()>;
 
 struct base_timer {
     using handler_type = std::function<void (base_timer&)>;
@@ -90,6 +88,19 @@ class watchdog : public base_timer, public std::enable_shared_from_this<watchdog
         return std::allocate_shared<watchdog>(allocator, args...);
     }
 };
+
+void init();
+bool is_online();
+boost::asio::io_service& get_boost_io();
+
+template <typename T, typename... Args>
+void submit_job(T&& cb_in, Args... args_in)
+{
+    auto bound = std::bind(cb_in, args_in...);
+    get_boost_io().dispatch([bound]{
+        bound();
+    });
+}
 
 } // namespace async
 

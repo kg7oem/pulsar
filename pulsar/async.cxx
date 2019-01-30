@@ -37,6 +37,12 @@ bool is_online()
     return is_online_flag.load();
 }
 
+boost::asio::io_service& get_boost_io()
+{
+    assert(is_online());
+    return boost_io;
+}
+
 static void async_thread()
 {
     boost_io.run();

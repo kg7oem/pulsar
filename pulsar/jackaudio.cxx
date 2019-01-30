@@ -141,6 +141,14 @@ static void wrap_void_status_string_cb(jackaudio::jack_status_t status_in, const
     return;
 }
 
+static void wrap_uint32_int_cb(const uint32_t uint32_in, const int register_in, void * arg)
+{
+    // FIXME what is the syntax to cast/dereference this well?
+    auto p = static_cast<std::function<void(const uint32_t, const int)> *>(arg);
+    auto cb = *p;
+    cb(uint32_in, register_in);
+}
+
 void jackaudio::node::activate()
 {
     assert(jack_client == nullptr);
@@ -277,6 +285,13 @@ connections::connections(const string_type& name_in)
 : daemon::base(name_in)
 { }
 
+connections::~connections()
+{
+    if (jack_client != nullptr) {
+        system_fault("can not destroy a running daemon");
+    }
+}
+
 void connections::init(const YAML::Node& yaml_in)
 {
     log_debug("initializing jackaudio connection daemon");
@@ -287,26 +302,63 @@ void connections::init(const YAML::Node& yaml_in)
         auto from = connection_node[0].as<string_type>();
         auto to = connection_node[1].as<string_type>();
 
-        log_info("jackaudio: auto connect ", from, " -> ", to);
+        log_info("jackaudio: watching connection ", from, " -> ", to);
         connection_list.emplace_back(from, to);
     }
 }
 
 void connections::start()
 {
-    log_debug("starting jackaudio connection daemon");
+    log_info("starting jackaudio connection daemon");
+
+    auto lock = debug_get_lock(jack_mutex);
 
     jack_client = jack_client_open("pulsar_connections", jack_options, 0);
 
     if (jack_client == nullptr) {
         system_fault("could not open connection to jack server");
     }
+
+    if(jack_set_port_registration_callback(
+        jack_client,
+        wrap_uint32_int_cb,
+        static_cast<void *>(new std::function<void(const uint32_t port_id_in, const int register_in)>([this](const uint32_t UNUSED port_id_in, const int register_in) -> void {
+            auto jack_port = jack_port_by_id(jack_client, port_id_in);
+            auto port_name = jack_port_name(jack_port);
+
+            if (register_in) {
+                log_debug("jackaudio: new port registration: ", port_name);
+                async::submit_job(&connections::check_port_connections, this, port_name);
+            } else {
+                log_debug("jackaudio: port is being deregistered: ", port_name);
+            }
+    }))))
+    {
+        system_fault("could not register jack port registration callback");
+    }
+
+    if (jack_activate(jack_client)) {
+        system_fault("could not activate jack client");
+    }
+
+    // do the initial connecting
+    for(auto&& i : connection_list) {
+        async::submit_job(&connections::check_port_connections, this, i.first);
+    }
 }
 
-connections::~connections()
+void connections::check_port_connections(const string_type&)
 {
-    if (jack_client != nullptr) {
-        system_fault("can not destroy a running daemon");
+    auto lock = debug_get_lock(jack_mutex);
+
+    // FIXME Attempt to connect everything known about and ignore
+    // any stuff like ports not existing or errors that occur.
+    // This isn't really good enough but it's good enough.
+    for(auto&& i : connection_list) {
+        auto output = i.first;
+        auto input = i.second;
+        log_debug("connecting jack ports: ", output, " -> ", input);
+        jack_connect(jack_client, output.c_str(), input.c_str());
     }
 }
 
