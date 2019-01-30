@@ -45,6 +45,8 @@ void wait_stopped()
     for(auto&& thread : async_threads) {
         thread.join();
     }
+
+    log_debug("engine is stopped");
 }
 
 boost::asio::io_service& get_boost_io()
@@ -115,8 +117,8 @@ base_timer::base_timer(const duration_type& initial_in, const duration_type& rep
 
 base_timer::~base_timer()
 {
-    if (running_flag) {
-        system_fault("can not destroy a running timer");
+    if (running_flag && is_online_flag) {
+        system_fault("can not destroy a running timer unless the async system is not online");
     }
 }
 

@@ -222,8 +222,6 @@ UNUSED static void process_audio(std::shared_ptr<pulsar::config::file> config_in
             log_verbose(get_compressor_state(compressor));
         }
     });
-
-    pulsar::system::wait_stopped();
 }
 
 int main(int argc_in, const char ** argv_in)
@@ -239,9 +237,8 @@ int main(int argc_in, const char ** argv_in)
     log_info("pulsar-dev initialized");
     log_info("Using Boost ", pulsar::system::get_boost_version());
 
-    std::vector<std::shared_ptr<pulsar::async::timer>> timers;
-
     process_audio(config);
 
+    pulsar::system::wait_stopped();
     return 0;
 }
