@@ -11,6 +11,7 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
 
+#include <csignal>
 #include <iostream>
 
 #include <pulsar/async.h>
@@ -107,15 +108,35 @@ static void init_debug(std::shared_ptr<pulsar::config::file> config_in)
     }
 }
 
+static void alarm_handler(const int signum_in)
+{
+    assert(signum_in == SIGALRM);
+    system_fault("caught alarm");
+}
+
 UNUSED static void init_pulsar(const pulsar::size_type num_threads_in)
 {
+    std::signal(SIGALRM, alarm_handler);
+    alarm(ALARM_TIMEOUT);
+
     pulsar::system::bootstrap(num_threads_in);
 
     pulsar::system::register_alive_handler([&] (void *) {
         alarm(ALARM_TIMEOUT);
     });
+}
 
-    alarm(ALARM_TIMEOUT);
+static void init_signals()
+{
+    static boost::asio::signal_set signals(pulsar::async::get_boost_io(), SIGINT, SIGTERM);
+
+    signals.async_wait([](const boost::system::error_code& error_in, const int signum_in) {
+        if (error_in) {
+            system_fault("got an error from ASIO in signal handler");
+        }
+
+        system_fault("caught signal: ", signum_in);
+    });
 }
 
 UNUSED static void init(std::shared_ptr<pulsar::config::file> config_in)
@@ -131,6 +152,7 @@ UNUSED static void init(std::shared_ptr<pulsar::config::file> config_in)
     }
 
     init_pulsar(num_threads);
+    init_signals();
 }
 
 UNUSED void log_properties(pulsar::node::base * node_in)

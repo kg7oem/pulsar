@@ -3,18 +3,19 @@
 ---
 
 engine:
-  # 0 to auto-detect number of threads if possible
+  # 0 to auto-detect number of threads if possible; this is the default
   #  threads: 4
   logs:
-    console_level: verbose
+    console_level: debug
     console_sources:
       - pulsar
       - pulsar.locking
       - jackaudio
-    memory_level: debug
+    memory_level: trace
     # this will use a lot of CPU
     # memory_level: trace
   debug:
+    # FIXME these are broken
     lock_watchdogs: false
 
 templates:
