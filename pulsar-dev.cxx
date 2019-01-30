@@ -28,7 +28,7 @@ using namespace std::chrono_literals;
 
 #define INFO_DELAY 50ms
 // Give valgrind lots of time
-#define ALARM_TIMEOUT 5
+#define ALARM_TIMEOUT 1
 
 #define DEFAULT_CONSOLE_LOG_LEVEL "info"
 // #define DEFAULT_MEMORY_LOG_LEVEL "debug"
@@ -238,7 +238,8 @@ int main(int argc_in, const char ** argv_in)
     log_info("Using Boost ", pulsar::system::get_boost_version());
 
     process_audio(config);
-
     pulsar::system::wait_stopped();
+
+    log_info("done processing audio");
     return 0;
 }
