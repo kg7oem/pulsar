@@ -107,9 +107,9 @@ static void init_debug(std::shared_ptr<pulsar::config::file> config_in)
     }
 }
 
-UNUSED static void init_pulsar()
+UNUSED static void init_pulsar(const pulsar::size_type num_threads_in)
 {
-    pulsar::system::bootstrap();
+    pulsar::system::bootstrap(num_threads_in);
 
     pulsar::system::register_alive_handler([&] (void *) {
         alarm(ALARM_TIMEOUT);
@@ -122,7 +122,15 @@ UNUSED static void init(std::shared_ptr<pulsar::config::file> config_in)
 {
     init_logging(config_in);
     init_debug(config_in);
-    init_pulsar();
+
+    auto engine_node = config_in->get_engine()["threads"];
+    pulsar::size_type num_threads = 0;
+
+    if (engine_node) {
+        num_threads = engine_node.as<pulsar::size_type>();
+    }
+
+    init_pulsar(num_threads);
 }
 
 UNUSED void log_properties(pulsar::node::base * node_in)
@@ -162,7 +170,6 @@ UNUSED static void process_audio(std::shared_ptr<pulsar::config::file> config_in
 
     auto domain_info = config_in->get_domain();
     auto domain = pulsar::config::make_domain(domain_info);
-    // auto domain_num_threads = domain_info->get_config()["threads"].as<pulsar::size_type>();
     auto node_map = pulsar::config::make_nodes(domain_info, domain);
 
     auto daemons_section = config_in->get_daemons();

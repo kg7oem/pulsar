@@ -3,6 +3,8 @@
 ---
 
 engine:
+  # 0 to auto-detect number of threads if possible
+  #  threads: 4
   logs:
     console_level: verbose
     console_sources:
@@ -87,7 +89,6 @@ domain:
   config:
     sample_rate: 48000
     buffer_size: 1024
-    threads: 4
   nodes:
     - name: jack
       class: pulsar::jackaudio::node

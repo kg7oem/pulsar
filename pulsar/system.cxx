@@ -53,7 +53,7 @@ static std::shared_ptr<logjam::logmemory> memory_logger;
     abort();
 }
 
-void bootstrap()
+void bootstrap(const size_type num_threads_in)
 {
     pulsar::dbus::init();
     pulsar::node::init();
@@ -64,7 +64,7 @@ void bootstrap()
     alive_timer = async::timer::make(0s, ALIVE_TICK_INTERVAL);
     alive_timer->start();
 
-    pulsar::async::init();
+    pulsar::async::init(num_threads_in);
 }
 
 void register_alive_handler(alive_handler_type cb_in, void * arg_in)

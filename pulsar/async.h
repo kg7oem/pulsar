@@ -89,7 +89,7 @@ class watchdog : public base_timer, public std::enable_shared_from_this<watchdog
     }
 };
 
-void init();
+void init(const size_type num_threads_in);
 bool is_online();
 boost::asio::io_service& get_boost_io();
 

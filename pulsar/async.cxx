@@ -20,7 +20,7 @@
 #include <pulsar/logging.h>
 #include <pulsar/system.h>
 
-#define NUM_ASYNC_THREADS 4
+#define DEFAULT_NUM_THREADS 1
 
 namespace pulsar {
 
@@ -49,13 +49,27 @@ static void async_thread()
     system_fault("Boost io.run() returned");
 }
 
-void init()
+void init(const size_type num_threads_in)
 {
     assert(! is_online_flag.load());
 
-    size_type num_threads_in = NUM_ASYNC_THREADS;
+    auto num_threads = num_threads_in;
 
-    for(size_type i = 0; i < num_threads_in; i++) {
+    log_trace("initializing async system; specified number of threads: ", num_threads);
+
+    if (num_threads == 0) {
+        log_trace("trying to detect number of cores");
+        num_threads = std::thread::hardware_concurrency();
+    }
+
+    if (num_threads == 0) {
+        log_info("unable to detect number of CPU cores; setting num_threads = ", DEFAULT_NUM_THREADS);
+        num_threads = DEFAULT_NUM_THREADS;
+    }
+
+    log_info("number of threads: ", num_threads);
+
+    for(size_type i = 0; i < num_threads; i++) {
         async_threads.emplace_back(async_thread);
         thread::set_realtime_priority(async_threads.back(), thread::rt_priorty::lowest);
     }
