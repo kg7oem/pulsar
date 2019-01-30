@@ -4,7 +4,7 @@
 
 engine:
   logs:
-    console_level: info
+    console_level: verbose
     console_sources:
       - pulsar
       - pulsar.locking
