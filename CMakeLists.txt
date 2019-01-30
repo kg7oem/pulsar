@@ -53,6 +53,7 @@ add_library(
     pulsar/audio.cxx
     pulsar/audio.util.cxx
     pulsar/config.cxx
+    pulsar/daemon.cxx
     pulsar/dbus.adaptor.h
     pulsar/dbus.cxx
     pulsar/debug.cxx

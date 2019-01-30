@@ -43,6 +43,7 @@ void init()
     jack_set_info_function(log_jack_info);
 
     library::register_node_factory("pulsar::jackaudio::node", make_node);
+    library::register_daemon_factory("pulsar::jackaudio::connections", make_connections);
 }
 
 pulsar::node::base * make_node(const string_type& name_in, std::shared_ptr<domain> domain_in)
@@ -50,8 +51,12 @@ pulsar::node::base * make_node(const string_type& name_in, std::shared_ptr<domai
     return domain_in->make_node<jackaudio::node>(name_in);
 }
 
-} // namespace jackaudio
+std::shared_ptr<connections> make_connections(const string_type& name_in)
+{
+    return std::make_shared<connections>(name_in);
+}
 
+} // namespace jackaudio
 
 jackaudio::node::node(const string_type& name_in, std::shared_ptr<pulsar::domain> domain_in)
 : pulsar::node::base(name_in, domain_in)
@@ -264,5 +269,47 @@ void jackaudio::node::execute()
     done_flag = true;
     done_cond.notify_all();
 }
+
+// start following new convention
+namespace jackaudio {
+
+connections::connections(const string_type& name_in)
+: daemon::base(name_in)
+{ }
+
+void connections::init(const YAML::Node& yaml_in)
+{
+    log_debug("initializing jackaudio connection daemon");
+
+    auto connect_node = yaml_in["connect"];
+    for(size_type i = 0; i < connect_node.size(); i++) {
+        auto connection_node = connect_node[i];
+        auto from = connection_node[0].as<string_type>();
+        auto to = connection_node[1].as<string_type>();
+
+        log_info("jackaudio: auto connect ", from, " -> ", to);
+        connection_list.emplace_back(from, to);
+    }
+}
+
+void connections::start()
+{
+    log_debug("starting jackaudio connection daemon");
+
+    jack_client = jack_client_open("pulsar_connections", jack_options, 0);
+
+    if (jack_client == nullptr) {
+        system_fault("could not open connection to jack server");
+    }
+}
+
+connections::~connections()
+{
+    if (jack_client != nullptr) {
+        system_fault("can not destroy a running daemon");
+    }
+}
+
+} // namespace jackaudio
 
 } // namespace pulsar

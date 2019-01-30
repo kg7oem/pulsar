@@ -32,9 +32,6 @@ using options_type = jack_options_t;
 using port_type = jack_port_t;
 using size_type = unsigned long;
 
-void init();
-pulsar::node::base * make_node(const string_type& name_in, std::shared_ptr<domain> domain_in);
-
 class node : public pulsar::node::base {
     std::shared_ptr<async::watchdog> watchdog = nullptr;
     client_type * jack_client = nullptr;
@@ -61,6 +58,23 @@ class node : public pulsar::node::base {
     ~node();
     virtual void activate() override;
 };
+
+class connections : public daemon::base {
+    string_type client_name = "";
+    client_type * jack_client = nullptr;
+    const options_type jack_options = JackNoStartServer;
+    std::list<std::pair<string_type, string_type>> connection_list;
+
+    public:
+    connections(const string_type& name_in);
+    virtual ~connections();
+    virtual void init(const YAML::Node& yaml_in) override;
+    virtual void start() override;
+};
+
+void init();
+pulsar::node::base * make_node(const string_type& name_in, std::shared_ptr<domain> domain_in);
+std::shared_ptr<connections> make_connections(const string_type& name_in);
 
 } // namespace jackaudio
 

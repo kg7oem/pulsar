@@ -49,6 +49,7 @@ class file : public std::enable_shared_from_this<file> {
     const YAML::Node get_chains();
     const YAML::Node get_chain(const string_type& name_in);
     const YAML::Node get_engine();
+    const YAML::Node get_daemons();
 };
 
 class domain : public std::enable_shared_from_this<domain> {

@@ -572,6 +572,17 @@ const YAML::Node file::get_engine()
     return engine_node;
 }
 
+const YAML::Node file::get_daemons()
+{
+    auto daemon_node = yaml_root["daemons"];
+
+    if (daemon_node && ! daemon_node.IsMap()) {
+        system_fault("daemons section must be a map");
+    }
+
+    return daemon_node;
+}
+
 domain::domain(const string_type name_in, const YAML::Node& yaml_in, std::shared_ptr<file> parent_in)
 : yaml_root(yaml_in), parent(parent_in), name(name_in)
 { }

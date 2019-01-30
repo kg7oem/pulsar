@@ -14,8 +14,10 @@
 #include <iostream>
 
 #include <pulsar/async.h>
+#include <pulsar/daemon.h>
 #include <pulsar/config.h>
 #include <pulsar/debug.h>
+#include <pulsar/library.h>
 #include <pulsar/logging.h>
 #include <pulsar/node.h>
 #include <pulsar/system.h>
@@ -32,6 +34,7 @@ using namespace std::chrono_literals;
 #define DEFAULT_MEMORY_LOG_AGE 3s
 
 static std::shared_ptr<logjam::logmemory> memory_logger;
+static std::list<std::shared_ptr<pulsar::daemon::base>> active_daemons;
 
 static void init_logging(std::shared_ptr<pulsar::config::file> config_in)
 {
@@ -155,19 +158,29 @@ std::string get_compressor_state(pulsar::node::base * node_in)
 
 UNUSED static void process_audio(std::shared_ptr<pulsar::config::file> config_in)
 {
-    log_info("Will start processing audio");
+    log_info("Configuring audio processing");
 
     auto domain_info = config_in->get_domain();
     auto domain = pulsar::config::make_domain(domain_info);
     auto domain_num_threads = domain_info->get_config()["threads"].as<pulsar::size_type>();
     auto node_map = pulsar::config::make_nodes(domain_info, domain);
 
-    log_debug("audio processing is being started");
-    domain->activate(domain_num_threads);
+    auto daemons_section = config_in->get_daemons();
+    if (daemons_section) {
+        for(auto&& i : daemons_section) {
+            auto daemon_name = i.first.as<pulsar::string_type>();
+            auto daemon_contents = i.second;
+            auto daemon_class = daemon_contents["class"].as<pulsar::string_type>();
 
-    for(UNUSED auto&& node : node_map) {
-        log_properties(node.second);
+            auto new_daemon = pulsar::library::make_daemon(daemon_class, daemon_name);
+            new_daemon->init(daemon_contents["config"]);
+            new_daemon->start();
+            active_daemons.push_back(new_daemon);
+        }
     }
+
+    log_info("audio processing is being started");
+    domain->activate(domain_num_threads);
 
     std::vector<pulsar::node::base *> compressor_nodes;
     compressor_nodes.push_back(node_map["comp_right"]);

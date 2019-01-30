@@ -4,7 +4,7 @@
 
 engine:
   logs:
-    console_level: verbose
+    console_level: info
     console_sources:
       - pulsar
       - pulsar.locking
@@ -72,6 +72,16 @@ chains:
           Max gate close: -.inf
         forward:
           Audio Output 1: remove_squelch_tail:out_1
+
+daemons:
+  watch_jack_connections:
+    class: pulsar::jackaudio::connections
+    config:
+      connect:
+        - [ system:capture_1, pulsar:left_in ]
+        - [ system:capture_2, pulsar:right_in ]
+        - [ pulsar:left_out, system:playback_1 ]
+        - [ pulsar:right_out, system:playback_2 ]
 
 domain:
   config:

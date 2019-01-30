@@ -16,7 +16,9 @@
 #include <functional>
 #include <memory>
 #include <string>
+#include <yaml-cpp/yaml.h>
 
+#include <pulsar/daemon.h>
 #include <pulsar/domain.h>
 #include <pulsar/node.h>
 
@@ -25,9 +27,12 @@ namespace pulsar {
 namespace library {
 
 using node_factory_type = std::function<node::base * (const string_type&, std::shared_ptr<domain>)>;
-
 void register_node_factory(const string_type& name_in, node_factory_type factory_in);
 node::base * make_node(const string_type& class_name_in, const string_type& name_in, std::shared_ptr<domain> domain_in);
+
+using daemon_factory_type = std::function<std::shared_ptr<daemon::base> (const string_type& name_in)>;
+void register_daemon_factory(const string_type& class_name_in, daemon_factory_type factory_in);
+std::shared_ptr<daemon::base> make_daemon(const string_type& class_name_in, const string_type& name_in);
 
 } // namespace library
 
