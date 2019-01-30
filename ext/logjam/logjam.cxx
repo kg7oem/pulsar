@@ -156,8 +156,9 @@ loglevel level_from_name(const char* name_in) {
 }
 
 void send_lambda_logevent(const string_type& source, const loglevel& level, const char *function, const char *path, const int& line, const log_wrapper_type& lambda_in) {
+    auto when = std::chrono::system_clock::now();
+
     if (logengine::get_engine()->should_log(level, source)) {
-        auto when = std::chrono::system_clock::now();
         auto tid = std::this_thread::get_id();
         auto message = lambda_in();
         logevent event(source, level, when, tid, function, path, line, message);
