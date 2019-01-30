@@ -78,6 +78,8 @@ jackaudio::node::~node()
 
 void jackaudio::node::open(const string_type& jack_name_in)
 {
+    log_trace("opening jackaudio client");
+
     jack_client = jack_client_open(jack_name_in.c_str(), jack_options, 0);
 
     if (jack_client == nullptr) {
@@ -151,6 +153,8 @@ static void wrap_uint32_int_cb(const uint32_t uint32_in, const int register_in, 
 
 void jackaudio::node::activate()
 {
+    log_trace("activating the jackaudio node: ", name);
+
     assert(jack_client == nullptr);
 
     auto& client_name = get_property("config:client_name").get_string();
@@ -254,6 +258,10 @@ void jackaudio::node::notify()
 
 void jackaudio::node::start()
 {
+    log_trace("starting jackaudio node: ", name);
+
+    if (jack_client == nullptr) system_fault("jackaudio client pointer was null");
+
     auto watchdog_timeout = get_property("config:watchdog_timeout_ms").get_size();
 
     if (watchdog_timeout) {

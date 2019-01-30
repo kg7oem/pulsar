@@ -73,40 +73,19 @@ std::shared_ptr<audio::buffer> domain::get_zero_buffer()
     return zero_buffer;
 }
 
-void domain::activate(const size_type num_threads_in)
+void domain::activate()
 {
-    if (num_threads_in <= 0) {
-        system_fault("attempt to activate a domain with invalid number of threads");
-    }
-
     assert(! activated);
 
     activated = true;
 
-    // FIXME Activate all the nodes before any threads exist to run them
-    // so a node is not executed from the ready list before it is
-    // activated. Right now if the order is reversed race conditions probably
-    // exist during startup.
-    //
-    // This will probably hold until topology changes are happening while
-    // the domain is running. If topology changes are safe then activation
-    // should be able to happen in any order.
-
+    // nodes must be activated before they are started
+    // but all nodes must be activated before any
+    // are started
     for(auto&& node : nodes) {
         node->activate();
     }
 
-    for(size_type i = 0; i < num_threads_in; i++) {
-        threads.emplace_back(std::bind(&domain::be_thread, this));
-        thread::set_realtime_priority(threads.back(), thread::rt_priorty::highest);
-    }
-
-    // FIXME
-    // jackaudio exposed the race condition between start/activate/threads even
-    // with the ordering change because it brought it's own thread with it.
-    //
-    // start() should become a node command and start becomes a part of the lifecycle
-    // which will become important when topology changes come around.
     for(auto&& node : nodes) {
         node->start();
     }
@@ -114,15 +93,11 @@ void domain::activate(const size_type num_threads_in)
 
 void domain::add_ready_node(node::base * node_in)
 {
-    llog_trace({ return pulsar::util::to_string("adding ready node: ", node_in->name); });
+    log_trace("adding ready node: ", node_in->name);
 
     assert(activated);
 
-    auto lock = debug_get_lock(run_queue_mutex);
-
-    run_queue.push_back(node_in);
-    run_queue_condition.notify_one();
-
+    async::submit_job(&domain::execute_one_node, node_in);
     log_trace("done adding ready node ", node_in->name);
 }
 
@@ -131,29 +106,11 @@ void domain::add_public_node(node::base * node_in)
     node_in->add_dbus(make_dbus_public_node_path(name, node_in->name));
 }
 
-void domain::be_thread()
+void domain::execute_one_node(node::base * node_in)
 {
-    while(1) {
-        auto lock = debug_get_lock(run_queue_mutex);
-
-        run_queue_condition.wait(lock, [this]{ return run_queue.size() > 0; });
-
-        node::base * ready_node;
-
-        // Dequeue strategy needs to be FIFO so any previous
-        // task that was scheduled to run is removed before a
-        // new one is removed. Topologies exist that are valid
-        // but include leafs that would wind up in a list that
-        // continues to grow if LIFO is used.
-        ready_node = run_queue.front();
-        run_queue.pop_front();
-
-        lock.unlock();
-
-        llog_trace({ return pulsar::util::to_string("running node: ", ready_node->name); });
-        ready_node->execute();
-        llog_trace({ return pulsar::util::to_string("done running node: ", ready_node->name); });
-    }
+    log_trace("in execute_one_node() for ", node_in->name);
+    node_in->execute();
+    log_trace("done running node: ", node_in->name);
 }
 
 } // namespace pulsar

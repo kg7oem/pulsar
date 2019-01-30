@@ -44,14 +44,9 @@ struct domain : public std::enable_shared_from_this<domain> {
     dbus_node * dbus = nullptr;
     std::shared_ptr<audio::buffer> zero_buffer = audio::buffer::make();
     std::vector<node::base *> nodes;
-    std::list<node::base *> run_queue;
-    mutex_type run_queue_mutex;
-    std::condition_variable run_queue_condition;
-    std::vector<std::thread> threads;
-    std::condition_variable step_done_condition;
     bool activated = false;
     bool step_done_flag = false;
-    void be_thread();
+    static void execute_one_node(node::base * node_in);
 
     public:
     const string_type name;
@@ -68,7 +63,7 @@ struct domain : public std::enable_shared_from_this<domain> {
     virtual ~domain();
     void init();
     std::shared_ptr<audio::buffer> get_zero_buffer();
-    void activate(const size_type num_threads_in = 1);
+    void activate();
     void step();
     void add_ready_node(node::base * node_in);
     void add_public_node(node::base * node_in);

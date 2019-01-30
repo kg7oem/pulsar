@@ -162,7 +162,7 @@ UNUSED static void process_audio(std::shared_ptr<pulsar::config::file> config_in
 
     auto domain_info = config_in->get_domain();
     auto domain = pulsar::config::make_domain(domain_info);
-    auto domain_num_threads = domain_info->get_config()["threads"].as<pulsar::size_type>();
+    // auto domain_num_threads = domain_info->get_config()["threads"].as<pulsar::size_type>();
     auto node_map = pulsar::config::make_nodes(domain_info, domain);
 
     auto daemons_section = config_in->get_daemons();
@@ -180,7 +180,7 @@ UNUSED static void process_audio(std::shared_ptr<pulsar::config::file> config_in
     }
 
     log_info("audio processing is being started");
-    domain->activate(domain_num_threads);
+    domain->activate();
 
     std::vector<pulsar::node::base *> compressor_nodes;
     compressor_nodes.push_back(node_map["comp_right"]);
@@ -194,7 +194,7 @@ UNUSED static void process_audio(std::shared_ptr<pulsar::config::file> config_in
         }
     });
 
-    info_timer->start();
+    // info_timer->start();
 
     while(1) {
         std::this_thread::sleep_for(1s);
