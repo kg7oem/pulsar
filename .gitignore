@@ -10,6 +10,7 @@ pulsar-dev
 liblogjam*.a
 libpulsar*.so
 libpulsar*.a
+gmon.out
 docs/
 
 CMakeCache.txt

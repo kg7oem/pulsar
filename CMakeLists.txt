@@ -9,6 +9,7 @@ project(pulsar)
 # Debug, Release, RelWithDebInfo, MinSizeRel
 set(CMAKE_BUILD_TYPE Debug)
 set(CMAKE_VERBOSE_MAKEFILE OFF)
+set(PULSAR_PROFILE ON)
 
 include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 
@@ -38,6 +39,12 @@ include_directories(SYSTEM ${DBUSLIB_INCLUDE_DIRS})
 include_directories(SYSTEM ext/)
 
 option(BUILD_DOC "Build documentation" ON)
+
+if (PULSAR_PROFILE)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pg")
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -pg")
+set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -pg")
+endif (PULSAR_PROFILE)
 
 add_custom_command(
     OUTPUT pulsar/dbus.adaptor.h
