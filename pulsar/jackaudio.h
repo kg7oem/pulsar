@@ -74,6 +74,7 @@ class connections : public daemon::base {
     virtual ~connections();
     virtual void init(const YAML::Node& yaml_in) override;
     virtual void start() override;
+    virtual void stop() override;
     void check_port_connections(const string_type& name_in);
     std::map<string_type, bool> get_connection_lookup(const string_type& port_name_in);
 };

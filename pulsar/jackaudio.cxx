@@ -307,7 +307,7 @@ connections::connections(const string_type& name_in)
 connections::~connections()
 {
     if (jack_client != nullptr) {
-        system_fault("can not destroy a running daemon");
+        stop();
     }
 }
 
@@ -331,6 +331,8 @@ void connections::start()
     log_info("starting jackaudio connection daemon");
 
     auto lock = debug_get_lock(jack_mutex);
+
+    assert(jack_client == nullptr);
 
     jack_client = jack_client_open("pulsar_connections", jack_options, 0);
 
@@ -364,6 +366,21 @@ void connections::start()
     for(auto&& i : connection_list) {
         async::submit_job(&connections::check_port_connections, this, i.first);
     }
+}
+
+void connections::stop()
+{
+    assert(jack_client != nullptr);
+
+    if (jack_deactivate(jack_client)) {
+        system_fault("could not deactivate jackaudio client");
+    }
+
+    if (jack_client_close(jack_client)) {
+        system_fault("could not close jackaudio client");
+    }
+
+    jack_client = nullptr;
 }
 
 void connections::check_port_connections(const string_type&)

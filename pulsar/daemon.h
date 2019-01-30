@@ -28,6 +28,7 @@ struct base {
     virtual ~base() = default;
     virtual void init(const YAML::Node& yaml_in) = 0;
     virtual void start() = 0;
+    virtual void stop() = 0;
 };
 
 } // namespace daemon
