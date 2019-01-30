@@ -18,7 +18,7 @@ engine:
     # turning these on will use
     # a lot of cpu
     # FIXME these are broken
-    lock_watchdogs: true
+    lock_watchdogs: false
 
 templates:
   gain:
