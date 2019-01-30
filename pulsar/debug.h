@@ -50,6 +50,7 @@ std::unique_lock<T> get_lock_wrapper(const string_type& logname_in, const logjam
         logjam::send_vargs_logevent(logname_in, level_in, function_in, path_in, line_in, "creating a lock watchdog");
         auto message = util::to_string("lock timeout for ", name_in, " at ", path_in, ":", line_in);
         lock_watchdog = async::watchdog::make(timeout_in, message);
+        // FIXME why does starting the watchdog lead to a deadlock?
         lock_watchdog->start();
     }
 

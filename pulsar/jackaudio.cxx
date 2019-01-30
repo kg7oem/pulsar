@@ -337,7 +337,7 @@ void connections::register_callbacks()
 
             if (register_in) {
                 log_debug("jackaudio: new port registration: ", port_name);
-                async::submit_job(&connections::check_port_connections, this, port_name);
+                check_port_connections(port_name);
             } else {
                 log_debug("jackaudio: port is being deregistered: ", port_name);
             }
