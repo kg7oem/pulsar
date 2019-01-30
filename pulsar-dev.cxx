@@ -128,14 +128,24 @@ UNUSED static void init_pulsar(const pulsar::size_type num_threads_in)
 
 static void init_signals()
 {
-    static boost::asio::signal_set signals(pulsar::async::get_boost_io(), SIGINT, SIGTERM);
+    auto&& io = pulsar::async::get_boost_io();
+    static boost::asio::signal_set quit_signals(io, SIGINT, SIGTERM);
+    static boost::asio::signal_set fault_signals(io, SIGSEGV, SIGABRT, SIGBUS);
 
-    signals.async_wait([](const boost::system::error_code& error_in, const int) {
+    quit_signals.async_wait([](const boost::system::error_code& error_in, const int) {
         if (error_in) {
-            system_fault("got an error from ASIO in signal handler");
+            system_fault("got an error from ASIO in the quit signal handler");
         }
 
         pulsar::system::shutdown();
+    });
+
+    fault_signals.async_wait([](const boost::system::error_code& error_in, const int signum_in) {
+        if (error_in) {
+            system_fault("got an error from ASIO in the fault signal handler");
+        }
+
+        system_fault("fatal signal received: ", signum_in);
     });
 }
 
