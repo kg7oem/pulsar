@@ -9,7 +9,7 @@ project(pulsar)
 # Debug, Release, RelWithDebInfo, MinSizeRel
 set(CMAKE_BUILD_TYPE Debug)
 set(CMAKE_VERBOSE_MAKEFILE OFF)
-set(PULSAR_PROFILE ON)
+set(PULSAR_PROFILE OFF)
 
 include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 
