@@ -326,20 +326,8 @@ void connections::init(const YAML::Node& yaml_in)
     }
 }
 
-void connections::start()
+void connections::register_callbacks()
 {
-    log_info("starting jackaudio connection daemon");
-
-    auto lock = debug_get_lock(jack_mutex);
-
-    assert(jack_client == nullptr);
-
-    jack_client = jack_client_open("pulsar_connections", jack_options, 0);
-
-    if (jack_client == nullptr) {
-        system_fault("could not open connection to jack server");
-    }
-
     if(jack_set_port_registration_callback(
         jack_client,
         wrap_uint32_int_cb,
@@ -357,19 +345,40 @@ void connections::start()
     {
         system_fault("could not register jack port registration callback");
     }
+}
 
-    if (jack_activate(jack_client)) {
-        system_fault("could not activate jack client");
+void connections::start()
+{
+    log_info("starting jackaudio connection daemon");
+
+    {
+        auto lock = debug_get_lock(jack_mutex);
+
+        assert(jack_client == nullptr);
+
+        jack_client = jack_client_open("pulsar_connections", jack_options, 0);
+
+        if (jack_client == nullptr) {
+            system_fault("could not open connection to jack server");
+        }
+
+        register_callbacks();
+
+        if (jack_activate(jack_client)) {
+            system_fault("could not activate jack client");
+        }
     }
 
     // do the initial connecting
-    for(auto&& i : connection_list) {
-        async::submit_job(&connections::check_port_connections, this, i.first);
+    for (auto&& i : connection_list) {
+        check_port_connections(i.first);
     }
 }
 
 void connections::stop()
 {
+    auto lock = debug_get_lock(jack_mutex);
+
     assert(jack_client != nullptr);
 
     if (jack_deactivate(jack_client)) {

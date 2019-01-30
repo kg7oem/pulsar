@@ -68,6 +68,7 @@ class connections : public daemon::base {
     client_type * jack_client = nullptr;
     const options_type jack_options = JackNoStartServer;
     list_type connection_list;
+    void register_callbacks();
 
     public:
     connections(const string_type& name_in);
