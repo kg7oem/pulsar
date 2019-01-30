@@ -130,7 +130,7 @@ static void init_signals()
 {
     auto&& io = pulsar::async::get_boost_io();
     static boost::asio::signal_set quit_signals(io, SIGINT, SIGTERM);
-    static boost::asio::signal_set fault_signals(io, SIGSEGV, SIGABRT, SIGBUS);
+    // static boost::asio::signal_set fault_signals(io, SIGSEGV, SIGABRT, SIGBUS);
 
     quit_signals.async_wait([](const boost::system::error_code& error_in, const int) {
         if (error_in) {
@@ -140,13 +140,13 @@ static void init_signals()
         pulsar::system::shutdown();
     });
 
-    fault_signals.async_wait([](const boost::system::error_code& error_in, const int signum_in) {
-        if (error_in) {
-            system_fault("got an error from ASIO in the fault signal handler");
-        }
+    // fault_signals.async_wait([](const boost::system::error_code& error_in, const int signum_in) {
+    //     if (error_in) {
+    //         system_fault("got an error from ASIO in the fault signal handler");
+    //     }
 
-        system_fault("fatal signal received: ", signum_in);
-    });
+    //     system_fault("fatal signal received: ", signum_in);
+    // });
 }
 
 UNUSED static void init(std::shared_ptr<pulsar::config::file> config_in)
@@ -225,15 +225,6 @@ UNUSED static void process_audio(std::shared_ptr<pulsar::config::file> config_in
     compressor_nodes.push_back(node_map["comp_right"]);
     compressor_nodes.push_back(node_map["comp_left"]);
     compressor_nodes.push_back(node_map["tail_eater"]);
-
-    static auto verbose_timer = pulsar::async::timer::make(
-        INFO_DELAY, INFO_DELAY, [compressor_nodes](pulsar::async::base_timer&) {
-            for(UNUSED auto&& compressor : compressor_nodes) {
-            log_verbose(get_compressor_state(compressor));
-        }
-    });
-
-    verbose_timer->start();
 }
 
 int main(int argc_in, const char ** argv_in)
