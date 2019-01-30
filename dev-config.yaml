@@ -83,10 +83,10 @@ daemons:
     class: pulsar::jackaudio::connections
     config:
       connect:
-        - [ system:capture_1, pulsar:left_in ]
-        - [ system:capture_2, pulsar:right_in ]
-        - [ pulsar:left_out, system:playback_1 ]
-        - [ pulsar:right_out, system:playback_2 ]
+        # - [ system:capture_1, pulsar:left_in ]
+        # - [ system:capture_2, pulsar:right_in ]
+        # - [ pulsar:left_out, system:playback_1 ]
+        # - [ pulsar:right_out, system:playback_2 ]
 
 domain:
   config:
