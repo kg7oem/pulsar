@@ -11,7 +11,7 @@ engine:
       - pulsar
       - pulsar.locking
       - jackaudio
-    memory_level: trace
+    memory_level: debug
     # this will use a lot of CPU
     # memory_level: trace
   debug:
