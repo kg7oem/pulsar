@@ -216,12 +216,14 @@ UNUSED static void process_audio(std::shared_ptr<pulsar::config::file> config_in
     compressor_nodes.push_back(node_map["comp_left"]);
     compressor_nodes.push_back(node_map["tail_eater"]);
 
-    auto info_timer = pulsar::async::timer::make(
+    static auto verbose_timer = pulsar::async::timer::make(
         INFO_DELAY, INFO_DELAY, [compressor_nodes](pulsar::async::base_timer&) {
             for(UNUSED auto&& compressor : compressor_nodes) {
             log_verbose(get_compressor_state(compressor));
         }
     });
+
+    verbose_timer->start();
 }
 
 int main(int argc_in, const char ** argv_in)
