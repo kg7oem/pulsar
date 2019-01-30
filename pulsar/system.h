@@ -39,6 +39,8 @@ using alive_handler_type = std::function<void (void *)>;
 [[noreturn]] void fault(const char* file_in, int line_in, const char* function_in, const string_type& message_in);
 
 void bootstrap(const size_type num_threads_in);
+void shutdown();
+void wait_stopped();
 const string_type& get_boost_version();
 void register_alive_handler(alive_handler_type cb_in, void * arg_in = nullptr);
 void enable_memory_logging(const duration_type& max_age_in, const string_type& level_name_in);

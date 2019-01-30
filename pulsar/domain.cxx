@@ -21,9 +21,21 @@
 
 namespace pulsar {
 
+auto domain_list = new std::list<std::shared_ptr<domain>>();
+
+const std::list<std::shared_ptr<domain>>& get_domains()
+{
+    return *domain_list;
+}
+
+void add_domain(std::shared_ptr<domain> domain_in)
+{
+    domain_list->push_back(domain_in);
+}
+
+// FIXME this should be in the domain namespace
 static string_type make_dbus_path(const string_type& domain_name_in)
 {
-
     return util::to_string(PULSAR_DBUS_DOMAIN_PREFIX, domain_name_in);
 }
 
@@ -68,6 +80,19 @@ void domain::init()
     dbus = new dbus_node(this->shared_from_this());
 }
 
+void domain::shutdown()
+{
+    log_debug("shutting down domain ", name);
+    if (! is_online) system_fault("can't shutdown a domain that is not online");
+
+    is_online = false;
+
+    for(auto&& node : nodes) {
+        log_trace("stopping node ", node->name);
+        node->stop();
+    }
+}
+
 std::shared_ptr<audio::buffer> domain::get_zero_buffer()
 {
     return zero_buffer;
@@ -78,6 +103,7 @@ void domain::activate()
     assert(! activated);
 
     activated = true;
+    is_online = true;
 
     // nodes must be activated before they are started
     // but all nodes must be activated before any
@@ -96,6 +122,10 @@ void domain::add_ready_node(node::base * node_in)
     log_trace("adding ready node: ", node_in->name);
 
     assert(activated);
+
+    if (! is_online) {
+        log_trace("skipping adding a ready node for a domain that is not online");
+    }
 
     async::submit_job(&domain::execute_one_node, node_in);
     log_trace("done adding ready node ", node_in->name);

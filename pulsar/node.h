@@ -87,6 +87,7 @@ struct base {
     *   notify
     *   reset_cycle
     *
+    * stop
     * deactivate
     * deconstruct
     *
@@ -104,6 +105,7 @@ struct base {
     virtual void did_run();
     virtual void notify();
     virtual void reset_cycle();
+    virtual void stop();
     virtual void deactivate();
 
     virtual void execute();

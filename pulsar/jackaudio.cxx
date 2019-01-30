@@ -286,6 +286,17 @@ void jackaudio::node::execute()
     done_cond.notify_all();
 }
 
+void jackaudio::node::stop()
+{
+    log_trace("stopping jackaudio");
+
+    if (jack_deactivate(jack_client) != 0) {
+        system_fault("could not deactivate jack client");
+    }
+
+    node::base::stop();
+}
+
 // start following new convention
 namespace jackaudio {
 

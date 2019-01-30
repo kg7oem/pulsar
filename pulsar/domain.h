@@ -30,7 +30,8 @@
 
 namespace pulsar {
 
-std::vector<std::shared_ptr<domain>> get_domains();
+const std::list<std::shared_ptr<domain>>& get_domains();
+void add_domain(std::shared_ptr<domain>);
 
 struct dbus_node : public ::audio::pulsar::domain_adaptor, public DBus::IntrospectableAdaptor, public DBus::ObjectAdaptor {
     std::shared_ptr<domain> parent;
@@ -45,7 +46,7 @@ struct domain : public std::enable_shared_from_this<domain> {
     std::shared_ptr<audio::buffer> zero_buffer = audio::buffer::make();
     std::vector<node::base *> nodes;
     bool activated = false;
-    bool step_done_flag = false;
+    std::atomic<bool> is_online = ATOMIC_VAR_INIT(false);
     static void execute_one_node(node::base * node_in);
 
     public:
@@ -57,11 +58,13 @@ struct domain : public std::enable_shared_from_this<domain> {
     {
         auto new_domain = std::make_shared<domain>(args...);
         new_domain->init();
+        add_domain(new_domain);
         return new_domain;
     }
     domain(const string_type& name_in, const pulsar::size_type sample_rate_in, const pulsar::size_type buffer_size_in);
     virtual ~domain();
     void init();
+    void shutdown();
     std::shared_ptr<audio::buffer> get_zero_buffer();
     void activate();
     void step();

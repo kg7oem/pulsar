@@ -17,6 +17,8 @@
 #include <vector>
 
 #include <pulsar/async.h>
+#include <pulsar/debug.h>
+#include <pulsar/domain.h>
 #include <pulsar/logging.h>
 #include <pulsar/system.h>
 
@@ -37,21 +39,32 @@ bool is_online()
     return is_online_flag.load();
 }
 
+// this must be called from outside ASIO
+void wait_stopped()
+{
+    for(auto&& thread : async_threads) {
+        thread.join();
+    }
+}
+
 boost::asio::io_service& get_boost_io()
 {
-    assert(is_online());
     return boost_io;
 }
 
 static void async_thread()
 {
+    log_trace("async thread is giving control to ASIO");
     boost_io.run();
-    system_fault("Boost io.run() returned");
+    log_trace("async thread got control back from ASIO");
+
+    if (is_online_flag) system_fault("Boost io.run() returned but async is online");
+    log_debug("async processing thread is done running");
 }
 
 void init(const size_type num_threads_in)
 {
-    assert(! is_online_flag.load());
+    if (is_online_flag) system_fault("attempt to double init async system");
 
     auto num_threads = num_threads_in;
 
@@ -75,6 +88,25 @@ void init(const size_type num_threads_in)
     }
 
     is_online_flag.store(true);
+}
+
+// this has to be safe to call from inside
+// the ASIO threads
+void stop()
+{
+    log_debug("shutting down async system");
+
+    if (! is_online_flag) system_fault("attempt to stop the async system but it is not running");
+
+    for(auto&& domain : get_domains()) {
+        log_debug("stopping domain ", domain->name);
+        domain->shutdown();
+    }
+
+    log_trace("stopping ASIO");
+    is_online_flag.store(false);
+    boost_io.stop();
+    log_debug("done telling ASIO to stop");
 }
 
 base_timer::base_timer(const duration_type& initial_in, const duration_type& repeat_in)

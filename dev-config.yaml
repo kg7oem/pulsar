@@ -6,7 +6,7 @@ engine:
   # 0 to auto-detect number of threads if possible; this is the default
   #  threads: 4
   logs:
-    console_level: debug
+    console_level: trace
     console_sources:
       - pulsar
       - pulsar.locking

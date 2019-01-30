@@ -130,12 +130,12 @@ static void init_signals()
 {
     static boost::asio::signal_set signals(pulsar::async::get_boost_io(), SIGINT, SIGTERM);
 
-    signals.async_wait([](const boost::system::error_code& error_in, const int signum_in) {
+    signals.async_wait([](const boost::system::error_code& error_in, const int) {
         if (error_in) {
             system_fault("got an error from ASIO in signal handler");
         }
 
-        system_fault("caught signal: ", signum_in);
+        pulsar::system::shutdown();
     });
 }
 
@@ -223,11 +223,7 @@ UNUSED static void process_audio(std::shared_ptr<pulsar::config::file> config_in
         }
     });
 
-    // info_timer->start();
-
-    while(1) {
-        std::this_thread::sleep_for(1s);
-    }
+    pulsar::system::wait_stopped();
 }
 
 int main(int argc_in, const char ** argv_in)

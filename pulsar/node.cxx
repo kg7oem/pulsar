@@ -209,6 +209,11 @@ void base::reset_cycle()
     audio.reset_cycle();
 }
 
+void base::stop()
+{
+    log_trace("node is stopped: ", name);
+}
+
 void base::deactivate()
 {
     system_fault("cant deactivate yet");

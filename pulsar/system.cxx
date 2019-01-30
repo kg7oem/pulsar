@@ -25,6 +25,7 @@
 #include <pulsar/logging.h>
 #include <pulsar/node.h>
 #include <pulsar/system.h>
+#include <pulsar/thread.h>
 
 #define ALIVE_TICK_INTERVAL 100ms
 
@@ -65,6 +66,16 @@ void bootstrap(const size_type num_threads_in)
     alive_timer->start();
 
     pulsar::async::init(num_threads_in);
+}
+
+void shutdown()
+{
+    async::stop();
+}
+
+void wait_stopped()
+{
+    async::wait_stopped();
 }
 
 void register_alive_handler(alive_handler_type cb_in, void * arg_in)
