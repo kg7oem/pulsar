@@ -253,6 +253,7 @@ pulsar::node::base * make_chain_node(const YAML::Node& node_yaml_in, const YAML:
     auto forward_node = chain_yaml_in["forward"];
     auto nodes_node = chain_yaml_in["nodes"];
     auto state_node = chain_yaml_in["state"];
+    auto config_node = chain_yaml_in["config"];
 
     if (node_yaml_in["class"]) {
         system_fault("chain node had a class set on it");
@@ -377,6 +378,39 @@ pulsar::node::base * make_chain_node(const YAML::Node& node_yaml_in, const YAML:
                     auto prefix = property_parts[0];
 
                     if (prefix != "state") {
+                        continue;
+                    }
+
+                    chain_root_node->add_property(property_name, i.second);
+                }
+            }
+        }
+    }
+
+    if (config_node) {
+        if (! config_node.IsSequence()) {
+            system_fault("config section of chain ", chain_name, " was not a sequence");
+        }
+
+        for(size_type i = 0; i < config_node.size(); i++) {
+            auto target_string = config_node[i].as<string_type>();
+            auto target_parts = util::split(target_string, ':');
+            assert(target_parts.size() == 2);
+            auto target_node_name = target_parts[0];
+            auto target_property_name = target_parts[1];
+            auto target_node = chain_nodes[target_node_name];
+
+            if (target_property_name != "*") {
+                target_property_name = "config:" + target_property_name;
+                auto&& property = target_node->get_property(target_property_name);
+                chain_root_node->add_property(target_property_name, &property);
+            } else {
+                for(auto&& i : target_node->get_properties()) {
+                    auto property_name = i.first;
+                    auto property_parts = util::split(property_name, ':');
+                    auto prefix = property_parts[0];
+
+                    if (prefix != "config") {
                         continue;
                     }
 
