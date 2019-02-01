@@ -59,10 +59,17 @@ dbus_node::dbus_node(base * parent_in, const std::string& path_in)
 std::vector<string_type> dbus_node::property_names()
 {
     std::vector<string_type> retval;
+    promise_type<void> promise;
 
-    for (auto&& i : parent->properties) {
-        retval.push_back(i.first);
-    }
+    async::submit_job([this, &retval, &promise] {
+        for (auto&& i : parent->properties) {
+            retval.push_back(i.first);
+        }
+
+        promise.set_value();
+    });
+
+    promise.get_future().get();
 
     return retval;
 }
