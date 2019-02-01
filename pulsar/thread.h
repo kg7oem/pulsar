@@ -14,15 +14,17 @@
 #pragma once
 
 #include <condition_variable>
+#include <future>
 #include <mutex>
 #include <thread>
 
 namespace pulsar {
 
-using condition_type = std::condition_variable;
 using mutex_type = std::mutex;
 using lock_type = std::unique_lock<mutex_type>;
 
+using condition_type = std::condition_variable;
+template <typename T> using promise_type = std::promise<T>;
 using thread_type = std::thread;
 
 namespace thread {

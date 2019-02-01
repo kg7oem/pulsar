@@ -16,6 +16,7 @@
 #include <cstdlib>
 #include <stdexcept>
 
+#include <pulsar/async.h>
 #include <pulsar/debug.h>
 #include <pulsar/library.h>
 #include <pulsar/logging.h>
@@ -69,22 +70,38 @@ std::vector<string_type> dbus_node::property_names()
 std::map<string_type, string_type> dbus_node::properties()
 {
     std::map<string_type, string_type> retval;
+    promise_type<void> promise;
 
-    for(auto&& i : parent->properties) {
-        retval[i.first] = i.second->get();
-    }
+    async::submit_job([this, &retval, &promise] {
+        for(auto&& i : parent->properties) {
+            retval[i.first] = i.second->get();
+        }
 
+        promise.set_value();
+    });
+
+    promise.get_future().get();
     return retval;
 }
 
-string_type dbus_node::peek(const string_type& name_in)
+string_type dbus_node::peek(const std::string& name_in)
 {
-    return parent->peek(name_in);
+    promise_type<std::string> promise;
+    async::submit_job([this, &name_in, &promise] { promise.set_value(parent->peek(name_in)); });
+    return promise.get_future().get();
 }
 
-void dbus_node::poke(const string_type& name_in, const string_type& value_in)
+void dbus_node::poke(const std::string& name_in, const std::string& value_in)
 {
-    parent->poke(name_in, value_in);
+    promise_type<void> promise;
+
+    async::submit_job([this, &name_in, &value_in, &promise] {
+        parent->poke(name_in, value_in);
+        promise.set_value();
+    });
+
+    promise.get_future().get();
+    return;
 }
 
 base::base(const string_type& name_in, std::shared_ptr<pulsar::domain> domain_in, const bool is_forwarder_in)
