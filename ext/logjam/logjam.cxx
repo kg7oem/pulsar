@@ -295,8 +295,8 @@ logevent::logevent(string_type source_in, const loglevel& level_in, const timest
 
 // THREAD this function is thread safe
 logengine* logengine::get_engine() {
-    static logengine engine;
-    return &engine;
+    static auto engine = new logengine();
+    return engine;
 }
 
 void logengine::add_destination(const std::shared_ptr<logdest>& destination_in) {
@@ -304,21 +304,37 @@ void logengine::add_destination(const std::shared_ptr<logdest>& destination_in) 
     add_destination__lockex(destination_in);
 }
 
-// attempts to add a destination more than once silently return
 // THREAD this function asserts required locking
 void logengine::add_destination__lockex(const std::shared_ptr<logdest>& destination_in) {
     assert_lock(caller_has_lockex());
 
-    for (auto&& i : destinations) {
-        if (i->id == destination_in->id) {
-            throw std::runtime_error("attempt to register duplicate log destination");
-        }
+    auto dest_id = destination_in->id;
+    auto found = destinations.find(dest_id);
+
+    if (found != destinations.end()) {
+        throw std::runtime_error("attempt to register duplicate log destination");
     }
 
     destination_in->engine = this;
-    destinations.push_back(destination_in);
+    destinations[dest_id] = destination_in;
 
     update_min_level__lockex();
+}
+
+void logengine::remove_destination(const logdest::destid& dest_id_in) {
+    auto lock = get_lockex();
+    remove_destination__lockex(dest_id_in);
+}
+
+// THREAD this function asserts required locking
+void logengine::remove_destination__lockex(const logdest::destid& dest_id_in) {
+    assert_lock(caller_has_lockex());
+
+    auto found = destinations.find(dest_id_in);
+
+    if (found != destinations.end()) {
+        destinations.erase(found);
+    }
 }
 
 void logengine::update_min_level() {
@@ -355,7 +371,8 @@ void logengine::update_min_level__lockex() {
     auto min_found = loglevel::fatal;
 
     for (auto&& i : destinations) {
-        auto dest_level = i->get_min_level();
+        auto destination = i.second.lock();
+        auto dest_level = destination->get_min_level();
         if (dest_level < min_found) {
             min_found = dest_level;
         }
@@ -375,7 +392,9 @@ bool logengine::should_log(const loglevel& level_in, const string_type& source_i
         return false;
     }
 
-    for (auto&& destination : destinations) {
+    for (auto&& i : destinations) {
+        auto destination = i.second.lock();
+
         if (destination->should_log(level_in, source_in)) {
             return true;
         }
@@ -440,13 +459,18 @@ void logengine::deliver_to_all__locksh(const logevent& event_in) {
 
     uint sent = 0;
     for(auto&& i : destinations) {
-        deliver_to_one__locksh(i, event_in);
+        auto destination = i.second.lock();
+        deliver_to_one__locksh(destination, event_in);
         sent++;
     }
     assert(sent == destinations.size());
 }
 
 logdest::logdest(const loglevel& min_level_in) : min_level(min_level_in) { }
+
+logdest::~logdest() {
+    engine->remove_destination(id);
+}
 
 // THREAD this function is inherently thread safe
 logdest::destid logdest::next_destination_id() {

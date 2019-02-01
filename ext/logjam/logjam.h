@@ -163,7 +163,7 @@ class logdest : public baseobj {
     public:
         const destid id = logdest::next_destination_id();
         logdest(const loglevel& min_level_in);
-        virtual ~logdest() = default;
+        virtual ~logdest();
         loglevel set_min_level(const loglevel& min_level_in);
         virtual bool should_log(const loglevel& level_in, const string_type& source_in);
         void output(const logevent& event_in);
@@ -176,7 +176,7 @@ class logengine : public baseobj, shareable {
     friend loglevel logdest::set_min_level__lockreq(const loglevel& min_level_in);
 
     protected:
-        std::vector<std::shared_ptr<logdest>> destinations;
+        std::map<logdest::destid, std::weak_ptr<logdest>> destinations;
         lockfree_queue event_buffer{0};
         std::atomic<loglevel> min_log_level = ATOMIC_VAR_INIT(loglevel::none);
         bool buffer_events = true;
@@ -185,6 +185,7 @@ class logengine : public baseobj, shareable {
         loglevel set_min_level__lockex(loglevel level_in);
         void update_min_level__lockex(void);
         void add_destination__lockex(const std::shared_ptr<logdest>& destination_in);
+        void remove_destination__lockex(const logdest::destid& dest_id_in);
         void deliver__locksh(const logevent& event_in);
         void deliver_to_one__locksh(const std::shared_ptr<logdest>& dest_in, const logevent& event_in);
         void deliver_to_all__locksh(const logevent& event_in);
@@ -197,6 +198,7 @@ class logengine : public baseobj, shareable {
         static logengine* get_engine();
         void update_min_level(void);
         void add_destination(const std::shared_ptr<logdest>& destination_in);
+        void remove_destination(const logdest::destid& dest_id_in);
         virtual bool should_log(const loglevel& level_in, const string_type& source_in);
         void deliver(const logevent& event);
         void start();

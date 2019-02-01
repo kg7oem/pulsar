@@ -73,7 +73,7 @@ static void init_logging(std::shared_ptr<pulsar::config::file> config_in)
         log_level_name = DEFAULT_CONSOLE_LOG_LEVEL;
     }
 
-    auto console = make_shared<logjam::logconsole>(logjam::level_from_name(log_level_name));
+    static auto console = make_shared<logjam::logconsole>(logjam::level_from_name(log_level_name));
 
     auto log_sources_node = engine_logs["console_sources"];
 
