@@ -197,7 +197,6 @@ class logengine : public baseobj, shareable {
         static logengine* get_engine();
         void update_min_level(void);
         void add_destination(const std::shared_ptr<logdest>& destination_in);
-        void add_log_source(const string_type& source_in);
         virtual bool should_log(const loglevel& level_in, const string_type& source_in);
         void deliver(const logevent& event);
         void start();

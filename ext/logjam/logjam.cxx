@@ -304,9 +304,6 @@ void logengine::add_destination(const std::shared_ptr<logdest>& destination_in) 
     add_destination__lockex(destination_in);
 }
 
-void logengine::add_log_source(const string_type&)
-{ }
-
 // attempts to add a destination more than once silently return
 // THREAD this function asserts required locking
 void logengine::add_destination__lockex(const std::shared_ptr<logdest>& destination_in) {
