@@ -146,7 +146,7 @@ struct baseobj {
     ~baseobj() = default;
 };
 
-class logdest : public baseobj {
+class logdest : public baseobj, protected shareable {
     friend class logengine;
     using destid = uint32_t;
 
@@ -157,6 +157,7 @@ class logdest : public baseobj {
 
     protected:
         logengine* engine = nullptr;
+        std::map<string_type, bool> filter_source_names;
         virtual void handle_output(const logevent& event) = 0;
         loglevel get_min_level();
 
@@ -165,6 +166,7 @@ class logdest : public baseobj {
         logdest(const loglevel& min_level_in);
         virtual ~logdest();
         loglevel set_min_level(const loglevel& min_level_in);
+        virtual void add_source_filter(const string_type& source_name_in);
         virtual bool should_log(const loglevel& level_in, const string_type& source_in);
         void output(const logevent& event_in);
 };
@@ -204,23 +206,20 @@ class logengine : public baseobj, shareable {
         void start();
 };
 
-class logconsole : public logdest, shareable {
+class logconsole : public logdest {
     private:
         virtual void handle_output(const logevent& event_in) override;
         void write_stdio__lockreq(const string_type& message_in);
         logjam::mutex stdio_mutex;
-        std::map<string_type, bool> filter_source_names;
 
     public:
         logconsole(const loglevel& level_in = loglevel::debug)
             : logdest(level_in) { }
         virtual ~logconsole() = default;
-        virtual bool should_log(const loglevel& level_in, const string_type& source_in) override;
-        virtual void add_source_filter(const string_type& source_name_in);
         virtual string_type format_event(const logevent& event) const;
 };
 
-class logmemory : public logdest, lockable {
+class logmemory : public logdest {
     private:
         // ordered with oldest event at the start
         std::list<logevent> event_history;

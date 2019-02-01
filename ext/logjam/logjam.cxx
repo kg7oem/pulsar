@@ -457,13 +457,12 @@ void logengine::deliver_to_one__locksh(const std::shared_ptr<logdest>& dest_in, 
 void logengine::deliver_to_all__locksh(const logevent& event_in) {
     assert_lock(caller_has_locksh());
 
-    uint sent = 0;
     for(auto&& i : destinations) {
         auto destination = i.second.lock();
-        deliver_to_one__locksh(destination, event_in);
-        sent++;
+        if (destination->should_log(event_in.level, event_in.source)) {
+            deliver_to_one__locksh(destination, event_in);
+        }
     }
-    assert(sent == destinations.size());
 }
 
 logdest::logdest(const loglevel& min_level_in) : min_level(min_level_in) { }
@@ -505,43 +504,8 @@ loglevel logdest::set_min_level__lockreq(const loglevel& min_level_in) {
     return old;
 }
 
-bool logdest::should_log(const loglevel& level_in, const string_type&) {
-    if (min_level == loglevel::none) return false;
-    return level_in >= min_level;
-}
-
-// THREAD this function is inherently thread safe
-void logdest::output(const logevent& event_in) {
-    assert(event_in.level >= get_min_level());
-    handle_output(event_in);
-}
-
 // THREAD this function acquires the needed locks
-bool logconsole::should_log(const loglevel& level_in, const string_type& source_in)
-{
-    // std::cout << "i'm here" << std::endl;
-
-    if (! logdest::should_log(level_in, source_in)) return false;
-
-    auto shared_lock = get_locksh();
-
-    // std::cout << "why?" << std::endl;
-
-    if (filter_source_names.size() == 0) return true;
-
-    // std::cout << "size was not zero" << std::endl;
-
-    auto i = filter_source_names.find(source_in);
-
-    if (i == filter_source_names.end()) return false;
-
-    // std::cout << "found an entry in the map: " << i->second << std::endl;
-
-    return i->second;
-}
-
-// THREAD this function acquires the needed locks
-void logconsole::add_source_filter(const string_type& source_name_in)
+void logdest::add_source_filter(const string_type& source_name_in)
 {
     auto exclusive_lock = get_lockex();
 
@@ -550,6 +514,27 @@ void logconsole::add_source_filter(const string_type& source_name_in)
     }
 
     filter_source_names[source_name_in] = true;
+}
+
+bool logdest::should_log(const loglevel& level_in, const string_type& source_in) {
+    if (min_level == loglevel::none) return false;
+    if (level_in < min_level) return false;
+
+    auto shared_lock = get_locksh();
+
+    if (filter_source_names.size() == 0) return true;
+
+    auto i = filter_source_names.find(source_in);
+
+    if (i == filter_source_names.end()) return false;
+
+    return i->second;
+}
+
+// THREAD this function is inherently thread safe
+void logdest::output(const logevent& event_in) {
+    assert(event_in.level >= get_min_level());
+    handle_output(event_in);
 }
 
 // THREAD this function is thread safe
@@ -574,29 +559,29 @@ void logconsole::handle_output(const logevent& event_in) {
 
 void logmemory::handle_output(const logevent& event_in)
 {
-    auto lock = get_lock();
+    auto lock = get_lockex();
     event_history.push_back(event_in);
     cleanup();
 }
 
 std::chrono::milliseconds logmemory::get_max_age() {
-    auto lock = get_lock();
+    auto lock = get_locksh();
     return max_age;
 }
 
 void logmemory::set_max_age(std::chrono::milliseconds max_age_in) {
-    auto lock = get_lock();
+    auto lock = get_lockex();
     max_age = max_age_in;
 }
 
 std::list<logevent> logmemory::get_event_history() {
-    auto lock = get_lock();
+    auto lock = get_locksh();
     return event_history;
 }
 
 std::vector<string_type> logmemory::format_event_history()
 {
-    auto lock = get_lock();
+    auto lock = get_locksh();
     auto history_copy = event_history;
     lock.unlock();
 
