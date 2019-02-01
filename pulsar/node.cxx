@@ -74,9 +74,9 @@ std::vector<string_type> dbus_node::property_names()
     return retval;
 }
 
-std::map<string_type, string_type> dbus_node::properties()
+std::map<std::string, std::string> dbus_node::properties()
 {
-    std::map<string_type, string_type> retval;
+    std::map<std::string, std::string> retval;
     promise_type<void> promise;
 
     async::submit_job([this, &retval, &promise] {
