@@ -223,7 +223,7 @@ void jackaudio::node::handle_jack_process(jack_nframes_t nframes_in)
     lock.unlock();
 
     log_trace("waiting for jackaudio node to become done");
-    done_lock.lock();
+    debug_relock(done_lock);
     done_cond.wait(done_lock, [this]{ return done_flag; });
 
     done_flag = false;

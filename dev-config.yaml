@@ -14,11 +14,6 @@ engine:
     memory_level: debug
     # this will use a lot of CPU
     # memory_level: trace
-  debug:
-    # turning these on will use
-    # a lot of cpu
-    # FIXME these are broken
-    lock_watchdogs: false
 
 templates:
   gain:

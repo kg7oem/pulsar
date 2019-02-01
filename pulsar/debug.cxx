@@ -19,17 +19,6 @@ namespace pulsar {
 
 namespace debug {
 
-static std::atomic<bool> lock_watchdogs_enabled_flag = ATOMIC_VAR_INIT(false);
-
-bool get_lock_watchdogs_enabled() {
-    return lock_watchdogs_enabled_flag.load();
-}
-
-void set_lock_watchdogs_enabled(const bool enabled_in)
-{
-    lock_watchdogs_enabled_flag.store(enabled_in);
-}
-
 } // namespace debug
 
 } // namespace pulsar

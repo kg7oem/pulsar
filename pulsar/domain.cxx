@@ -14,6 +14,7 @@
 #include <cassert>
 #include <functional>
 
+#include <pulsar/async.h>
 #include <pulsar/debug.h>
 #include <pulsar/domain.h>
 #include <pulsar/logging.h>

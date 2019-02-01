@@ -13,14 +13,15 @@
 
 #pragma once
 
-// FIXME this can't stay
-#include <pulsar/async.h>
 #include <pulsar/logging.h>
 #include <pulsar/system.h>
 #include <pulsar/types.h>
 #include <pulsar/util.h>
 
+#define LOCK_LOGGING
+
 #define debug_get_lock(mutex) pulsar::debug::get_lock_wrapper(PULSAR_LOG_LOCK_NAME, logjam::loglevel::trace, __PRETTY_FUNCTION__, __FILE__, __LINE__, mutex, #mutex)
+#define debug_relock(lock) pulsar::debug::relock_wrapper(PULSAR_LOG_LOCK_NAME, logjam::loglevel::trace, __PRETTY_FUNCTION__, __FILE__, __LINE__, lock, #lock)
 
 namespace pulsar {
 
@@ -28,36 +29,13 @@ namespace debug {
 
 using namespace std::chrono_literals;
 
-#define LOCK_LOGGING
-#define LOCK_WATCHDOGS
-// FIXME this is probably way too sensitive
-#define LOCK_WATCHDOG_DEFAULT 20ms
-
-bool get_lock_watchdogs_enabled();
-void set_lock_watchdogs_enabled(const bool enabled_in);
-
 template <typename T>
-std::unique_lock<T> get_lock_wrapper(const string_type& logname_in, const logjam::loglevel& level_in, const char *function_in, const char *path_in, const int& line_in, T& mutex_in, const string_type& name_in, UNUSED const duration_type timeout_in = LOCK_WATCHDOG_DEFAULT) {
+std::unique_lock<T> get_lock_wrapper(const string_type& logname_in, const logjam::loglevel& level_in, const char *function_in, const char *path_in, const int& line_in, T& mutex_in, const string_type& name_in) {
     thread_local bool went_recursive = false;
 
     if (went_recursive) system_fault("aborting because of recursion");
 
     went_recursive = true;
-
-#ifdef LOCK_WATCHDOGS
-    std::shared_ptr<async::watchdog> lock_watchdog;
-
-
-    // FIXME check for 0 timeout and skip
-    if (timeout_in != 0ms && get_lock_watchdogs_enabled() && async::is_online()) {
-        logjam::send_vargs_logevent(logname_in, level_in, function_in, path_in, line_in, "creating a lock watchdog");
-        auto message = util::to_string("lock timeout for ", name_in, " at ", path_in, ":", line_in);
-        lock_watchdog = async::watchdog::make(timeout_in, message);
-        // FIXME why does starting the watchdog lead to a deadlock?
-        lock_watchdog->start();
-    }
-
-#endif
 
 #ifdef LOCK_LOGGING
     logjam::send_vargs_logevent(logname_in, level_in, function_in, path_in, line_in, "getting lock for ", name_in);
@@ -65,13 +43,26 @@ std::unique_lock<T> get_lock_wrapper(const string_type& logname_in, const logjam
     logjam::send_vargs_logevent(logname_in, level_in, function_in, path_in, line_in, "got lock for ", name_in);
 #endif
 
-#ifdef LOCK_WATCHDOGS
-    if (lock_watchdog != nullptr) lock_watchdog->stop();
-#endif
-
     went_recursive = false;
 
     return lock;
+}
+
+template <typename T>
+void relock_wrapper(const string_type& logname_in, const logjam::loglevel& level_in, const char *function_in, const char *path_in, const int& line_in, T& lock_in, const string_type& name_in) {
+    thread_local bool went_recursive = false;
+
+    if (went_recursive) system_fault("aborting because of recursion");
+
+    went_recursive = true;
+
+#ifdef LOCK_LOGGING
+    logjam::send_vargs_logevent(logname_in, level_in, function_in, path_in, line_in, "relocking lock: ", name_in);
+    lock_in.lock();
+    logjam::send_vargs_logevent(logname_in, level_in, function_in, path_in, line_in, "finished relocking: ", name_in);
+#endif
+
+    went_recursive = false;
 }
 
 } // namespace debug

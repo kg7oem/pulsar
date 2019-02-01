@@ -100,12 +100,6 @@ static void init_debug(std::shared_ptr<pulsar::config::file> config_in)
 
     if (! debug_section) return;
     if (! debug_section.IsMap()) system_fault("debug section of config file was not a map");
-
-    auto lock_watchdogs = debug_section["lock_watchdogs"];
-    if (lock_watchdogs) {
-        auto enabled = lock_watchdogs.as<bool>();
-        pulsar::debug::set_lock_watchdogs_enabled(enabled);
-    }
 }
 
 static void alarm_handler(const int signum_in)
