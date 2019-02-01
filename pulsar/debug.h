@@ -38,12 +38,15 @@ void set_lock_watchdogs_enabled(const bool enabled_in);
 
 template <typename T>
 std::unique_lock<T> get_lock_wrapper(const string_type& logname_in, const logjam::loglevel& level_in, const char *function_in, const char *path_in, const int& line_in, T& mutex_in, const string_type& name_in, UNUSED const duration_type timeout_in = LOCK_WATCHDOG_DEFAULT) {
-#ifdef LOCK_WATCHDOGS
     thread_local bool went_recursive = false;
-    std::shared_ptr<async::watchdog> lock_watchdog;
 
     if (went_recursive) system_fault("aborting because of recursion");
+
     went_recursive = true;
+
+#ifdef LOCK_WATCHDOGS
+    std::shared_ptr<async::watchdog> lock_watchdog;
+
 
     // FIXME check for 0 timeout and skip
     if (timeout_in != 0ms && get_lock_watchdogs_enabled() && async::is_online()) {
@@ -54,7 +57,6 @@ std::unique_lock<T> get_lock_wrapper(const string_type& logname_in, const logjam
         lock_watchdog->start();
     }
 
-    went_recursive = false;
 #endif
 
 #ifdef LOCK_LOGGING
@@ -66,6 +68,8 @@ std::unique_lock<T> get_lock_wrapper(const string_type& logname_in, const logjam
 #ifdef LOCK_WATCHDOGS
     if (lock_watchdog != nullptr) lock_watchdog->stop();
 #endif
+
+    went_recursive = false;
 
     return lock;
 }
