@@ -73,6 +73,20 @@ chains:
         forward:
           Audio Output 1: remove_squelch_tail:out_1
 
+# stacks are transformed into chains that automatically
+# handle the N:N links between nodes and automatically
+# forward to first node listed and from the first
+# node listed
+stacks:
+  tube_preamp:
+    nodes:
+      - name: input_level
+        template: gain
+      - name: tube
+        template: tube
+      - name: output_level
+        template: gain
+
 daemons:
   watch_jack_connections:
     class: pulsar::jackaudio::connections
@@ -109,12 +123,19 @@ domain:
         left_in:
           - comp_left:*
           - jack:left_loop_out
-          - tube_left:*
+          - tube_simulator:in_left
         right_in:
           - comp_right:*
           - jack:right_loop_out
-          - tube_right:*
+          - tube_simulator:in_right
         demod_in: tail_eater:in_1
+
+    - name: tube_simulator
+      stack: tube_preamp
+      channels: stereo
+      link:
+        out_left: jack:left_tube_out
+        out_right: jack:right_tube_out
 
     - name: tail_eater
       chain: remove_squelch_tail
@@ -171,13 +192,3 @@ domain:
         Gain: 2
       link:
         Output: jack:right_out
-
-    - name: tube_left
-      template: tube
-      link:
-        Audio Output 1: jack:left_tube_out
-
-    - name: tube_right
-      template: tube
-      link:
-        Audio Output 1: jack:right_tube_out
