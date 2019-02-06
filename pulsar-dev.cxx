@@ -163,7 +163,7 @@ UNUSED void log_properties(pulsar::node::base * node_in)
 {
 
     llog_debug({
-        auto& node_name = node_in->get_property("node:name").get_string();
+        auto& node_name = node_in->get_property("node:name").value->get_string();
         return pulsar::util::to_string("Properties for node: ", node_name);
     });
 
@@ -174,7 +174,7 @@ UNUSED void log_properties(pulsar::node::base * node_in)
 
         llog_debug({
             auto property = i.second;
-            return pulsar::util::to_string("property: ", property->name, "; value = '", property->get(), "'");
+            return pulsar::util::to_string("property: ", property.name, "; value = '", property.value->get(), "'");
         });
     }
 }

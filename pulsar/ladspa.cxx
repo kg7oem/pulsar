@@ -274,7 +274,7 @@ void instance::run(const size_type num_samples_in)
 node::node(const string_type& name_in, std::shared_ptr<pulsar::domain> domain_in)
 : pulsar::node::base(name_in, domain_in)
 {
-    add_property("node:class", property::value_type::string).set("pulsar::ladspa::node");
+    add_property("node:class", property::value_type::string).value->set("pulsar::ladspa::node");
     add_property("plugin:filename", property::value_type::string);
     add_property("plugin:id", property::value_type::size);
     add_property("plugin:label", property::value_type::string);
@@ -285,13 +285,13 @@ void node::init()
     assert(domain != nullptr);
     assert(ladspa == nullptr);
 
-    auto ladspa_file = get_property("plugin:filename").get_string();
-    auto ladspa_id = get_property("plugin:id").get_size();
+    auto ladspa_file = get_property("plugin:filename").value->get_string();
+    auto ladspa_id = get_property("plugin:id").value->get_size();
 
     ladspa = make_instance(ladspa_file, ladspa_id, domain->sample_rate);
 
-    get_property("plugin:label").set(ladspa->get_descriptor()->Label);
-    get_property("plugin:id").set(ladspa->get_descriptor()->UniqueID);
+    get_property("plugin:label").value->set(ladspa->get_descriptor()->Label);
+    get_property("plugin:id").value->set(ladspa->get_descriptor()->UniqueID);
 
     auto port_count = ladspa->get_port_count();
 
@@ -324,9 +324,9 @@ void node::init()
             property_name += port_name;
 
             auto& control = add_property(property_name, property::value_type::real);
-            control.set(default_value);
+            control.value->set(default_value);
 
-            ladspa->connect(port_num, &control.get_real());
+            ladspa->connect(port_num, &control.value->get_real());
         } else {
             system_fault("LADSPA port was neither audio nor control");
         }

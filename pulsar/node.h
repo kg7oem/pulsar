@@ -60,7 +60,7 @@ struct base {
     mutex_type node_mutex;
     std::shared_ptr<pulsar::domain> domain;
     // FIXME pointer because I can't figure out how to make emplace() work
-    std::map<string_type, property::generic *> properties;
+    std::map<string_type, property::property> properties;
     base(const string_type& name_in, std::shared_ptr<pulsar::domain> domain_in, const bool is_forwarder_in = false);
     void add_dbus(const std::string path_in);
 
@@ -109,8 +109,8 @@ struct base {
     virtual void deactivate();
 
     virtual void execute();
-    property::generic& add_property(const string_type& name_in, const property::value_type& type_in);
-    property::generic& add_property(const string_type& name_in, property::generic * property_in);
+    property::property& add_property(const string_type& name_in, const property::value_type& type_in);
+    property::property& add_property(const string_type& name_in, const property::property& property_in);
 
     public:
     const size_type id = next_node_id();
@@ -119,8 +119,8 @@ struct base {
     audio::component audio;
     virtual ~base();
     std::shared_ptr<pulsar::domain> get_domain();
-    const std::map<string_type, property::generic *>& get_properties();
-    property::generic& get_property(const string_type& name_in);
+    const std::map<string_type, property::property>& get_properties();
+    property::property& get_property(const string_type& name_in);
     string_type peek(const string_type& name_in);
     void poke(const string_type& name_in, const string_type& value_in);
     virtual void init();

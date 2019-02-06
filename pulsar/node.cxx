@@ -81,7 +81,7 @@ std::map<std::string, std::string> dbus_node::properties()
 
     async::submit_job([this, &retval, &promise] {
         for(auto&& i : parent->properties) {
-            retval[i.first] = i.second->get();
+            retval[i.first] = i.second.value->get();
         }
 
         promise.set_value();
@@ -116,9 +116,9 @@ base::base(const string_type& name_in, std::shared_ptr<pulsar::domain> domain_in
 {
     assert(domain != nullptr);
 
-    add_property("node:name", property::value_type::string).set(name);
-    add_property("node:domain", pulsar::property::value_type::string).set(domain->name);
-    add_property("node:id", pulsar::property::value_type::size).set(id);
+    add_property("node:name", property::value_type::string).value->set(name);
+    add_property("node:domain", pulsar::property::value_type::string).value->set(domain->name);
+    add_property("node:id", pulsar::property::value_type::size).value->set(id);
 }
 
 base::~base()
@@ -141,7 +141,7 @@ std::shared_ptr<domain> base::get_domain()
     return domain;
 }
 
-property::generic& base::get_property(const string_type& name_in)
+property::property& base::get_property(const string_type& name_in)
 {
     auto result = properties.find(name_in);
 
@@ -149,7 +149,7 @@ property::generic& base::get_property(const string_type& name_in)
         system_fault("no property existed with name: ", name_in);
     }
 
-    return *result->second;
+    return result->second;
 }
 
 string_type fully_qualify_property_name(const string_type& name_in)
@@ -165,33 +165,45 @@ string_type base::peek(const string_type& name_in)
 {
     auto lock = debug_get_lock(node_mutex);
     auto name = fully_qualify_property_name(name_in);
-    return get_property(name).get();
+    return get_property(name).value->get();
 }
 
 void base::poke(const string_type& name_in, const string_type& value_in)
 {
     auto lock = debug_get_lock(node_mutex);
     auto name = fully_qualify_property_name(name_in);
-    get_property(name).set(value_in);
+    get_property(name).value->set(value_in);
 }
 
-const std::map<string_type, property::generic *>& base::get_properties()
+const std::map<string_type, property::property>& base::get_properties()
 {
     return properties;
 }
 
-property::generic& base::add_property(const string_type& name_in, const property::value_type& type_in)
+property::property& base::add_property(const string_type& name_in, const property::value_type& type_in)
 {
-    // FIXME why doesn't emplace work?
-    auto new_property = new property::generic(this, name_in, type_in);
-    properties[new_property->name] = new_property;
-    return *new_property;
+    if (properties.find(name_in) != properties.end()) system_fault("attempt to add duplicate property name: ", name_in);
+
+    auto result = properties.emplace(
+        std::piecewise_construct,
+        std::forward_as_tuple(name_in),
+        std::forward_as_tuple(this, name_in, type_in)
+    );
+
+    return result.first->second;
 }
 
-property::generic& base::add_property(const string_type& name_in, property::generic * property_in)
+property::property& base::add_property(const string_type& name_in, const property::property& property_in)
 {
-    properties[name_in] = property_in;
-    return *property_in;
+    if (properties.find(name_in) != properties.end()) system_fault("attempt to add duplicate property name: ", name_in);
+
+    auto result = properties.emplace(
+        std::piecewise_construct,
+        std::forward_as_tuple(name_in),
+        std::forward_as_tuple(this, name_in, property_in.value)
+    );
+
+    return result.first->second;
 }
 
 void base::activate()

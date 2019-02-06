@@ -208,7 +208,7 @@ static pulsar::node::base * make_class_node(const YAML::Node& node_yaml_in, std:
             auto config_name = i.first.as<string_type>();
             auto config_node = i.second;
             auto property_name = string_type("plugin:") + config_name;
-            new_node->get_property(property_name).set(config_node);
+            new_node->get_property(property_name).value->set(config_node);
         }
     }
 
@@ -219,7 +219,7 @@ static pulsar::node::base * make_class_node(const YAML::Node& node_yaml_in, std:
             auto config_name = i.first.as<string_type>();
             auto config_node = i.second;
             auto property_name = string_type("config:") + config_name;
-            new_node->get_property(property_name).set(config_node);
+            new_node->get_property(property_name).value->set(config_node);
         }
     }
 
@@ -369,8 +369,8 @@ pulsar::node::base * make_chain_node(const YAML::Node& node_yaml_in, const YAML:
 
             if (target_property_name != "*") {
                 target_property_name = "state:" + target_property_name;
-                auto&& property = target_node->get_property(target_property_name);
-                chain_root_node->add_property(target_property_name, &property);
+                auto& property = target_node->get_property(target_property_name);
+                chain_root_node->add_property(target_property_name, property);
             } else {
                 for(auto&& i : target_node->get_properties()) {
                     auto property_name = i.first;
@@ -402,8 +402,8 @@ pulsar::node::base * make_chain_node(const YAML::Node& node_yaml_in, const YAML:
 
             if (target_property_name != "*") {
                 target_property_name = "config:" + target_property_name;
-                auto&& property = target_node->get_property(target_property_name);
-                chain_root_node->add_property(target_property_name, &property);
+                auto& property = target_node->get_property(target_property_name);
+                chain_root_node->add_property(target_property_name, property);
             } else {
                 for(auto&& i : target_node->get_properties()) {
                     auto property_name = i.first;

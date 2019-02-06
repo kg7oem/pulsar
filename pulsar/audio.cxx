@@ -573,7 +573,7 @@ audio::input * audio::component::add_input(const string_type& name_in)
     inputs[new_input->name] = new_input;
 
     auto property_name = string_type("input:") + name_in;
-    parent->add_property(property_name, property::value_type::string).set("audio");
+    parent->add_property(property_name, property::value_type::string).value->set("audio");
 
     return new_input;
 }
@@ -608,7 +608,7 @@ audio::output * audio::component::add_output(const string_type& name_in)
     outputs[new_output->name] = new_output;
 
     auto property_name = string_type("output:") + name_in;
-    parent->add_property(property_name, property::value_type::string).set("audio");
+    parent->add_property(property_name, property::value_type::string).value->set("audio");
 
     return new_output;
 }

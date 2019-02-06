@@ -61,8 +61,8 @@ std::shared_ptr<connections> make_connections(const string_type& name_in)
 jackaudio::node::node(const string_type& name_in, std::shared_ptr<pulsar::domain> domain_in)
 : pulsar::node::base(name_in, domain_in)
 {
-    add_property("node:class", property::value_type::string).set("pulsar::jackaudio::node");
-    add_property("config:client_name", property::value_type::string).set(name_in);
+    add_property("node:class", property::value_type::string).value->set("pulsar::jackaudio::node");
+    add_property("config:client_name", property::value_type::string).value->set(name_in);
     add_property("config:sample_rate", property::value_type::size);
     add_property("config:watchdog_timeout_ms", property::value_type::size);
 }
@@ -93,8 +93,8 @@ void jackaudio::node::open(const string_type& jack_name_in)
         system_fault("jack sample rate did not match domain sample rate");
     }
 
-    get_property("config:client_name").set(client_name);
-    get_property("config:sample_rate").set(sample_rate);
+    get_property("config:client_name").value->set(client_name);
+    get_property("config:sample_rate").value->set(sample_rate);
 }
 
 jackaudio::port_type * jackaudio::node::add_port(const string_type& port_name_in, const char * port_type_in, const flags_type flags_in, const size_type buffer_size_in)
@@ -157,7 +157,7 @@ void jackaudio::node::activate()
 
     assert(jack_client == nullptr);
 
-    auto& client_name = get_property("config:client_name").get_string();
+    auto& client_name = get_property("config:client_name").value->get_string();
     open(client_name);
 
     for(auto&& name : audio.get_output_names()) {
@@ -262,7 +262,7 @@ void jackaudio::node::start()
 
     if (jack_client == nullptr) system_fault("jackaudio client pointer was null");
 
-    auto watchdog_timeout = get_property("config:watchdog_timeout_ms").get_size();
+    auto watchdog_timeout = get_property("config:watchdog_timeout_ms").value->get_size();
 
     if (watchdog_timeout) {
         auto message = util::to_string("jackaudio node ", name, " was not ready fast enough");

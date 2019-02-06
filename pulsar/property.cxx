@@ -21,11 +21,9 @@ namespace pulsar {
 
 namespace property {
 
-generic::generic(node::base * parent_in, const string_type& name_in, const value_type& type_in)
-: parent(parent_in), name(name_in), type(type_in)
+storage::storage(const value_type& type_in)
+: type(type_in)
 {
-    assert(parent != nullptr);
-
     switch(type) {
         case value_type::unknown: system_fault("can not specify unknown as a parameter type");
         case value_type::size: value.size = 0; break;
@@ -35,7 +33,7 @@ generic::generic(node::base * parent_in, const string_type& name_in, const value
     }
 }
 
-generic::~generic()
+storage::~storage()
 {
     if (type == value_type::string && value.string != nullptr) {
         delete(value.string);
@@ -43,7 +41,7 @@ generic::~generic()
     }
 }
 
-string_type generic::get()
+string_type storage::get()
 {
     switch(type) {
         case value_type::unknown: system_fault("parameter type was not known");
@@ -56,7 +54,7 @@ string_type generic::get()
     system_fault("should never get out of switch statement");
 }
 
-void generic::set(const double& value_in)
+void storage::set(const double& value_in)
 {
     switch(type) {
         case value_type::unknown: system_fault("parameter type was not known"); return;
@@ -69,7 +67,7 @@ void generic::set(const double& value_in)
     system_fault("should never get out of switch statement");
 }
 
-void generic::set(const string_type& value_in)
+void storage::set(const string_type& value_in)
 {
     auto c_str = value_in.c_str();
 
@@ -84,7 +82,7 @@ void generic::set(const string_type& value_in)
     system_fault("should never get out of switch statement");
 }
 
-void generic::set(const YAML::Node& value_in)
+void storage::set(const YAML::Node& value_in)
 {
     switch(type) {
         case value_type::unknown: system_fault("parameter type was not known");
@@ -95,12 +93,7 @@ void generic::set(const YAML::Node& value_in)
     }
 }
 
-node::base * generic::get_parent()
-{
-    return parent;
-}
-
-size_type& generic::get_size()
+size_type& storage::get_size()
 {
     if (type != value_type::size) {
         system_fault("parameter is not of type: size");
@@ -109,7 +102,7 @@ size_type& generic::get_size()
     return value.size;
 }
 
-void generic::set_size(const size_type& size_in)
+void storage::set_size(const size_type& size_in)
 {
     if (type != value_type::size) {
         system_fault("parameter is not of type: size");
@@ -118,7 +111,7 @@ void generic::set_size(const size_type& size_in)
     value.size = size_in;
 }
 
-integer_type& generic::get_integer()
+integer_type& storage::get_integer()
 {
     if (type != value_type::integer) {
         system_fault("parameter is not of type: integer");
@@ -127,7 +120,7 @@ integer_type& generic::get_integer()
     return value.integer;
 }
 
-void generic::set_integer(const integer_type& integer_in)
+void storage::set_integer(const integer_type& integer_in)
 {
     if (type != value_type::integer) {
         system_fault("parameter is not of type: integer");
@@ -136,7 +129,7 @@ void generic::set_integer(const integer_type& integer_in)
     value.integer = integer_in;
 }
 
-void generic::set_real(const real_type& real_in)
+void storage::set_real(const real_type& real_in)
 {
     if (type != value_type::real) {
         system_fault("parameter is not of type: real");
@@ -145,7 +138,7 @@ void generic::set_real(const real_type& real_in)
     value.real = real_in;
 }
 
-real_type& generic::get_real()
+real_type& storage::get_real()
 {
     if (type != value_type::real) {
         system_fault("parameter is not of type: real");
@@ -154,7 +147,7 @@ real_type& generic::get_real()
     return value.real;
 }
 
-void generic::set_string(const string_type& string_in)
+void storage::set_string(const string_type& string_in)
 {
     if (type != value_type::string) {
         system_fault("parameter is not of type: string");
@@ -163,7 +156,7 @@ void generic::set_string(const string_type& string_in)
     *value.string = string_in;
 }
 
-string_type& generic::get_string()
+string_type& storage::get_string()
 {
     if (type != value_type::string) {
         system_fault("parameter is not of type: string");
@@ -171,6 +164,14 @@ string_type& generic::get_string()
 
     return *value.string;
 }
+
+property::property(node::base * parent_in, const string_type& name_in, const value_type type_in)
+: parent(parent_in), name(name_in), value(std::make_shared<storage>(type_in))
+{ }
+
+property::property(node::base * parent_in, const string_type& name_in, std::shared_ptr<storage> storage_in)
+: parent(parent_in), name(name_in), value(storage_in)
+{ }
 
 } // namespace parameter
 

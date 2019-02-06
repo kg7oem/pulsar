@@ -13,6 +13,7 @@
 
 #pragma once
 
+#include <memory>
 #include <string>
 
 #include <pulsar/config.h>
@@ -32,21 +33,20 @@ union value_container {
     string_type * string;
 };
 
-class generic {
+class storage : public std::enable_shared_from_this<storage> {
+    storage(const storage&) = delete;
+
     protected:
     value_container value;
-    node::base * parent;
 
     public:
-    const string_type name;
     const value_type type = value_type::unknown;
-    generic(node::base * parent_in, const string_type& name_in, const value_type& type_in);
-    virtual ~generic();
+    storage(const value_type& type_in);
+    virtual ~storage();
     string_type get();
     void set(const double& value_in);
     void set(const string_type& value_in);
     void set(const YAML::Node& value_in);
-    node::base * get_parent();
     size_type& get_size();
     void set_size(const size_type& size_in);
     integer_type& get_integer();
@@ -55,6 +55,17 @@ class generic {
     real_type& get_real();
     string_type& get_string();
     void set_string(const string_type& string_in);
+};
+
+class property {
+    protected:
+    node::base * parent;
+
+    public:
+    const string_type name;
+    const std::shared_ptr<storage> value;
+    property(node::base * parent_in, const string_type& name_in, const value_type type_in);
+    property(node::base * parent_in, const string_type& name_in, std::shared_ptr<storage> storage_in);
 };
 
 } // namespace property
