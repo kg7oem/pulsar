@@ -25,6 +25,7 @@
 #include <thread>
 #include <unordered_set>
 #include <vector>
+#include <functional>
 
 #ifdef LOGJAM_LOG_MACROS
 #ifndef LOGJAM_NLOG
