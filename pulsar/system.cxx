@@ -24,6 +24,7 @@
 #include <pulsar/ladspa.h>
 #include <pulsar/logging.h>
 #include <pulsar/node.h>
+#include <pulsar/pulseaudio.h>
 #include <pulsar/system.h>
 #include <pulsar/thread.h>
 
@@ -58,8 +59,11 @@ void bootstrap(const size_type num_threads_in)
 {
     pulsar::dbus::init();
     pulsar::node::init();
-    pulsar::jackaudio::init();
+
     pulsar::ladspa::init();
+
+    pulsar::jackaudio::init();
+    pulsar::pulseaudio::init();
 
     // the timer must exist before async init happens
     alive_timer = async::timer::make(0s, ALIVE_TICK_INTERVAL);

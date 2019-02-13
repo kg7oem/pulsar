@@ -18,6 +18,7 @@ set(CMAKE_CXX_STANDARD 17)
 
 find_package(Boost 1.58.0 COMPONENTS system REQUIRED)
 find_package(PkgConfig REQUIRED)
+find_package(PulseAudio REQUIRED)
 find_package(Threads REQUIRED)
 find_package(yaml-cpp REQUIRED)
 
@@ -70,6 +71,7 @@ add_library(
     pulsar/library.cxx
     pulsar/node.cxx
     pulsar/property.cxx
+    pulsar/pulseaudio.cxx
     pulsar/system.cxx
     pulsar/thread.cxx
     pulsar/util.cxx
@@ -95,6 +97,7 @@ target_link_libraries(pulsar ${DBUSLIB_LIBRARIES})
 target_link_libraries(pulsar dl)
 target_link_libraries(pulsar jack)
 target_link_libraries(pulsar logjam)
+target_link_libraries(pulsar pulse)
 target_link_libraries(pulsar yaml-cpp)
 
 target_link_libraries(pulsar-dev pulsar)
