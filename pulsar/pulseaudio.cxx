@@ -11,6 +11,7 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
 
+#include <pulsar/library.h>
 #include <pulsar/logging.h>
 #include <pulsar/pulseaudio.h>
 #include <pulsar/system.h>
@@ -20,23 +21,16 @@ namespace pulsar {
 
 namespace pulseaudio {
 
-using namespace std::chrono_literals;
-
+static pa_mainloop * pulse_main_loop = nullptr;
 static pa_mainloop_api * pulse_api = nullptr;
 static thread_type * pulse_thread = nullptr;
 
 static void pulse_loop()
 {
-    assert(pulse_api == nullptr);
-
-    auto loop = pa_mainloop_new();
-    assert(loop != nullptr);
-
-    pulse_api = pa_mainloop_get_api(loop);
-    assert(pulse_api != nullptr);
+    assert(pulse_main_loop != nullptr);
 
     log_debug("pulseaudio thread is giving control to pulseaudio main loop");
-    auto result = pa_mainloop_run(loop, NULL);
+    auto result = pa_mainloop_run(pulse_main_loop, NULL);
     log_debug("pulseaudio thread got control back from pulseaudio main loop");
 
     if (result < 0) {
@@ -44,13 +38,28 @@ static void pulse_loop()
     }
 }
 
+pulsar::node::base * make_client_node(const string_type& name_in, std::shared_ptr<domain> domain_in)
+{
+    return domain_in->make_node<pulseaudio::client_node>(name_in);
+}
+
 void init()
 {
     log_debug("pulseaudio system is initializing");
 
     assert(pulse_thread == nullptr);
+    assert(pulse_api == nullptr);
+    assert(pulse_main_loop == nullptr);
+
+    pulse_main_loop = pa_mainloop_new();
+    assert(pulse_main_loop != nullptr);
+
+    pulse_api = pa_mainloop_get_api(pulse_main_loop);
+    assert(pulse_api != nullptr);
 
     pulse_thread = new thread_type(pulse_loop);
+
+    library::register_node_factory("pulsar::pulseaudio::client", make_client_node);
 }
 
 pa_context * make_context(const string_type& name_in)
@@ -62,6 +71,19 @@ pa_context * make_context(const string_type& name_in)
 
     return context;
 }
+
+node::node(const string_type& name_in, std::shared_ptr<pulsar::domain> domain_in)
+: pulsar::node::base(name_in, domain_in)
+{
+    add_property("node:class", property::value_type::string).set("pulsar::jackaudio::node");
+
+    add_property("config:context", property::value_type::string).set(name_in);
+    add_property("config:sample_rate", property::value_type::size);
+}
+
+client_node::client_node(const string_type& name_in, std::shared_ptr<pulsar::domain> domain_in)
+: node(name_in, domain_in)
+{ }
 
 } // namespace pulseaudio
 

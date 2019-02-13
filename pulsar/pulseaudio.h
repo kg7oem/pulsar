@@ -15,6 +15,7 @@
 
 #include <pulse/pulseaudio.h>
 
+#include <pulsar/node.h>
 #include <pulsar/types.h>
 
 namespace pulsar {
@@ -23,6 +24,17 @@ namespace pulseaudio {
 
 void init();
 pa_context * make_context(const string_type& name_in);
+
+class node : public pulsar::node::base, public std::enable_shared_from_this<node> {
+    protected:
+    pa_context * context;
+    node(const string_type& name_in, std::shared_ptr<pulsar::domain> domain_in);
+};
+
+class client_node : public node {
+    public:
+    client_node(const string_type& name_in, std::shared_ptr<pulsar::domain> domain_in);
+};
 
 } // namespace pulseaudio
 
