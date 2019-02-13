@@ -18,6 +18,7 @@
 #include <boost/asio/system_timer.hpp>
 #include <chrono>
 #include <functional>
+#include <list>
 #include <memory>
 
 #include <pulsar/system.h>
@@ -86,6 +87,56 @@ class watchdog : public base_timer, public std::enable_shared_from_this<watchdog
     {
         static pool_allocator_type<watchdog> allocator;
         return std::allocate_shared<watchdog>(allocator, args...);
+    }
+};
+
+template <typename T>
+class notifier {
+    protected:
+    std::atomic<size_type> next_watcher_id = ATOMIC_VAR_INIT(1);
+
+    public:
+    using cb_type = std::function<void (const T&)>;
+    using promise_type = std::promise<const T&>;
+
+    struct watcher {
+        const size_type id;
+        cb_type cb;
+        const bool repeat;
+        watcher(const size_type id_in, cb_type cb_in, const bool repeat_in)
+        : id(id_in), cb(cb_in), repeat(repeat_in)
+        { }
+    };
+
+    protected:
+    std::list<watcher> watchers;
+
+    public:
+    void notify(const T& event_in)
+    {
+        for(auto&& watcher : watchers) {
+            watcher.cb(event_in);
+        }
+    }
+
+    watcher& watch(cb_type cb_in)
+    {
+        watchers.emplace_back(next_watcher_id++, cb_in, true);
+        return watchers.back();
+    }
+
+    void wait_for(const T& wait_event_in)
+    {
+        promise_type promise;
+
+        watch([&promise, wait_event_in] (const T& got_event_in) {
+            if (wait_event_in == got_event_in) {
+                promise.set_value(got_event_in);
+            }
+        });
+
+        promise.get_future().get();
+        return;
     }
 };
 

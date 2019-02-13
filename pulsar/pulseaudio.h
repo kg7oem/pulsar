@@ -15,6 +15,7 @@
 
 #include <pulse/pulseaudio.h>
 
+#include <pulsar/async.h>
 #include <pulsar/node.h>
 #include <pulsar/types.h>
 
@@ -25,10 +26,21 @@ namespace pulseaudio {
 void init();
 pa_context * make_context(const string_type& name_in);
 
-class node : public pulsar::node::base, public std::enable_shared_from_this<node> {
+struct node : public pulsar::node::base, public std::enable_shared_from_this<node> {
+    using state_notifier_type = async::notifier<pa_context_state_t>;
+
     protected:
-    pa_context * context;
+    state_notifier_type context_state;
+    pa_context * context = nullptr;
+    pa_stream * stream = nullptr;
+    pa_sample_spec sample_spec;
+    pa_buffer_attr buf_attr;
     node(const string_type& name_in, std::shared_ptr<pulsar::domain> domain_in);
+
+    public:
+    virtual void activate() override;
+    // FIXME this should not be public
+    void context_ready();
 };
 
 class client_node : public node {
