@@ -151,11 +151,13 @@ void node::activate()
     output_spec.channels = 2;
     input_spec.channels = 2;
 
-    buffer_attr.fragsize = (uint32_t)-1;
-    buffer_attr.maxlength = domain->buffer_size * sizeof(sample_type);
-    buffer_attr.minreq = 0;
-    buffer_attr.prebuf = (uint32_t)-1;
-    buffer_attr.tlength = domain->buffer_size * sizeof(sample_type);
+    auto buff_size_bytes = domain->buffer_size * sizeof(sample_type);
+
+    buffer_attr.fragsize = buff_size_bytes;
+    buffer_attr.maxlength = buff_size_bytes;
+    buffer_attr.minreq = buff_size_bytes;
+    buffer_attr.prebuf = buff_size_bytes;
+    buffer_attr.tlength = buff_size_bytes;
 
     context = make_context(get_property("config:context").get_string());
 
