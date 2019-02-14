@@ -111,6 +111,8 @@ pa_stream * node::make_stream(const string_type& name_in, const pa_sample_spec *
     return stream;
 }
 
+// called from pulseaudio thread and assumed that the
+// lock is already held by pulseaudio
 static void state_cb(pa_context *context, void *userdata)
 {
     auto notifier = static_cast<node::state_notifier_type *>(userdata);
@@ -118,19 +120,30 @@ static void state_cb(pa_context *context, void *userdata)
     notifier->notify(state);
 }
 
-static void stream_write_cb(pa_stream * stream_in, size_t bytes_in , void * userdata_in)
+// called from pulseaudio thread and assumed that the
+// lock is already held by pulseaudio
+static void stream_write_cb(UNUSED pa_stream * stream_in, size_t bytes_in, void * userdata_in)
 {
     log_trace("stream write callback invoked; bytes_in = ", bytes_in);
 
     auto node = static_cast<pulseaudio::node *>(userdata_in);
 
     auto zeros = node->get_domain()->get_zero_buffer();
-    pa_stream_write(stream_in, zeros->get_pointer(), bytes_in, NULL, 0, PA_SEEK_RELATIVE);
+    // pa_stream_write(stream_in, zeros->get_pointer(), bytes_in, NULL, 0, PA_SEEK_RELATIVE);
 }
 
-static void stream_read_cb(pa_stream * /* stream */, size_t bytes_in, void * /* userdata */)
+// called from pulseaudio thread and assumed that the
+// lock is already held by pulseaudio
+static void stream_read_cb(pa_stream * /* stream */, size_t bytes_in, void * userdata_in)
 {
-    system_fault("stream read callback invoked; bytes_in = ", bytes_in);
+    log_trace("stream read callback invoked; bytes_in = ", bytes_in);
+
+    auto node = static_cast<pulseaudio::node *>(userdata_in);
+    auto buff_size_bytes = node->get_domain()->buffer_size * sizeof(sample_type);
+
+    if (bytes_in != buff_size_bytes) {
+        system_fault("pulseaudio read size of ", bytes_in, " was not same as domain buffer size of ", buff_size_bytes);
+    }
 }
 
 void node::activate()
@@ -154,10 +167,10 @@ void node::activate()
     auto buff_size_bytes = domain->buffer_size * sizeof(sample_type);
 
     buffer_attr.fragsize = buff_size_bytes;
+    buffer_attr.tlength = buff_size_bytes;
     buffer_attr.maxlength = buff_size_bytes;
     buffer_attr.minreq = buff_size_bytes;
-    buffer_attr.prebuf = buff_size_bytes;
-    buffer_attr.tlength = buff_size_bytes;
+    buffer_attr.prebuf = (uint32_t) -1;
 
     context = make_context(get_property("config:context").get_string());
 
@@ -176,7 +189,7 @@ void node::activate()
     output_stream = make_stream("Playback", &output_spec);
 
     lock_pulse();
-    pa_stream_set_read_callback(input_stream, stream_read_cb, nullptr);
+    pa_stream_set_read_callback(input_stream, stream_read_cb, this);
     pa_stream_set_write_callback(output_stream, stream_write_cb, this);
     unlock_pulse();
 }
@@ -188,7 +201,9 @@ void node::start()
     lock_pulse();
 
     auto flags = static_cast<pa_stream_flags_t>(
-        PA_STREAM_INTERPOLATE_TIMING | PA_STREAM_AUTO_TIMING_UPDATE
+        PA_STREAM_ADJUST_LATENCY
+        | PA_STREAM_INTERPOLATE_TIMING
+        | PA_STREAM_AUTO_TIMING_UPDATE
     );
 
     auto result = pa_stream_connect_record(input_stream, nullptr, &buffer_attr, flags);
