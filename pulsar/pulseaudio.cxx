@@ -113,17 +113,24 @@ pa_stream * node::make_stream(const string_type& name_in, const pa_sample_spec *
 
 // called from pulseaudio thread and assumed that the
 // lock is already held by pulseaudio
-static void state_cb(pa_context *context, void *userdata)
+static void state_cb(pa_context *context, void *userdata_in)
 {
-    auto notifier = static_cast<node::state_notifier_type *>(userdata);
+    assert(userdata_in != nullptr);
+
+    auto notifier = static_cast<node::notifier_type *>(userdata_in);
     auto state = pa_context_get_state(context);
-    notifier->notify(state);
+
+    if (state == PA_CONTEXT_READY) {
+        notifier->notify(node_event::pulse_context_ready);
+    }
 }
 
 // called from pulseaudio thread and assumed that the
 // lock is already held by pulseaudio
 static void stream_write_cb(UNUSED pa_stream * stream_in, size_t bytes_in, void * userdata_in)
 {
+    assert(userdata_in != nullptr);
+
     log_trace("stream write callback invoked; bytes_in = ", bytes_in);
 
     auto node = static_cast<pulseaudio::node *>(userdata_in);
@@ -136,6 +143,8 @@ static void stream_write_cb(UNUSED pa_stream * stream_in, size_t bytes_in, void 
 // lock is already held by pulseaudio
 static void stream_read_cb(pa_stream * /* stream */, size_t bytes_in, void * userdata_in)
 {
+    assert(userdata_in != nullptr);
+
     log_trace("stream read callback invoked; bytes_in = ", bytes_in);
 
     auto node = static_cast<pulseaudio::node *>(userdata_in);
@@ -144,6 +153,18 @@ static void stream_read_cb(pa_stream * /* stream */, size_t bytes_in, void * use
     if (bytes_in != buff_size_bytes) {
         system_fault("pulseaudio read size of ", bytes_in, " was not same as domain buffer size of ", buff_size_bytes);
     }
+}
+
+static void cork_result_cb(pa_stream *, int success_in, void *userdata_in)
+{
+    assert(userdata_in != nullptr);
+
+    if (! success_in) {
+        system_fault("attempt to uncork pulseaudio stream failed");
+    }
+
+    auto notifier = static_cast<node::notifier_type *>(userdata_in);
+    notifier->notify(node_event::pulse_input_uncorked);
 }
 
 void node::activate()
@@ -177,31 +198,25 @@ void node::activate()
     lock_pulse();
 
     pa_context_connect(context, nullptr, PA_CONTEXT_NOFLAGS, nullptr);
-    pa_context_set_state_callback(context, state_cb, &context_state);
+    pa_context_set_state_callback(context, state_cb, &event);
 
     unlock_pulse();
 
     log_debug("waiting for pulseaudio context to become ready");
-    context_state.wait_for(PA_CONTEXT_READY);
+    event.wait_for(node_event::pulse_context_ready);
     log_debug("pulseaudio context is now ready");
 
     input_stream = make_stream("Record", &input_spec);
     output_stream = make_stream("Playback", &output_spec);
 
     lock_pulse();
+
     pa_stream_set_read_callback(input_stream, stream_read_cb, this);
     pa_stream_set_write_callback(output_stream, stream_write_cb, this);
-    unlock_pulse();
-}
-
-void node::start()
-{
-    log_trace("pulseaudio node is starting: ", name);
-
-    lock_pulse();
 
     auto flags = static_cast<pa_stream_flags_t>(
-        PA_STREAM_ADJUST_LATENCY
+        PA_STREAM_START_CORKED
+        | PA_STREAM_ADJUST_LATENCY
         | PA_STREAM_INTERPOLATE_TIMING
         | PA_STREAM_AUTO_TIMING_UPDATE
     );
@@ -217,6 +232,33 @@ void node::start()
     if (result < 0) {
         system_fault("could not connect playback stream");
     }
+
+    unlock_pulse();
+}
+
+void node::uncork(pa_stream * stream_in)
+{
+    lock_pulse();
+
+    auto operation = pa_stream_cork(stream_in, false, cork_result_cb, &event);
+
+    if (operation == nullptr) {
+        auto error = pa_context_errno(context);
+        system_fault("could not uncork pulseaudio input stream: ", pa_strerror(error));
+    }
+
+    pa_operation_unref(operation);
+
+    unlock_pulse();
+}
+
+void node::start()
+{
+    log_trace("pulseaudio node is starting: ", name);
+
+    lock_pulse();
+
+    // uncork(input_stream);
 
     unlock_pulse();
 

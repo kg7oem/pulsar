@@ -26,11 +26,16 @@ namespace pulseaudio {
 void init();
 pa_context * make_context(const string_type& name_in);
 
+enum class node_event {
+    pulse_context_ready = 0,
+    pulse_input_uncorked
+};
+
 struct node : public pulsar::node::base, public std::enable_shared_from_this<node> {
-    using state_notifier_type = async::notifier<pa_context_state_t>;
+    using notifier_type = async::notifier<node_event>;
 
     protected:
-    state_notifier_type context_state;
+    notifier_type event;
     pa_context * context = nullptr;
     pa_stream * output_stream = nullptr;
     pa_stream * input_stream = nullptr;
@@ -40,6 +45,7 @@ struct node : public pulsar::node::base, public std::enable_shared_from_this<nod
     node(const string_type& name_in, std::shared_ptr<pulsar::domain> domain_in);
     void start() override;
     pa_stream * make_stream(const string_type& name_in, const pa_sample_spec * spec_in);
+    void uncork(pa_stream * stream_in);
 
     public:
     virtual void activate() override;
