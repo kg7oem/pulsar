@@ -23,21 +23,23 @@ namespace pulsar {
 
 namespace pulseaudio {
 
-static pa_mainloop * pulse_main_loop = nullptr;
+static pa_threaded_mainloop  * pulse_main_loop = nullptr;
 static pa_mainloop_api * pulse_api = nullptr;
-static thread_type * pulse_thread = nullptr;
 
-static void pulse_loop()
+static void lock_pulse()
 {
     assert(pulse_main_loop != nullptr);
+    log_trace("getting pulse lock");
+    pa_threaded_mainloop_lock(pulse_main_loop);
+    log_trace("got pulse lock");
+}
 
-    log_debug("pulseaudio thread is giving control to pulseaudio main loop");
-    auto result = pa_mainloop_run(pulse_main_loop, NULL);
-    log_debug("pulseaudio thread got control back from pulseaudio main loop");
-
-    if (result < 0) {
-        system_fault("pulseaudio pa_mainloop_run() had an error response");
-    }
+static void unlock_pulse()
+{
+    assert(pulse_main_loop != nullptr);
+    log_trace("giving up pulse lock");
+    pa_threaded_mainloop_unlock(pulse_main_loop);
+    log_trace("gave up pulse lock");
 }
 
 pulsar::node::base * make_client_node(const string_type& name_in, std::shared_ptr<domain> domain_in)
@@ -49,17 +51,21 @@ void init()
 {
     log_debug("pulseaudio system is initializing");
 
-    assert(pulse_thread == nullptr);
     assert(pulse_api == nullptr);
     assert(pulse_main_loop == nullptr);
 
-    pulse_main_loop = pa_mainloop_new();
+    pulse_main_loop = pa_threaded_mainloop_new();
     assert(pulse_main_loop != nullptr);
 
-    pulse_api = pa_mainloop_get_api(pulse_main_loop);
+    pulse_api = pa_threaded_mainloop_get_api(pulse_main_loop);
     assert(pulse_api != nullptr);
 
-    pulse_thread = new thread_type(pulse_loop);
+    // will have to lock pulseaudio objects after the loop has been started
+    auto result = pa_threaded_mainloop_start(pulse_main_loop);
+
+    if (result < 0) {
+        system_fault("could not start pulseaudio threaded mainloop");
+    }
 
     library::register_node_factory("pulsar::pulseaudio::client", make_client_node);
 }
@@ -68,8 +74,12 @@ pa_context * make_context(const string_type& name_in)
 {
     assert(pulse_api != nullptr);
 
+    lock_pulse();
+
     auto context = pa_context_new(pulse_api, name_in.c_str());
     assert(context != nullptr);
+
+    unlock_pulse();
 
     return context;
 }
@@ -99,15 +109,21 @@ void node::activate()
 {
     log_trace("starting pulseaudio activation for node: ", name);
 
+    lock_pulse();
+
     assert(context == nullptr);
     context = make_context(get_property("config:context").get_string());
 
     pa_context_connect(context, nullptr, PA_CONTEXT_NOFLAGS, nullptr);
     pa_context_set_state_callback(context, state_cb, &context_state);
 
+    unlock_pulse();
+
     log_debug("waiting for pulseaudio context to become ready");
     context_state.wait_for(PA_CONTEXT_READY);
     log_debug("pulseaudio context is now ready");
+
+    lock_pulse();
 
 #if defined BOOST_BIG_ENDIAN
     sample_spec.format = PA_SAMPLE_FLOAT32BE;
@@ -115,7 +131,7 @@ void node::activate()
     sample_spec.format = PA_SAMPLE_FLOAT32LE;
 #else
 #error system is not big or little endian?
-#endif //
+#endif
 
     sample_spec.rate = get_property("config:sample_rate").get_size();
     sample_spec.channels = 1;
@@ -131,22 +147,21 @@ void node::activate()
     buf_attr.prebuf = (uint32_t)-1;
     buf_attr.tlength = domain->buffer_size;
 
+    auto flags = static_cast<pa_stream_flags_t>(
+        PA_STREAM_INTERPOLATE_TIMING | PA_STREAM_AUTO_TIMING_UPDATE
+    );
+
     auto result = pa_stream_connect_playback(
-        stream, nullptr, &buf_attr,
-        static_cast<pa_stream_flags_t>(PA_STREAM_INTERPOLATE_TIMING | PA_STREAM_AUTO_TIMING_UPDATE),
-        nullptr, nullptr
+        stream, nullptr, &buf_attr, flags, nullptr, nullptr
     );
 
     if (result < 0) {
         system_fault("could not connect playback stream");
     }
 
-    pulsar::node::base::activate();
-}
+    unlock_pulse();
 
-void node::context_ready()
-{
-    system_fault("context is ready");
+    pulsar::node::base::activate();
 }
 
 client_node::client_node(const string_type& name_in, std::shared_ptr<pulsar::domain> domain_in)

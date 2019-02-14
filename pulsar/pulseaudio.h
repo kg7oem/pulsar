@@ -39,8 +39,6 @@ struct node : public pulsar::node::base, public std::enable_shared_from_this<nod
 
     public:
     virtual void activate() override;
-    // FIXME this should not be public
-    void context_ready();
 };
 
 class client_node : public node {
