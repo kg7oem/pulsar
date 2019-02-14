@@ -32,10 +32,14 @@ struct node : public pulsar::node::base, public std::enable_shared_from_this<nod
     protected:
     state_notifier_type context_state;
     pa_context * context = nullptr;
-    pa_stream * stream = nullptr;
-    pa_sample_spec sample_spec;
-    pa_buffer_attr buf_attr;
+    pa_stream * output_stream = nullptr;
+    pa_stream * input_stream = nullptr;
+    pa_sample_spec output_spec;
+    pa_sample_spec input_spec;
+    pa_buffer_attr buffer_attr;
     node(const string_type& name_in, std::shared_ptr<pulsar::domain> domain_in);
+    void start() override;
+    pa_stream * make_stream(const string_type& name_in, const pa_sample_spec * spec_in);
 
     public:
     virtual void activate() override;
