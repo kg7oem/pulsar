@@ -54,6 +54,8 @@ chains:
 
   remove_squelch_tail:
     channels: 1
+    config:
+      - gate:Max gate close
     state:
       - gate:*
     forward:
