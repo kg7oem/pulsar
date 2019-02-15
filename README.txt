@@ -64,8 +64,8 @@ the major changes start to slow down.
 
 Limitations
 
-  * Nearly all unexpected cases are fatal when they should
-    be non-fatal errors.
+  * This thing is extremely brittle. Nearly all unexpected
+    cases are fatal when they should be non-fatal errors.
   * Only built and tested on Debian/GNU Linux and Ubuntu.
   * No cycles allowed in the graph that defines the signal
     processing. They are not impossible but right now will
