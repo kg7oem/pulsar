@@ -13,6 +13,7 @@
 
 #include <pthread.h>
 
+#include <pulsar/logging.h>
 #include <pulsar/system.h>
 #include <pulsar/thread.h>
 #include <pulsar/types.h>
@@ -27,8 +28,8 @@ void set_realtime_priority(thread_type& thread_in, const rt_priorty& priority_in
     sched_param sch_params;
     sch_params.sched_priority = static_cast<int>(priority_in);
 
-    if (pthread_setschedparam(thread_in.native_handle(), SCHED_RR, &sch_params)) {
-        system_fault("could not set realtime priority for thread");
+    if (auto error = pthread_setschedparam(thread_in.native_handle(), SCHED_RR, &sch_params)) {
+        log_error("could not set thread to realtime priority: ", strerror(error));
     }
 }
 
