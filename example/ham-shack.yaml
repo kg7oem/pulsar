@@ -1,35 +1,36 @@
-# This is a real world working example of the configuration in use in my
-# HAM radio station. The control_microphone chain is controlled by a perl
-# script which makes it follow the state of the PTT on the radio. This is
-# used so that a live shoutcast stream only includes the microphone audio
-# when the radio is transmitting and not the audio from the room all the
-# time.
-#
-# The remove_squelch_tail chain is used to chop off the end of received
-# transmissions. The squelch tail is the pssssssht that is heard on
-# two way FM radios when the other station stops transmitting. The
-# combination of the delay and gate is very effective and removing this.
-# See https://www.qrz.com/lookup/kg7oem#RemovingSquelchTails for more
-# info.
-
 ---
 
 engine:
   logs:
     console_level: info
-    memory_level: trace
+    memory_level: debug
 
 templates:
+  compressor:
+    class: pulsar::ladspa::node
+    plugin:
+      filename: /usr/local/lib/ladspa/ZamComp-ladspa.so
+
   gate:
     class: pulsar::ladspa::node
     plugin:
       filename: /usr/local/lib/ladspa/ZamGate-ladspa.so
+
+  gain:
+    class: pulsar::ladspa::node
+    plugin:
+      filename: /usr/lib/ladspa/amp_1181.so
 
   delay:
     class: pulsar::ladspa::node
     plugin:
       filename: /usr/lib/ladspa/delay_1898.so
       id: 1899
+
+  tube:
+    class: pulsar::ladspa::node
+    plugin:
+      filename: /usr/local/lib/ladspa/ZamTube-ladspa.so
 
 chains:
   control_microphone:
@@ -54,15 +55,31 @@ chains:
 
   remove_squelch_tail:
     channels: 1
-    config:
-      - gate:Max gate close
     state:
       - gate:*
+    config:
+      - control_output:*
+      - control_level:*
     forward:
       in_1:
-        - delay:Input
+        - compressor:Audio Input 1
         - gate:Sidechain Input
     nodes:
+      - name: compressor
+        template: compressor
+        config:
+          Attack: 3
+          Release: 750
+          Threshold: -18
+          Ratio: 8
+          Knee: 0
+          Makeup: 10
+        link:
+          Audio Output 1: tube
+      - name: tube
+        template: tube
+        link:
+          Audio Output 1: delay:Input
       - name: delay
         template: delay
         config:
@@ -78,6 +95,21 @@ chains:
           Attack: 25
           Release: 25
           Max gate close: -.inf
+        link:
+          Audio Output 1: control_level
+      - name: control_level
+        template: gain
+        config:
+          Amps gain (dB): 0
+        link:
+          Output: control_output:Audio Input 1
+      - name: control_output
+        template: gate
+        config:
+          Threshold: -0
+          Attack: 25
+          Release: 25
+          Max gate close: 0
         forward:
           Audio Output 1: remove_squelch_tail:out_1
 
@@ -86,32 +118,30 @@ daemons:
     class: pulsar::jackaudio::connections
     config:
       connect:
-        - [ "Network In:out_1", "IC-7100 Out:playback_1" ]
-        - [ system:capture_2, ModPro:microphone_in_1 ]
-        - [ ModPro:microphone_out_1, system:playback_2 ]
-        - [ happytime:from_slave_1, "IC-7100:playback_1" ]
-        - [ ModPro:receive_out_1, happytime:to_slave_1 ]
-        - [ "IC-7100 In:capture_1", "Comptroller Out:in_1" ]
-        - [ ModPro:receive_out_1, "Comptroller Out:in_2" ]
-        - [ system:capture_1, "Comptroller Out:in_3" ]
-        - [ system:capture_2, "Comptroller Out:in_4" ]
-        - [ system:capture_1, ModPro:transmit_in_1 ]
-        - [ ModPro:transmit_out_1, "IC-7100 Out:playback_1" ]
-        - [ "IC-7100 In:capture_1", ModPro:receive_in_1 ]
-        - [ ModPro:receive_out_1, system:playback_1 ]
-        - [ ModPro:receive_out_1, "Network Out:in_1" ]
-        - [ ModPro:receive_out_1, "Rex Out:in_1" ]
-        - [ ModPro:receive_out_1, "Liv Room Out:in_1" ]
+        - [ system:capture_1, ModPro:voice_in ]
+        - [ system:capture_2, ModPro:microphone_in ]
+        - [ ModPro:speaker_out, system:playback_1 ]
+        - [ ModPro:microphone_out, system:playback_2 ]
 
-        - [ ModPro:receive_out_1, ffmpeg:input_1 ]
-        - [ ModPro:receive_out_1, ffmpeg:input_2 ]
-        - [ system:capture_1, ffmpeg:input_1 ]
-        - [ system:capture_1, ffmpeg:input_2 ]
+        - [ "IC-7100 In:capture_1", ModPro:ic7100_in ]
+        - [ ModPro:ic7100_out, "IC-7100 Out:playback_1" ]
+        - [ "IC-7610 In:capture_1", ModPro:ic7610_in ]
+        - [ ModPro:ic7610_out, "IC-7610 Out:playback_1" ]
+
+        - [ system:capture_2, "Comptroller Out:in_1" ]
+        - [ ModPro:voice_out, "Comptroller Out:in_2" ]
+        - [ ModPro:speaker_out, "Comptroller Out:in_3" ]
+        - [ "Comptroller In:out_2", system:playback_2 ]
+
+        - [ ModPro:speaker_out, "ffmpeg:input_1" ]
+        - [ ModPro:speaker_out, "ffmpeg:input_2" ]
+        - [ ModPro:voice_out, "ffmpeg:input_1" ]
+        - [ ModPro:voice_out, "ffmpeg:input_2" ]
 
 domain:
   config:
     sample_rate: 48000
-    buffer_size: 1024
+    buffer_size: 256
   nodes:
     - name: jack
       class: pulsar::jackaudio::node
@@ -121,24 +151,67 @@ domain:
         # hardware
         watchdog_timeout_ms: 100
       inputs:
-        - microphone_out_1
-        - receive_out_1
-        - transmit_out_1
+        - microphone_out
+        - speaker_out
+        - voice_out
+        - ic7100_out
+        - ic7610_out
       outputs:
-        - microphone_in_1
-        - transmit_in_1
-        - receive_in_1
+        - microphone_in
+        - voice_in
+        - ic7100_in
+        - ic7610_in
       link:
-        receive_in_1: remove_tail
-        microphone_in_1: control_microphone
-        transmit_in_1: jack:transmit_out_1
+        ic7100_in: remove_tail_ic7100
+        ic7610_in: remove_tail_ic7610
+        microphone_in:
+          - control_microphone_ic7100
+          - control_microphone_ic7610
+        voice_in: control_voice:Audio Input 1
 
-    - name: control_microphone
+    - name: control_voice
+      template: gate
+      config:
+        Threshold: -60
+        Attack: 25
+        Release: 25
+        Max gate close: -.inf
+      link:
+        Audio Output 1:
+          - jack:voice_out
+          - control_voice_ic7100
+          - control_voice_ic7610
+
+    - name: control_microphone_ic7100
       chain: control_microphone
       link:
-        out_1: jack:microphone_out_1
+        out_1: jack:microphone_out
 
-    - name: remove_tail
+    - name: control_voice_ic7100
+      template: gain
+      config:
+        Amps gain (dB): 0
+      link:
+        Output: jack:ic7100_out
+
+    - name: remove_tail_ic7100
       chain: remove_squelch_tail
       link:
-        out_1: jack:receive_out_1
+        out_1: jack:speaker_out
+
+    - name: control_microphone_ic7610
+      chain: control_microphone
+      link:
+        out_1: jack:microphone_out
+
+    - name: control_voice_ic7610
+      template: gain
+      config:
+        Amps gain (dB): 0
+      link:
+        Output: jack:ic7610_out
+
+    - name: remove_tail_ic7610
+      chain: remove_squelch_tail
+      link:
+        out_1: jack:speaker_out

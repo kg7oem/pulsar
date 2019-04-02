@@ -1,0 +1,103 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+use v5.10;
+use autodie ':all';
+
+use File::Basename;
+use Getopt::Long qw(:config require_order);
+use Net::DBus;
+
+main();
+
+sub main {
+    my %args = parse_args();
+    my $radio = $ARGV[0];
+    my $new_level = $ARGV[1];
+    my $dbus = Net::DBus->session;
+    our $pulsar = $dbus->get_service("audio.pulsar");
+
+    if ($args{mute}) {
+        set_mute($radio, 1);
+    } elsif ($args{unmute}) {
+        set_mute($radio, 0);
+    } elsif (defined $new_level) {
+        set_level($radio, $new_level);
+    } else {
+        get_level($radio);
+    }
+
+    exit(0);
+}
+
+sub parse_args {
+    my %args;
+
+    GetOptions(
+        '--mute|m' => \$args{mute},
+        '--unmute|u' => \$args{unmute},
+    ) or usage();
+
+    foreach my $key (qw(mute unmute)) {
+        $args{$key} = 0 unless defined $args{$key};
+    }
+
+    if ($args{mute} || $args{unmute}) {
+        usage() if $args{mute} && $args{unmute};
+        usage() unless @ARGV == 1;
+    } else {
+        usage() if @ARGV < 1 || @ARGV > 2;
+    }
+
+    return %args;
+}
+
+sub usage {
+    my $basename = basename($0);
+
+    say STDERR "Usage:";
+    say STDERR "  $basename <radio name>";
+    say STDERR "  $basename <radio name> <audio level>";
+    say STDERR "  $basename --mute <radio name>";
+    say STDERR "  $basename --unmute <radio name>";
+
+    exit(1);
+}
+
+sub make_dbus_node {
+    my ($radio) = @_;
+    our $pulsar;
+    my $node = $pulsar->get_object("/Domain/main/Node/remove_tail_$radio", "audio.pulsar.node");
+    return $node;
+}
+
+sub get_level {
+    my ($radio) = @_;
+    my $node = make_dbus_node($radio);
+    say $node->peek('config:Amps gain (dB)');
+
+    return;
+}
+
+sub set_level {
+    my ($radio, $level) = @_;
+    my $node = make_dbus_node($radio);
+    $node->poke('config:Amps gain (dB)', $level);
+
+    return;
+}
+
+sub set_mute {
+    my ($radio, $muted) = @_;
+    my $node = make_dbus_node($radio);
+
+    if ($muted) {
+        $node->poke('config:Max gate close', -inf);
+    } else {
+        $node->poke('config:Max gate close', 0);
+    }
+
+    return;
+}
+
