@@ -12,6 +12,7 @@
 // GNU Lesser General Public License for more details.
 
 #include <pthread.h>
+#include <string.h>
 
 #include <pulsar/logging.h>
 #include <pulsar/system.h>
