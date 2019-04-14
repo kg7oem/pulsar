@@ -203,6 +203,9 @@ daemons:
         - [ ModPro:speaker_out, system:playback_1 ]
         - [ ModPro:voice_out, system:playback_2 ]
 
+        - [ rig-play:out_0, ModPro:rigplay_in ]
+        - [ rig-play:out_1, ModPro:rigplay_in ]
+
         - [ "IC-7100 In:capture_1", ModPro:ic7100_in ]
         - [ ModPro:ic7100_out, "IC-7100 Out:playback_1" ]
         - [ "IC-7610 In:capture_1", ModPro:ic7610_in ]
@@ -237,6 +240,7 @@ domain:
         - ic7100_in
         - ic7610_in
         - microphone_in
+        - rigplay_in
       link:
         microphone_in:
           - voice
@@ -244,6 +248,11 @@ domain:
           - receive_ic7100
         ic7610_in:
           - receive_ic7610
+        rigplay_in:
+          - jack:speaker_out
+          # FIXME this will expose a bug and cause a crash at startup
+          # but with out it audio does not go into the radios
+          # - transmit
 
     - name: receive_ic7100
       chain: rig_receive
@@ -251,6 +260,7 @@ domain:
         out_1:
           - jack:speaker_out
           - jack:receive_out
+          # FIXME this will expose a bug and cause a crash at startup
           # - receive:Input
 
     - name: receive_ic7610
@@ -259,8 +269,10 @@ domain:
         out_1:
           - jack:speaker_out
           - jack:receive_out
+      # FIXME this will expose a bug and cause a crash at startup
       #     - receive:Input
 
+    # FIXME this will expose a bug and cause a crash at startup
     # - name: receive
     #   template: gain
     #   link:

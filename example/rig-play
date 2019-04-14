@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+
+set -e
+
+function main {
+    local radio="$1"; shift || true
+
+    if [ "$radio" == '' ] || [ "$1" == '' ]; then
+        usage
+    elif [ "$radio" == 'ic7100' ]; then
+        PORT=4500
+    elif [ "$radio" == 'ic7610' ]; then
+        PORT=4510
+    else
+        echo "Unknown radio name: $radio" >&2
+	exit 1
+    fi
+
+    trap cleanup EXIT
+
+    enable_ptt
+    mpv --audio-channels=stereo -ao=jack --jack-name=rig-play --jack-connect=no --jack-autostart=no "$@"
+}
+
+function usage {
+    local basename="$(basename $0)"
+
+    echo "Usage:" >&2
+    echo "  $basename <radio name> <filename>" >&2
+
+    exit 1
+}
+
+function disable_ptt {
+    rigctl -m 2 -r 127.0.0.1:"$PORT" T 0
+}
+
+function enable_ptt {
+    rigctl -m 2 -r 127.0.0.1:"$PORT" T 1
+}
+
+function cleanup {
+    disable_ptt
+}
+
+main "$@"
