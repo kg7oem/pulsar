@@ -34,6 +34,9 @@ $SIG{ALRM} = \&alarm_handler;
 
 END { clean_exit(); }
 
+$| = 1;
+print '';
+
 my $rig_path = $ARGV[0] or die "must specify a hamlib rig path name";
 my $radio_name = $ARGV[1] or die "must specify a radio name";
 
@@ -76,17 +79,14 @@ while(1) {
     }
 
     my $global_ptt = get_serial_ptt($serial);
-    my $rig_ptt = get_rig_ptt($rig);
 
-    if ($rig_ptt) {
+    if ($global_ptt) {
         open_gate($voice_gate);
     } else {
         close_gate($voice_gate);
     }
 
-    if ($rig_ptt != $global_ptt) {
-       set_rig_ptt($rig, $global_ptt);
-    }
+    update_rig_ptt($rig, $global_ptt);
 
     my $took = gettimeofday() - $started_at;
     my $wait = 1 / 20 - $took;
@@ -99,16 +99,11 @@ while(1) {
 clean_exit();
 die "should not get here";
 
-sub open_gate {
-    my ($gate) = @_;
-    $gate->poke("Max gate close", 0);
-    return;
-}
-
 sub get_serial_ptt {
     my ($serial) = @_;
     my $status = $serial->get_modem;
     die "error getting serial status: $!" unless defined $status;
+    die "expected RTS to be set" unless $status->{rts};
     return 0 unless exists $status->{cts};
     return 1 if $status->{cts};
     return 0;
@@ -125,9 +120,35 @@ sub get_rig_ptt {
     return $ptt_state;
 }
 
+sub update_rig_ptt {
+    my ($rig, $enabled) = @_;
+    state $last_state;
+
+    if (! defined $last_state || $last_state != $enabled) {
+        print "Set PTT state: ";
+
+        if ($enabled) {
+            say "transmit";
+        } else {
+            say "receive";
+        }
+
+        set_rig_ptt($rig, $enabled);
+        $last_state = $enabled;
+    }
+
+    return;
+}
+
 sub set_rig_ptt {
-    my ($rig, $ptt) = @_;
-    $rig->set_ptt($Hamlib::RIG_VFO_CURR, $ptt);
+    my ($rig, $enabled) = @_;
+    $rig->set_ptt($Hamlib::RIG_VFO_CURR, $enabled);
+    return;
+}
+
+sub open_gate {
+    my ($gate) = @_;
+    $gate->poke("Max gate close", 0);
     return;
 }
 
