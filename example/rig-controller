@@ -1,0 +1,196 @@
+#!/usr/bin/env perl
+
+# * read desired PTT state from a foot pedal on a serial port
+# * allow/inhibit the microphone based on desired PTT state
+# * update radio using CAT to follow desired PTT state
+# * read radio mode using CAT
+# * adjust per radio input modulation level based on current
+#   operating mode
+
+use strict;
+use warnings;
+use v5.10;
+
+use Data::Dumper;
+use Hamlib;
+use IO::Termios;
+use Net::DBus;
+use Time::HiRes qw(gettimeofday sleep);
+
+# USB MOD level 50% with IC-7100 and IC-7610
+# input audio level limited to -6db
+# also check the alsa mixer levels for the
+# audio devices - gain should be 100%
+use constant TRANSMIT_MODE_GAIN => {
+    _default => -10,
+    FM => -30,
+};
+
+Hamlib::rig_set_debug($Hamlib::RIG_DEBUG_NONE);
+
+$SIG{INT} = \&clean_exit;
+$SIG{TERM} = \&clean_exit;
+$SIG{ALRM} = \&alarm_handler;
+
+END { clean_exit(); }
+
+my $rig_path = $ARGV[0] or die "must specify a hamlib rig path name";
+my $radio_name = $ARGV[1] or die "must specify a radio name";
+
+say "Rig controller starting up: $rig_path";
+
+alarm(1);
+
+my $rig = new Hamlib::Rig(2);
+$rig->set_conf("rig_pathname", $rig_path);
+$rig->open;
+
+my $bus = Net::DBus->session;
+my $modpro = $bus->get_service("audio.pulsar");
+my $voice_gate = $modpro->get_object("/Domain/main/Node/voice", "audio.pulsar.node");
+my $receive_gate = $modpro->get_object("/Domain/main/Node/receive_$radio_name", "audio.pulsar.node");
+my $transmit_gain = $modpro->get_object("/Domain/main/Node/transmit_$radio_name", "audio.pulsar.node");
+
+my $serial = IO::Termios->open("/dev/ttyS0") or die "could not open serial port: $!";
+$serial->set_modem({ rts => 1 }) or die "could not set RTS";
+
+if (get_serial_ptt($serial)) {
+    die "PTT was enabled at startup; aborting";
+    exit(1);
+}
+
+open_gate($receive_gate);
+
+say "Rig controller running";
+
+while(1) {
+    alarm(1);
+
+    my $started_at = gettimeofday();
+    my $mode = get_mode($rig);
+
+    if ($mode =~ m/FM$/) {
+        set_gain($transmit_gain, TRANSMIT_MODE_GAIN->{FM});
+    } else {
+        set_gain($transmit_gain, TRANSMIT_MODE_GAIN->{_default});
+    }
+
+    my $global_ptt = get_serial_ptt($serial);
+    my $rig_ptt = get_rig_ptt($rig);
+
+    if ($rig_ptt) {
+        open_gate($voice_gate);
+    } else {
+        close_gate($voice_gate);
+    }
+
+    if ($rig_ptt != $global_ptt) {
+       set_rig_ptt($rig, $global_ptt);
+    }
+
+    my $took = gettimeofday() - $started_at;
+    my $wait = 1 / 20 - $took;
+
+    if ($wait > 0) {
+        sleep($wait);
+    }
+}
+
+clean_exit();
+die "should not get here";
+
+sub open_gate {
+    my ($gate) = @_;
+    $gate->poke("Max gate close", 0);
+    return;
+}
+
+sub get_serial_ptt {
+    my ($serial) = @_;
+    my $status = $serial->get_modem;
+    die "error getting serial status: $!" unless defined $status;
+    return 0 unless exists $status->{cts};
+    return 1 if $status->{cts};
+    return 0;
+}
+
+sub get_rig_ptt {
+    my ($rig) = @_;
+    my $ptt_state = $rig->get_ptt();
+
+    if ($ptt_state < 0) {
+        die "hamlib failed when getting PTT state";
+    }
+
+    return $ptt_state;
+}
+
+sub set_rig_ptt {
+    my ($rig, $ptt) = @_;
+    $rig->set_ptt($Hamlib::RIG_VFO_CURR, $ptt);
+    return;
+}
+
+sub close_gate {
+    my ($gate) = @_;
+    $gate->poke("Max gate close", "-inf");
+    return;
+}
+
+sub set_gain {
+    my ($gain, $level) = @_;
+    $gain->poke('Amps gain (dB)', $level);
+    return;
+}
+
+sub clean_exit {
+    alarm(1);
+    say "cleaning up for exit";
+
+    close_gate($voice_gate);
+    close_gate($receive_gate);
+
+    set_rig_ptt($rig, 0);
+    set_gain($transmit_gain, TRANSMIT_MODE_GAIN->{_default});
+
+    exit(0);
+}
+
+sub alarm_handler {
+    say STDERR "GOT ALARM SIGNAL";
+    clean_exit();
+}
+
+sub get_mode {
+    my ($rig) = @_;
+    my ($mode) = $rig->get_mode();
+
+    die "hamlib failed when getting mode" if $mode < 0;
+
+    return "NONE" if $mode == $Hamlib::RIG_MODE_NONE;
+    return "AM" if $mode == $Hamlib::RIG_MODE_AM;
+    return "CW" if $mode == $Hamlib::RIG_MODE_CW;
+    return "USB" if $mode == $Hamlib::RIG_MODE_USB;
+    return "LSB" if $mode == $Hamlib::RIG_MODE_LSB;
+    return "RTTY" if $mode == $Hamlib::RIG_MODE_RTTY;
+    return "FM" if $mode == $Hamlib::RIG_MODE_FM;
+    return "WFM" if $mode == $Hamlib::RIG_MODE_WFM;
+    return "CWR" if $mode == $Hamlib::RIG_MODE_CWR;
+    return "RTTYR" if $mode == $Hamlib::RIG_MODE_RTTYR;
+    return "AMS" if $mode == $Hamlib::RIG_MODE_AMS;
+    return "PKTLSB" if $mode == $Hamlib::RIG_MODE_PKTLSB;
+    return "PKTUSB" if $mode == $Hamlib::RIG_MODE_PKTUSB;
+    return "PKTFM" if $mode == $Hamlib::RIG_MODE_PKTFM;
+    return "ECSSUSB" if $mode == $Hamlib::RIG_MODE_ECSSUSB;
+    return "ECSSLSB" if $mode == $Hamlib::RIG_MODE_ECSSLSB;
+    return "FAX" if $mode == $Hamlib::RIG_MODE_FAX;
+    return "SAM" if $mode == $Hamlib::RIG_MODE_SAM;
+    return "SAL" if $mode == $Hamlib::RIG_MODE_SAL;
+    return "SAH" if $mode == $Hamlib::RIG_MODE_SAH;
+    return "DSB" if $mode == $Hamlib::RIG_MODE_DSB ;
+    return "FMN" if $mode == $Hamlib::RIG_MODE_FMN;
+    return "PKTAM" if $mode == $Hamlib::RIG_MODE_PKTAM;
+    return "TESTS_MAX" if $mode == $Hamlib::RIG_MODE_TESTS_MAX;
+
+    die "unknown hamlib rig mode: $mode";
+}

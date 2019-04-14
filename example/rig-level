@@ -1,5 +1,8 @@
 #!/usr/bin/env perl
 
+# mute/unmute and adjust the receive gain
+# of a radio
+
 use strict;
 use warnings;
 use v5.10;
@@ -68,7 +71,7 @@ sub usage {
 sub make_dbus_node {
     my ($radio) = @_;
     our $pulsar;
-    my $node = $pulsar->get_object("/Domain/main/Node/remove_tail_$radio", "audio.pulsar.node");
+    my $node = $pulsar->get_object("/Domain/main/Node/receive_$radio", "audio.pulsar.node");
     return $node;
 }
 
@@ -100,4 +103,3 @@ sub set_mute {
 
     return;
 }
-
