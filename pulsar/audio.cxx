@@ -235,11 +235,13 @@ void audio::input::link_ready(audio::link * link_in, std::shared_ptr<audio::buff
         log_trace(to_string(), " telling audio component we are ready");
         parent->audio.source_ready(this);
 
-        auto forward_buffer = mix_outputs();
+        if (forwards.size() > 0) {
+            auto forward_buffer = get_buffer();
 
-        for(auto&& forward : forwards) {
-            llog_trace({ return pulsar::util::to_string("node ", parent->name, " forwarding to ", forward->to->get_parent()->name, ":", forward->to->name); });
-            forward->to->link_ready(link_in, forward_buffer);
+            for(auto&& forward : forwards) {
+                llog_trace({ return pulsar::util::to_string("node ", parent->name, " forwarding to ", forward->to->get_parent()->name, ":", forward->to->name); });
+                forward->to->link_ready(link_in, forward_buffer);
+            }
         }
     }
 }
@@ -288,7 +290,7 @@ std::shared_ptr<audio::buffer> audio::input::mix_outputs()
 {
     llog_trace({ return pulsar::util::to_string("mixing ", links.size(), " input buffers for ", parent->name, ":", name); });
 
-    assert(link_buffers.size() > 0);
+    assert(links.size() + num_forwards_to_us > 1);
 
     auto mix_buffer = audio::buffer::make();
     mix_buffer->init(parent->get_domain()->buffer_size);
