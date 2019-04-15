@@ -323,7 +323,9 @@ void audio::output::reset_cycle()
 }
 
 void audio::output::register_forward(UNUSED output_forward * forward_in)
-{ }
+{
+    forwards_to_us++;
+}
 
 std::shared_ptr<audio::buffer> audio::output::get_buffer()
 {
@@ -395,11 +397,41 @@ void audio::output::notify()
     }
 
     for(auto&& forward : forwards) {
-        forward->to->set_buffer(buffer);
+        log_trace(parent->name, ":", name, " telling forwarder about available buffer");
+        forward->to->add_forwarded_buffer(buffer);
     }
 
     for(auto&& link : links) {
         link->notify(buffer);
+    }
+}
+
+void audio::output::add_forwarded_buffer(std::shared_ptr<audio::buffer> buffer_in)
+{
+    auto lock = debug_get_lock(forward_mutex);
+
+    forwarded_buffers.push_back(buffer_in);
+    std::shared_ptr<audio::buffer> buffer = nullptr;
+    auto available = forwarded_buffers.size();
+
+    log_trace(parent->name, ":", name, " forwards to us: ", forwards_to_us, "; available buffers: ", available);
+
+    if (available > forwards_to_us) {
+        system_fault("sanity check failed; available buffers: ", available, "; forwards to us: ", forwards_to_us);
+    }
+
+    if (available == forwards_to_us) {
+        if (available == 1) {
+            buffer = forwarded_buffers.at(0);
+        } else {
+            system_fault("need to mix forward buffers");
+        }
+
+        forwarded_buffers.clear();
+    }
+
+    if (buffer != nullptr) {
+        set_buffer(buffer);
     }
 }
 

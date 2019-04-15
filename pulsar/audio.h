@@ -98,7 +98,10 @@ class input : public channel {
 
 class output : public channel {
     std::vector<output_forward *> forwards;
+    size_type forwards_to_us = 0;
     std::shared_ptr<audio::buffer> buffer;
+    std::vector<std::shared_ptr<audio::buffer>> forwarded_buffers;
+    mutex_type forward_mutex;
 
     public:
     output(const string_type& name_in, node::base * parent_in);
@@ -109,6 +112,7 @@ class output : public channel {
     void forward_to(output * to_in);
     void forward_to(node::base * node_in, const string_type& port_name_in);
     void register_forward(output_forward * forward_in);
+    void add_forwarded_buffer(std::shared_ptr<audio::buffer> buffer_in);
     std::shared_ptr<audio::buffer> get_buffer();
     void set_buffer(std::shared_ptr<audio::buffer> buffer_in);
     void notify();
@@ -140,6 +144,7 @@ struct output_forward {
     output * from;
     output * to;
     output_forward(output * from_in, output * to_in);
+    void set_buffer();
 };
 
 class component {
