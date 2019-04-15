@@ -371,7 +371,7 @@ void connections::check_port_connections(const string_type&)
     for(auto&& i : connection_list) {
         auto output = i.first;
         auto input = i.second;
-        log_debug("connecting jack ports: ", output, " -> ", input);
+        // log_debug("connecting jack ports: ", output, " -> ", input);
         jack_connect(jack_client, output.c_str(), input.c_str());
     }
 }
