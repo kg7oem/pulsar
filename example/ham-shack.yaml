@@ -250,9 +250,7 @@ domain:
           - receive_ic7610
         rigplay_in:
           - jack:speaker_out
-          # FIXME this will expose a bug and cause a crash at startup
-          # but with out it audio does not go into the radios
-          # - transmit
+          - transmit
 
     - name: receive_ic7100
       chain: rig_receive
@@ -260,7 +258,7 @@ domain:
         out_1:
           - jack:speaker_out
           - jack:receive_out
-          # FIXME this will expose a bug and cause a crash at startup
+          # FIXME this will expose a bug and cause audio glitching
           # - receive:Input
 
     - name: receive_ic7610
@@ -269,10 +267,10 @@ domain:
         out_1:
           - jack:speaker_out
           - jack:receive_out
-      # FIXME this will expose a bug and cause a crash at startup
-      #     - receive:Input
+          # FIXME this will expose a bug and cause audio glitching
+          # - receive:Input
 
-    # FIXME this will expose a bug and cause a crash at startup
+    # FIXME this will expose a bug and cause audio glitching
     # - name: receive
     #   template: gain
     #   link:
