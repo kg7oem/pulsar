@@ -283,6 +283,21 @@ bool base::is_ready()
     return audio.is_ready();
 }
 
+io::io(const string_type& name_in, std::shared_ptr<pulsar::domain> domain_in)
+: base(name_in, domain_in, true)
+{ }
+
+void io::notify()
+{ }
+
+void io::execute()
+{
+    log_trace("invoking parent execute() method first for io node");
+    node::base::execute();
+
+    processed();
+}
+
 forwarder::forwarder(const string_type& name_in, std::shared_ptr<pulsar::domain> domain_in)
 : base(name_in, domain_in, true)
 { }

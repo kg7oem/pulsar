@@ -198,8 +198,8 @@ static pulsar::node::base * make_class_node(const YAML::Node& node_yaml_in, std:
 
     auto node_config_node = node_yaml["config"];
     auto node_plugin_node = node_yaml["plugin"];
-    auto node_inputs_node = node_yaml["inputs"];
-    auto node_outputs_node = node_yaml["outputs"];
+    auto node_inputs_node = node_yaml["sends"];
+    auto node_outputs_node = node_yaml["receives"];
 
     auto new_node = pulsar::library::make_node(class_name, node_name, domain_in);
 

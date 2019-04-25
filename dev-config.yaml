@@ -86,7 +86,7 @@ daemons:
 domain:
   config:
     sample_rate: 48000
-    buffer_size: 1024
+    buffer_size: 256
   nodes:
     - name: jack
       class: pulsar::jackaudio::node
@@ -94,8 +94,8 @@ domain:
         client_name: pulsar
         # reduce sensitivity because of interrupt isues on test
         # hardware
-        watchdog_timeout_ms: 1500
-      inputs:
+        watchdog_timeout_ms: 100
+      sends:
         - left_out
         - right_out
         - demod_out
@@ -104,7 +104,7 @@ domain:
         - right_loop_out
         - left_tube_out
         - right_tube_out
-      outputs: [ left_in, right_in, demod_in ]
+      receives: [ left_in, right_in, demod_in ]
       link:
         left_in:
           - comp_left:*

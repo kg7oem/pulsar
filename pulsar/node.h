@@ -127,6 +127,14 @@ struct base {
     virtual bool is_ready();
 };
 
+class io : public base {
+    protected:
+    io(const string_type& name_in, std::shared_ptr<pulsar::domain> domain_in);
+    void notify() override;
+    virtual void execute() override;
+    virtual void processed() = 0;
+};
+
 class forwarder : public base {
     protected:
     virtual void will_run() override;

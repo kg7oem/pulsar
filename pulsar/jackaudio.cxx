@@ -59,7 +59,7 @@ std::shared_ptr<connections> make_connections(const string_type& name_in)
 } // namespace jackaudio
 
 jackaudio::node::node(const string_type& name_in, std::shared_ptr<pulsar::domain> domain_in)
-: pulsar::node::base(name_in, domain_in)
+: pulsar::node::io(name_in, domain_in)
 {
     add_property("node:class", property::value_type::string).value->set("pulsar::jackaudio::node");
     add_property("config:client_name", property::value_type::string).value->set(name_in);
@@ -186,7 +186,7 @@ void jackaudio::node::activate()
         system_fault("could not set jackaudio process callback");
     }
 
-    pulsar::node::base::activate();
+    pulsar::node::io::activate();
 }
 
 // FIXME right now a node with no inputs will never run.
@@ -249,12 +249,8 @@ void jackaudio::node::run()
         audio::util::pcm_set(jack_buffer, channel_buffer->get_pointer(), buffer_size);
     }
 
-    pulsar::node::base::run();
+    pulsar::node::io::run();
 }
-
-// notifications happened from inside the jackaudio callback
-void jackaudio::node::notify()
-{ }
 
 void jackaudio::node::start()
 {
@@ -275,11 +271,8 @@ void jackaudio::node::start()
     }
 }
 
-void jackaudio::node::execute()
+void jackaudio::node::processed()
 {
-    log_trace("invoking parent execute() method first for jackaudio node");
-    node::base::execute();
-
     log_trace("waking up jackaudio thread");
     auto done_lock = debug_get_lock(done_mutex);
     done_flag = true;
