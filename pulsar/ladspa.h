@@ -82,7 +82,7 @@ class instance : public std::enable_shared_from_this<instance> {
     void run(const size_type num_samples_in);
 };
 
-class node : public pulsar::node::base {
+class node : public pulsar::node::filter {
     virtual void init() override;
 
     protected:

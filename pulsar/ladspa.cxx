@@ -272,7 +272,7 @@ void instance::run(const size_type num_samples_in)
 }
 
 node::node(const string_type& name_in, std::shared_ptr<pulsar::domain> domain_in)
-: pulsar::node::base(name_in, domain_in)
+: pulsar::node::filter(name_in, domain_in)
 {
     add_property("node:class", property::value_type::string).value->set("pulsar::ladspa::node");
     add_property("plugin:filename", property::value_type::string);
@@ -370,8 +370,6 @@ void node::run()
     }
 
     log_trace("done running LADSPA plugin for node ", name);
-
-    pulsar::node::base::run();
 }
 
 } // namespace ladspa

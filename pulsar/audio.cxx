@@ -437,7 +437,7 @@ void audio::link::notify(std::shared_ptr<audio::buffer> ready_buffer_in, const b
 
     if (! available_flag) {
         if (blocking_in) {
-            system_fault("until the notify race condition is solved blocking is not ok");
+            system_fault("until the notify race condition is solved blocking is not ok: ", to_string());
             llog_trace({ return pulsar::util::to_string("node is blocked on link ", to_string()); });
             available_condition.wait(lock, [this]{ return available_flag.load(); });
         } else {
@@ -559,7 +559,7 @@ void audio::component::source_ready(audio::input *)
     if (now_waiting == 0) {
         // FIXME RACE is this the race condition causing deadlocks?
         assert(parent->is_ready());
-        parent->will_run();
+        parent->input_ready();
     }
 }
 

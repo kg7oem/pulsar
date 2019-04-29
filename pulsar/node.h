@@ -31,6 +31,47 @@ namespace pulsar {
 
 namespace node {
 
+    /*
+    *
+    * pulsar node lifecycle
+    *
+    * construct
+    * init
+    * activate
+    * start
+    *
+    * input ready
+    * init cycle
+    * reset cycle
+    *
+    * stop
+    * deactivate
+    * deconstruct
+    *
+    *
+    *
+    * filter node cycle
+    *
+    * input ready
+    *   init cycle
+    *   enqueue
+    * execute
+    *   run
+    *   notify
+    *   reset_cycle
+    *
+    *
+    *
+    * io node cycle
+    *
+    * process (called by external thread and left blocking until later)
+    *   init_cycle
+    * input ready
+    *   unblock caller
+    * reset cycle
+    *
+    */
+
 void init();
 string_type fully_qualify_property_name(const string_type& name_in);
 base * make_chain_node(const string_type& name_in, std::shared_ptr<pulsar::domain> domain_in);
@@ -64,35 +105,6 @@ struct base {
     base(const string_type& name_in, std::shared_ptr<pulsar::domain> domain_in, const bool is_forwarder_in = false);
     void add_dbus(const std::string path_in);
 
-    /*
-    * FIXME init_cycle should happen immediately before run but that does not
-    * work right now for unknown reasons
-    *
-    * Typical node lifecycle
-    *
-    * construct
-    * init
-    * activate
-    * start
-    *
-    * wait_inputs
-    *
-    * will_run
-    *   init_cycle
-    *   enqueue
-    *
-    * execute
-    *   run
-    *   did_run
-    *   notify
-    *   reset_cycle
-    *
-    * stop
-    * deactivate
-    * deconstruct
-    *
-    */
-
     // needs to be reachable by templated factory methods
     public:
     virtual void activate();
@@ -100,15 +112,13 @@ struct base {
     protected:
     virtual void start();
     virtual void init_cycle();
-    virtual void will_run();
-    virtual void run();
-    virtual void did_run();
+    virtual void input_ready() = 0;
     virtual void notify();
     virtual void reset_cycle();
     virtual void stop();
     virtual void deactivate();
+    virtual void execute() = 0;
 
-    virtual void execute();
     property::property& add_property(const string_type& name_in, const property::value_type& type_in);
     property::property& add_property(const string_type& name_in, const property::property& property_in);
 
@@ -127,17 +137,28 @@ struct base {
     virtual bool is_ready();
 };
 
+class filter : public base {
+    protected:
+    filter(const string_type& name_in, std::shared_ptr<pulsar::domain> domain_in);
+    virtual void execute() override;
+    virtual void input_ready();
+    virtual void run() = 0;
+};
+
 class io : public base {
     protected:
+    std::condition_variable done_cond;
+    mutex_type done_mutex;
+    bool done_flag = false;
+
     io(const string_type& name_in, std::shared_ptr<pulsar::domain> domain_in);
-    void notify() override;
-    virtual void execute() override;
-    virtual void processed() = 0;
+    virtual void process(const std::map<string_type, sample_type *>& receives, const std::map<string_type, sample_type *>& sends);
+    virtual void unblock_caller();
 };
 
 class forwarder : public base {
     protected:
-    virtual void will_run() override;
+    virtual void input_ready() override;
     virtual void execute() override;
     virtual void notify() override;
     forwarder(const string_type& name_in, std::shared_ptr<pulsar::domain> domain_in);

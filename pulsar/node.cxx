@@ -17,6 +17,7 @@
 #include <stdexcept>
 
 #include <pulsar/async.h>
+#include <pulsar/audio.util.h>
 #include <pulsar/debug.h>
 #include <pulsar/library.h>
 #include <pulsar/logging.h>
@@ -212,6 +213,8 @@ void base::activate()
 
     audio.activate();
     reset_cycle();
+
+    log_trace("done activating node ", name);
 }
 
 void base::start()
@@ -222,18 +225,6 @@ void base::init_cycle()
     log_trace("initializing cycle for node ", name);
     audio.init_cycle();
 }
-
-void base::will_run()
-{
-    init_cycle();
-    domain->add_ready_node(this);
-}
-
-void base::run()
-{ }
-
-void base::did_run()
-{ }
 
 void base::notify()
 {
@@ -260,49 +251,104 @@ void base::init()
     add_dbus(make_dbus_path(std::to_string(id)));
 }
 
-void base::execute()
+bool base::is_ready()
+{
+    return audio.is_ready();
+}
+
+filter::filter(const string_type& name_in, std::shared_ptr<pulsar::domain> domain_in)
+: base(name_in, domain_in, false)
+{ }
+
+void filter::input_ready()
+{
+    init_cycle();
+    domain->add_ready_node(this);
+}
+
+void filter::execute()
 {
     log_debug("--------> node ", name, " started executing");
     auto lock = debug_get_lock(node_mutex);
 
     run();
-    did_run();
-
-    // FIXME RACE There is still a race condition - after resetting new
-    // buffers can start coming in again. This needs to get all the things
-    // that will need to be notified into a list before the reset happens
-    // then reset then notify using that copy of the data.
-    reset_cycle();
     notify();
+    reset_cycle();
 
     log_debug("<-------- node ", name, " finished executing");
-}
-
-bool base::is_ready()
-{
-    return audio.is_ready();
 }
 
 io::io(const string_type& name_in, std::shared_ptr<pulsar::domain> domain_in)
 : base(name_in, domain_in, true)
 { }
 
-void io::notify()
-{ }
-
-void io::execute()
+void io::process(const std::map<string_type, sample_type *>& receives, const std::map<string_type, sample_type *>& sends)
 {
-    log_trace("invoking parent execute() method first for io node");
-    node::base::execute();
+    log_trace("IO node process() was just invoked");
 
-    processed();
+    auto lock = debug_get_lock(node_mutex);
+    auto done_lock = debug_get_lock(done_mutex);
+
+    if (done_flag) {
+        system_fault("IO node process() went reentrant");
+    }
+
+    done_lock.unlock();
+
+    init_cycle();
+
+    log_trace("IO node is setting up output buffers");
+    for(auto&& name : audio.get_output_names()) {
+        auto output = audio.get_output(name);
+        auto user_buffer = receives.find(name);
+        auto buffer = audio::buffer::make();
+
+        if (user_buffer == receives.end()) {
+            system_fault("could not find user supplied buffer for IO output: ", name);
+        }
+
+        buffer->init(domain->buffer_size, user_buffer->second);
+        output->set_buffer(buffer);
+    }
+
+    lock.unlock();
+
+    log_trace("waiting for IO node to become done");
+    debug_relock(done_lock);
+    done_cond.wait(done_lock, [this]{ return done_flag; });
+    done_flag = false;
+
+    log_trace("IO node is now done");
+
+    for(auto&& name : audio.get_input_names()) {
+        auto buffer_size = domain->buffer_size;
+        auto input = audio.get_input(name);
+        auto user_buffer = sends.find(name);
+        auto channel_buffer = input->get_buffer();
+
+        if (user_buffer == sends.end()) {
+            system_fault("could not find user supplied buffer for IO input: ", name);
+        }
+
+        audio::util::pcm_set(user_buffer->second, channel_buffer->get_pointer(), buffer_size);
+    }
+
+    reset_cycle();
+}
+
+void io::unblock_caller()
+{
+    log_trace("waking up blocked IO node thread");
+    auto done_lock = debug_get_lock(done_mutex);
+    done_flag = true;
+    done_cond.notify_all();
 }
 
 forwarder::forwarder(const string_type& name_in, std::shared_ptr<pulsar::domain> domain_in)
 : base(name_in, domain_in, true)
 { }
 
-void forwarder::will_run()
+void forwarder::input_ready()
 {
     log_trace("forwarder node is short-circuting execute(): ", name);
 

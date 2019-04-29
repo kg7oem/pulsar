@@ -38,9 +38,6 @@ class node : public pulsar::node::io {
     const options_type jack_options = JackNoStartServer;
     std::map<string_type, port_type *> jack_ports;
     std::atomic<bool> did_notify = ATOMIC_VAR_INIT(false);
-    std::condition_variable done_cond;
-    mutex_type done_mutex;
-    bool done_flag = false;
     port_type * add_port(const string_type& port_name_in, const char * port_type_in, const flags_type flags_in, const size_type buffer_size_in = 0);
     sample_type * get_port_buffer(const string_type& port_name_in);
     void open(const string_type& jack_name_in);
@@ -49,9 +46,9 @@ class node : public pulsar::node::io {
 
     /* lifecycle methods */
     void start() override;
-    virtual void run() override;
-    virtual void processed() override;
+    virtual void input_ready();
     virtual void stop() override;
+    virtual void execute() override;
 
     public:
     node(const string_type& name_in, std::shared_ptr<pulsar::domain> domain_in);

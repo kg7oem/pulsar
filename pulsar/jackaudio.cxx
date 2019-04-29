@@ -13,7 +13,6 @@
 
 #include <chrono>
 
-#include <pulsar/audio.util.h>
 #include <pulsar/debug.h>
 #include <pulsar/jackaudio.h>
 #include <pulsar/logging.h>
@@ -198,35 +197,24 @@ void jackaudio::node::handle_jack_process(jack_nframes_t nframes_in)
 
     if (watchdog != nullptr) watchdog->start();
 
-    auto lock = debug_get_lock(node_mutex);
-    auto done_lock = debug_get_lock(done_mutex);
-
-    if (done_flag) {
-        system_fault("jackaudio handle_jack_process() went reentrant");
-    }
-
-    done_lock.unlock();
-
     if (nframes_in != domain->buffer_size) {
         system_fault("jackaudio process request and buffer size were not the same");
     }
 
-    for(auto&& name : audio.get_output_names()) {
-        auto output = audio.get_output(name);
-        auto jack_buffer = get_port_buffer(name);
-        auto buffer = audio::buffer::make();
+    std::map<string_type, sample_type *> receives, sends;
 
-        buffer->init(nframes_in, jack_buffer);
-        output->set_buffer(buffer);
+    for(auto&& name : audio.get_output_names()) {
+        auto jack_buffer = get_port_buffer(name);
+        receives[name] = jack_buffer;
     }
 
-    lock.unlock();
+    for(auto&& name : audio.get_input_names()) {
+        auto jack_buffer = get_port_buffer(name);
+        sends[name] = jack_buffer;
+    }
 
-    log_trace("waiting for jackaudio node to become done");
-    debug_relock(done_lock);
-    done_cond.wait(done_lock, [this]{ return done_flag; });
+    process(receives, sends);
 
-    done_flag = false;
     log_trace("going to reset watchdog for node", name);
     if (watchdog != nullptr) watchdog->stop();
     log_debug("********** giving control back to jackaudio");
@@ -235,21 +223,6 @@ void jackaudio::node::handle_jack_process(jack_nframes_t nframes_in)
 void jackaudio::node::handle_jack_shutdown(jack_status_t, const char * message_in)
 {
     system_fault("jackaudio server shut down: ", message_in);
-}
-
-void jackaudio::node::run()
-{
-    log_trace("jackaudio node is now running");
-
-    for(auto&& name : audio.get_input_names()) {
-        auto buffer_size = domain->buffer_size;
-        auto input = audio.get_input(name);
-        auto jack_buffer = get_port_buffer(name);
-        auto channel_buffer = input->get_buffer();
-        audio::util::pcm_set(jack_buffer, channel_buffer->get_pointer(), buffer_size);
-    }
-
-    pulsar::node::io::run();
 }
 
 void jackaudio::node::start()
@@ -271,12 +244,10 @@ void jackaudio::node::start()
     }
 }
 
-void jackaudio::node::processed()
+void jackaudio::node::input_ready()
 {
-    log_trace("waking up jackaudio thread");
-    auto done_lock = debug_get_lock(done_mutex);
-    done_flag = true;
-    done_cond.notify_all();
+    log_trace("jackaudio node is now running");
+    unblock_caller();
 }
 
 void jackaudio::node::stop()
@@ -289,6 +260,9 @@ void jackaudio::node::stop()
 
     node::base::stop();
 }
+
+void jackaudio::node::execute()
+{ }
 
 // start following new convention
 namespace jackaudio {
