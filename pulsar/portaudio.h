@@ -32,9 +32,8 @@ class node : public pulsar::node::io {
     std::map<string_type, sample_type *> receives, sends;
     std::vector<std::shared_ptr<audio::buffer>> buffers;
 
-    void add_input(const string_type& name_in);
-    void add_output(const string_type& name_in);
-    void init() override;
+    void add_send(const string_type& name_in);
+    void add_receive(const string_type& name_in);
     void start() override;
     void execute() override;
     virtual void stop() override;

@@ -56,37 +56,22 @@ node::~node()
 void node::execute()
 { }
 
-void node::init()
-{
-    log_trace("portaudio init() was invoked");
-
-    add_input("left_out");
-    add_input("right_out");
-
-    add_output("right_in");
-    add_output("left_in");
-
-    pulsar::node::io::init();
-}
-
-void node::add_input(const string_type& name_in)
+void node::add_send(const string_type& name_in)
 {
     auto buffer = audio::buffer::make();
     buffer->init(domain->buffer_size);
     buffers.push_back(buffer);
 
     sends[name_in] = buffer->get_pointer();
-    audio.add_input(name_in);
 }
 
-void node::add_output(const string_type& name_in)
+void node::add_receive(const string_type& name_in)
 {
     auto buffer = audio::buffer::make();
     buffer->init(domain->buffer_size);
     buffers.push_back(buffer);
 
     receives[name_in] = buffer->get_pointer();
-    audio.add_output(name_in);
 }
 
 static int process_cb(const void *inputBuffer, void *outputBuffer, size_type framesPerBuffer, const PaStreamCallbackTimeInfo *timeInfo, PaStreamCallbackFlags statusFlags, void *userdata )
@@ -142,10 +127,27 @@ void node::activate()
     log_trace("portaudio activate() was invoked");
     assert(stream == nullptr);
 
+    auto num_sends = audio.get_input_names().size();
+    auto num_receives = audio.get_output_names().size();
+
+    if (num_sends == 0 || num_receives == 0) {
+        system_fault("portaudio nodes must have at least 1 send and 1 receive");
+    }
+
+    for(auto&& name : audio.get_output_names()) {
+        log_debug("adding receive to portaudio node: ", name);
+        add_receive(name);
+    }
+
+    for(auto&& name : audio.get_input_names()) {
+        log_debug("adding send to portaudio node: ", name);
+        add_send(name);
+    }
+
     {
         auto lock = debug_get_lock(portaudio_mutex);
         auto userdata = static_cast<void *>(this);
-        auto err = Pa_OpenDefaultStream(&stream, 2, 2, paFloat32, domain->sample_rate, domain->buffer_size, portaudio::process_cb, userdata);
+        auto err = Pa_OpenDefaultStream(&stream, num_receives, num_sends, paFloat32, domain->sample_rate, domain->buffer_size, portaudio::process_cb, userdata);
 
         if (err != paNoError) {
             system_fault("Could not open portaudio default stream: ", Pa_GetErrorText(err));
