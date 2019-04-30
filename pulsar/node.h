@@ -152,8 +152,11 @@ class io : public base {
     bool done_flag = false;
 
     io(const string_type& name_in, std::shared_ptr<pulsar::domain> domain_in);
-    virtual void process(const std::map<string_type, sample_type *>& receives, const std::map<string_type, sample_type *>& sends);
+    virtual void input_ready();
     virtual void unblock_caller();
+
+    public:
+    virtual void process(const std::map<string_type, sample_type *>& receives, const std::map<string_type, sample_type *>& sends);
 };
 
 class forwarder : public base {

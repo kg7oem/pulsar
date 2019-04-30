@@ -69,6 +69,7 @@ add_library(
     pulsar/ladspa.cxx
     pulsar/library.cxx
     pulsar/node.cxx
+    pulsar/portaudio.cxx
     pulsar/property.cxx
     pulsar/system.cxx
     pulsar/thread.cxx
@@ -95,6 +96,7 @@ target_link_libraries(pulsar ${DBUSLIB_LIBRARIES})
 target_link_libraries(pulsar dl)
 target_link_libraries(pulsar jack)
 target_link_libraries(pulsar logjam)
+target_link_libraries(pulsar portaudio)
 target_link_libraries(pulsar yaml-cpp)
 
 target_link_libraries(pulsar-dev pulsar)

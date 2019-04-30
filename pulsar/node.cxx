@@ -336,6 +336,12 @@ void io::process(const std::map<string_type, sample_type *>& receives, const std
     reset_cycle();
 }
 
+void io::input_ready()
+{
+    log_trace("IO node has all inputs ready; unblocking caller");
+    unblock_caller();
+}
+
 void io::unblock_caller()
 {
     log_trace("waking up blocked IO node thread");

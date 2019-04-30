@@ -25,6 +25,7 @@ You'll need these packages to compile on Debian or Ubuntu
 
   cmake ladspa-sdk libboost-system-dev libjack-jackd2-dev
   libyaml-cpp-dev pkg-config libdbus-c++-dev libdbus-1-dev
+  portaudio19-dev
 
 You'll need these packages to use dev-config.yaml
 
