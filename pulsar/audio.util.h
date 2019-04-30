@@ -29,6 +29,8 @@ namespace util {
     void pcm_scale(sample_type * dest_in, const float scale_in, const size_type samples_in);
     void pcm_set(sample_type * dest_in, const sample_type * src_in, const size_type samples_in);
     void pcm_mix(sample_type * dest_in, const sample_type * src_in, const size_type samples_in);
+    void pcm_interlace(sample_type * dest_in, const std::vector<sample_type *>& src_in, const size_type frames_in);
+    void pcm_deinterlace(std::vector<sample_type *>& dest_in, const sample_type * src_in, const size_type frames_in);
 }
 
 } // namespace audio

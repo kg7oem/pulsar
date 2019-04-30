@@ -46,7 +46,6 @@ class node : public pulsar::node::io {
 
     /* lifecycle methods */
     void start() override;
-    virtual void input_ready();
     virtual void stop() override;
     virtual void execute() override;
 

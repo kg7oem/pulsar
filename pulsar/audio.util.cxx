@@ -50,4 +50,28 @@ void audio::util::pcm_mix(sample_type * dest_in, const sample_type * src_in, con
     }
 }
 
+void audio::util::pcm_interlace(sample_type * dest_in, const std::vector<sample_type *>& src_in, const size_type frames_in)
+{
+    size_type channels = src_in.size();
+
+    auto p = dest_in;
+    for(size_type i = 0; i < frames_in; i++) {
+        for(size_type j = 0; j < channels; j++) {
+            *p++ = src_in[j][i];
+        }
+    }
+}
+
+void audio::util::pcm_deinterlace(std::vector<sample_type *>& dest_in, const sample_type * src_in, const size_type frames_in)
+{
+    size_type channels = dest_in.size();
+
+    auto p = src_in;
+    for(size_type i = 0; i < frames_in; i++) {
+        for(size_type j = 0; j < channels; j++) {
+            dest_in[j][i] = *p++;
+        }
+    }
+}
+
 } // namespace pulsar

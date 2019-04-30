@@ -1,6 +1,6 @@
 Pulsar Audio Engine
 
-This is a prototype signal processing system suitable for live
+This is a proof of concept signal processing system suitable for live
 audio applications and construction of audio control systems. It is
 an engine for mixing audio and applying audio effects made available
 as a library or standalone headless application. Basically this is
@@ -25,6 +25,7 @@ You'll need these packages to compile on Debian or Ubuntu
 
   cmake ladspa-sdk libboost-system-dev libjack-jackd2-dev
   libyaml-cpp-dev pkg-config libdbus-c++-dev libdbus-1-dev
+  portaudio19-dev
 
 You'll need these packages to use dev-config.yaml
 
@@ -50,16 +51,16 @@ something like this:
 
 Status
 
-This is early software undergoing major changes but basic
+This is experimental software undergoing major changes but basic
 functionality is present. This software is also being used
 as the audio control system in a live broadcast application
 with my ham radio station and a shoutcast stream. For the
 author reliability is good but there are limitations.
 
-In its present form the software is considered to be the
-prototype for a finished and polished system. This prototype
-will be evolved into the first development release once
-the major changes start to slow down.
+In its present form the software is considered to be research
+for a prototype system. Once the features and architecture
+are nailed down the system will be optimized into production
+quality software.
 
 
 Limitations
@@ -77,6 +78,7 @@ Implemented features
   * Multithreaded - effect plugins run in parallel if the topology allows for it
   * Configuration driven - YAML files define the signal processing chain and configuration
   * JACK audio client - participates in the whole JACK ecosystem
+  * PortAudio client (default stream only currently)
   * Load, configure and use any LADSPA plugin
   * Change effect configuration while audio engine is running.
   * Query and adjust plugin configuration via DBUS.
@@ -89,11 +91,12 @@ Planned features
     * Control the headless program via DBUS or other forms of IPC
   * Change the topology around while audio processing is running
   * Posix, Windows, and MacOS support
-  * VST2 and VST3 on all supported platforms
+  * LV2, VST2 and VST3 plugins on all supported platforms
+    * Use plugins as filter nodes
+    * Access Pulsar itself as a plugin in other applications
   * Native Pulse Audio sources and sinks
-  * Portaudio support as an alternative to JACK
   * Resampling for disparate clock domains (safe audio device aggregation)
-
+  * File IO for batch processing on the command line
 
 Design
 

@@ -251,12 +251,6 @@ void jackaudio::node::start()
     }
 }
 
-void jackaudio::node::input_ready()
-{
-    log_trace("jackaudio node is now running");
-    unblock_caller();
-}
-
 void jackaudio::node::stop()
 {
     log_trace("stopping jackaudio");
