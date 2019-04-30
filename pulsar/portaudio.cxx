@@ -12,6 +12,8 @@
 // GNU Lesser General Public License for more details.
 
 #include <pulsar/audio.util.h>
+#include <pulsar/async.h>
+#include <pulsar/debug.h>
 #include <pulsar/logging.h>
 #include <pulsar/portaudio.h>
 
@@ -19,8 +21,14 @@ namespace pulsar {
 
 namespace portaudio {
 
+static mutex_type portaudio_mutex;
+
 void init()
 {
+    log_debug("Initializing portaudio support");
+
+    auto lock = debug_get_lock(portaudio_mutex);
+
     auto err = Pa_Initialize();
 
     if (err != paNoError) {
@@ -83,14 +91,26 @@ void node::add_output(const string_type& name_in)
 static int process_cb(const void *inputBuffer, void *outputBuffer, size_type framesPerBuffer, const PaStreamCallbackTimeInfo *timeInfo, PaStreamCallbackFlags statusFlags, void *userdata )
 {
     log_trace("***************** portaudio process callback was invoked");
-
     assert(userdata != nullptr);
 
+    promise_type<void> promise;
     // FIXME is this the right way to do this? It is much cleaner than the jackaudio node
     // way of handling callbacks
     auto node = (portaudio::node *) userdata;
-    node->process_cb(inputBuffer, outputBuffer, framesPerBuffer, timeInfo, statusFlags);
 
+    log_trace("creating async job to invoke portaudio::node::process_cb()");
+    async::submit_job([&] {
+        log_trace("async job started");
+        node->process_cb(inputBuffer, outputBuffer, framesPerBuffer, timeInfo, statusFlags);
+
+        log_trace("async job completed; setting promise value");
+        promise.set_value();
+    });
+
+    log_trace("waiting for async job to complete");
+    promise.get_future().get();
+
+    log_trace("***************** giving control back to portaudio");
     return 0;
 }
 
@@ -98,6 +118,7 @@ void node::activate()
 {
     log_trace("portaudio activate() was invoked");
 
+    auto lock = debug_get_lock(portaudio_mutex);
     auto userdata = static_cast<void *>(this);
     auto err = Pa_OpenDefaultStream(&stream, 2, 2, paFloat32, domain->sample_rate, domain->buffer_size, portaudio::process_cb, userdata);
 
@@ -112,6 +133,7 @@ void node::start()
 {
     log_trace("portaudio start() was invoked");
 
+    auto lock = debug_get_lock(portaudio_mutex);
     auto err = Pa_StartStream(stream);
 
     if (err != paNoError) {
@@ -123,6 +145,8 @@ void node::start()
 
 void node::process_cb(UNUSED const void *inputBuffer, UNUSED void *outputBuffer, size_type framesPerBuffer, UNUSED const PaStreamCallbackTimeInfo *timeInfo, UNUSED PaStreamCallbackFlags statusFlags)
 {
+    log_trace("portaudio::node::process_cb() was invoked");
+
     assert(framesPerBuffer == domain->buffer_size);
 
     std::vector<sample_type *> input;

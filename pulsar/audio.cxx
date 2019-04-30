@@ -147,6 +147,8 @@ void audio::input::init_cycle()
 
 void audio::input::reset_cycle()
 {
+    llog_trace({ return pulsar::util::to_string("resetting audio input ", to_string()); });
+
     {
         auto lock = debug_get_lock(link_buffers_mutex);
         link_buffers.empty();
@@ -157,8 +159,7 @@ void audio::input::reset_cycle()
     }
 
     auto waiting_things = links.size() + num_forwards_to_us;
-    llog_trace({ return pulsar::util::to_string("resetting audio input ", to_string()); });
-
+    llog_trace({ return pulsar::util::to_string(" waiting things: ", waiting_things, " for ", to_string()); });
     links_waiting.store(waiting_things);
 }
 

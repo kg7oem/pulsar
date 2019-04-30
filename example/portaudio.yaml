@@ -63,10 +63,7 @@ chains:
 domain:
   config:
     sample_rate: 48000
-    # FIXME the smaller the buffer size
-    # the less reliable the portaudio node
-    # is - 256 samples might only run for a minute
-    buffer_size: 4096
+    buffer_size: 512
   nodes:
     - name: portaudio
       class: pulsar::portaudio::node
