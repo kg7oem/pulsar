@@ -114,6 +114,28 @@ static int process_cb(const void *inputBuffer, void *outputBuffer, size_type fra
     return 0;
 }
 
+void node::process_cb(const void *inputBuffer, void *outputBuffer, size_type framesPerBuffer, const PaStreamCallbackTimeInfo *, PaStreamCallbackFlags statusFlags)
+{
+    log_trace("portaudio::node::process_cb() was invoked");
+    assert(framesPerBuffer == domain->buffer_size);
+
+    if (statusFlags) {
+        system_fault("portaudio callback got non-zero statusFlags: ", statusFlags);
+    }
+
+    std::vector<sample_type *> input;
+    input.push_back(receives["left_in"]);
+    input.push_back(receives["right_in"]);
+    audio::util::pcm_deinterlace(input, static_cast<const sample_type *>(inputBuffer), framesPerBuffer);
+
+    process(receives, sends);
+
+    std::vector<sample_type *> output;
+    output.push_back(sends["left_out"]);
+    output.push_back(sends["right_out"]);
+    audio::util::pcm_interlace(static_cast<sample_type *>(outputBuffer), output, framesPerBuffer);
+}
+
 void node::activate()
 {
     log_trace("portaudio activate() was invoked");
@@ -141,25 +163,6 @@ void node::start()
     }
 
     pulsar::node::io::start();
-}
-
-void node::process_cb(UNUSED const void *inputBuffer, UNUSED void *outputBuffer, size_type framesPerBuffer, UNUSED const PaStreamCallbackTimeInfo *timeInfo, UNUSED PaStreamCallbackFlags statusFlags)
-{
-    log_trace("portaudio::node::process_cb() was invoked");
-
-    assert(framesPerBuffer == domain->buffer_size);
-
-    std::vector<sample_type *> input;
-    input.push_back(receives["left_in"]);
-    input.push_back(receives["right_in"]);
-    audio::util::pcm_deinterlace(input, static_cast<const sample_type *>(inputBuffer), framesPerBuffer);
-
-    process(receives, sends);
-
-    std::vector<sample_type *> output;
-    output.push_back(sends["left_out"]);
-    output.push_back(sends["right_out"]);
-    audio::util::pcm_interlace(static_cast<sample_type *>(outputBuffer), output, framesPerBuffer);
 }
 
 } // namespace portaudio
