@@ -27,12 +27,13 @@ void init()
 {
     log_debug("Initializing portaudio support");
 
-    auto lock = debug_get_lock(portaudio_mutex);
+    {
+        auto lock = debug_get_lock(portaudio_mutex);
+        auto err = Pa_Initialize();
 
-    auto err = Pa_Initialize();
-
-    if (err != paNoError) {
-        system_fault("Could not initialize portaudio: ",  Pa_GetErrorText(err));
+        if (err != paNoError) {
+            system_fault("Could not initialize portaudio: ",  Pa_GetErrorText(err));
+        }
     }
 
     library::register_node_factory("pulsar::portaudio::node", make_node);
@@ -139,13 +140,16 @@ void node::process_cb(const void *inputBuffer, void *outputBuffer, size_type fra
 void node::activate()
 {
     log_trace("portaudio activate() was invoked");
+    assert(stream == nullptr);
 
-    auto lock = debug_get_lock(portaudio_mutex);
-    auto userdata = static_cast<void *>(this);
-    auto err = Pa_OpenDefaultStream(&stream, 2, 2, paFloat32, domain->sample_rate, domain->buffer_size, portaudio::process_cb, userdata);
+    {
+        auto lock = debug_get_lock(portaudio_mutex);
+        auto userdata = static_cast<void *>(this);
+        auto err = Pa_OpenDefaultStream(&stream, 2, 2, paFloat32, domain->sample_rate, domain->buffer_size, portaudio::process_cb, userdata);
 
-    if (err != paNoError) {
-        system_fault("Could not open portaudio default stream: ", Pa_GetErrorText(err));
+        if (err != paNoError) {
+            system_fault("Could not open portaudio default stream: ", Pa_GetErrorText(err));
+        }
     }
 
     pulsar::node::io::activate();
@@ -154,15 +158,36 @@ void node::activate()
 void node::start()
 {
     log_trace("portaudio start() was invoked");
+    assert(stream != nullptr);
 
-    auto lock = debug_get_lock(portaudio_mutex);
-    auto err = Pa_StartStream(stream);
+    {
+        auto lock = debug_get_lock(portaudio_mutex);
+        auto err = Pa_StartStream(stream);
 
-    if (err != paNoError) {
-        system_fault("Could not start portaudio stream: ", Pa_GetErrorText(err));
+        if (err != paNoError) {
+            system_fault("Could not start portaudio stream: ", Pa_GetErrorText(err));
+        }
     }
 
     pulsar::node::io::start();
+}
+
+void node::stop()
+{
+    log_trace("portaudio stop() was invoked");
+    assert(stream != nullptr);
+
+    {
+        auto lock = debug_get_lock(portaudio_mutex);
+        auto err = Pa_StopStream(stream);
+
+        if (err != paNoError) {
+            system_fault("Could not stop portaudio stream: ", Pa_GetErrorText(err));
+        }
+
+    }
+
+    pulsar::node::io::stop();
 }
 
 } // namespace portaudio

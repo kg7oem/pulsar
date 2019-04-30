@@ -37,6 +37,7 @@ class node : public pulsar::node::io {
     void init() override;
     void start() override;
     void execute() override;
+    virtual void stop() override;
 
     public:
     node(const string_type& name_in, std::shared_ptr<pulsar::domain> domain_in);
