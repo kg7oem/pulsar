@@ -95,7 +95,7 @@ if (DBUSLIB_FOUND)
         OUTPUT pulsar/dbus.adaptor.h
         COMMAND dbusxx-xml2cpp pulsar/dbus.adaptor.xml --adaptor=pulsar/dbus.adaptor.h
         DEPENDS pulsar/dbus.adaptor.xml
-        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     )
 
     add_definitions(-DCONFIG_HAVE_DBUS)
