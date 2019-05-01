@@ -19,7 +19,6 @@
 #include <string>
 
 #include <pulsar/async.h>
-#include <pulsar/dbus.h>
 #include <pulsar/jackaudio.h>
 #include <pulsar/ladspa.h>
 #include <pulsar/logging.h>
@@ -27,6 +26,10 @@
 #include <pulsar/portaudio.h>
 #include <pulsar/system.h>
 #include <pulsar/thread.h>
+
+#ifdef CONFIG_HAVE_DBUS
+#include <pulsar/dbus.h>
+#endif
 
 #define ALIVE_TICK_INTERVAL 100ms
 
@@ -57,7 +60,10 @@ static std::shared_ptr<logjam::logmemory> memory_logger;
 
 void bootstrap(const size_type num_threads_in)
 {
+#ifdef CONFIG_HAVE_DBUS
     pulsar::dbus::init();
+#endif
+
     pulsar::node::init();
     pulsar::jackaudio::init();
     pulsar::ladspa::init();

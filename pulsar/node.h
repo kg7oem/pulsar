@@ -20,12 +20,15 @@
 #include <string>
 
 #include <pulsar/audio.h>
-#include <pulsar/dbus.h>
 #include <pulsar/domain.h>
 #include <pulsar/node.forward.h>
 #include <pulsar/property.h>
 #include <pulsar/system.h>
 #include <pulsar/thread.h>
+
+#ifdef CONFIG_HAVE_DBUS
+#include <pulsar/dbus.h>
+#endif
 
 namespace pulsar {
 
@@ -77,6 +80,7 @@ string_type fully_qualify_property_name(const string_type& name_in);
 base * make_chain_node(const string_type& name_in, std::shared_ptr<pulsar::domain> domain_in);
 size_type next_node_id();
 
+#ifdef CONFIG_HAVE_DBUS
 struct dbus_node : public ::audio::pulsar::node_adaptor, public DBus::IntrospectableAdaptor, public DBus::ObjectAdaptor {
     base * parent;
 
@@ -86,6 +90,7 @@ struct dbus_node : public ::audio::pulsar::node_adaptor, public DBus::Introspect
     virtual std::string peek(const std::string& name_in) override;
     virtual void poke(const std::string& name_in, const std::string& value_in) override;
 };
+#endif
 
 struct base {
     friend void audio::component::source_ready(audio::input *);
@@ -94,17 +99,22 @@ struct base {
     friend base * config::make_chain_node(const YAML::Node& node_yaml_in, const YAML::Node& chain_yaml_in, std::shared_ptr<pulsar::config::domain> config_in, std::shared_ptr<pulsar::domain> domain_in);
     // FIXME only run() is needed but run() is static and friend didn't like that
     friend pulsar::domain;
+#ifdef CONFIG_HAVE_DBUS
     friend dbus_node;
+#endif
 
     protected:
+#ifdef CONFIG_HAVE_DBUS
     std::list<dbus_node *> dbus_nodes{0, nullptr};
+#endif
     mutex_type node_mutex;
     std::shared_ptr<pulsar::domain> domain;
     // FIXME pointer because I can't figure out how to make emplace() work
     std::map<string_type, property::property> properties;
     base(const string_type& name_in, std::shared_ptr<pulsar::domain> domain_in, const bool is_forwarder_in = false);
+#ifdef CONFIG_HAVE_DBUS
     void add_dbus(const std::string path_in);
-
+#endif
     // needs to be reachable by templated factory methods
     public:
     virtual void activate();

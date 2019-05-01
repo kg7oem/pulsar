@@ -11,8 +11,6 @@ set(CMAKE_BUILD_TYPE Debug)
 set(CMAKE_VERBOSE_MAKEFILE OFF)
 set(PULSAR_PROFILE OFF)
 
-include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
-
 # don't change anything below this line
 set(CMAKE_CXX_STANDARD 17)
 
@@ -20,8 +18,6 @@ find_package(Boost 1.58.0 COMPONENTS system REQUIRED)
 find_package(PkgConfig REQUIRED)
 find_package(Threads REQUIRED)
 find_package(yaml-cpp REQUIRED)
-
-pkg_check_modules(DBUSLIB dbus-c++-1 REQUIRED)
 
 # FIXME how to enable only in Debug build type?
 add_definitions(-Og)
@@ -38,7 +34,7 @@ add_definitions(-Wfatal-errors -Werror)
 
 # . gives us pulsar/ so it is not a system directory
 include_directories(.)
-include_directories(SYSTEM ${DBUSLIB_INCLUDE_DIRS})
+include_directories(SYSTEM ${Boost_INCLUDE_DIR})
 include_directories(SYSTEM ext/)
 
 option(BUILD_DOC "Build documentation" ON)
@@ -49,13 +45,6 @@ set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -pg")
 set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -pg")
 endif (PULSAR_PROFILE)
 
-add_custom_command(
-    OUTPUT pulsar/dbus.adaptor.h
-    COMMAND dbusxx-xml2cpp pulsar/dbus.adaptor.xml --adaptor=pulsar/dbus.adaptor.h
-    DEPENDS pulsar/dbus.adaptor.xml
-    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-)
-
 add_library(
     pulsar SHARED
 
@@ -64,8 +53,6 @@ add_library(
     pulsar/audio.util.cxx
     pulsar/config.cxx
     pulsar/daemon.cxx
-    pulsar/dbus.adaptor.h
-    pulsar/dbus.cxx
     pulsar/debug.cxx
     pulsar/domain.cxx
     pulsar/jackaudio.cxx
@@ -91,11 +78,8 @@ add_executable(
     pulsar-dev.cxx
 )
 
-target_compile_options(pulsar PUBLIC ${DBUSLIB_CFLAGS_OTHER})
-
 target_link_libraries(pulsar ${CMAKE_THREAD_LIBS_INIT})
 target_link_libraries(pulsar ${Boost_LIBRARIES})
-target_link_libraries(pulsar ${DBUSLIB_LIBRARIES})
 target_link_libraries(pulsar dl)
 target_link_libraries(pulsar jack)
 target_link_libraries(pulsar logjam)
@@ -103,6 +87,23 @@ target_link_libraries(pulsar portaudio)
 target_link_libraries(pulsar yaml-cpp)
 
 target_link_libraries(pulsar-dev pulsar)
+
+pkg_check_modules(DBUSLIB dbus-c++-1)
+
+if (DBUSLIB_FOUND)
+    add_custom_command(
+        OUTPUT pulsar/dbus.adaptor.h
+        COMMAND dbusxx-xml2cpp pulsar/dbus.adaptor.xml --adaptor=pulsar/dbus.adaptor.h
+        DEPENDS pulsar/dbus.adaptor.xml
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    )
+
+    add_definitions(-DCONFIG_HAVE_DBUS)
+    target_compile_options(pulsar PUBLIC ${DBUSLIB_CFLAGS_OTHER})
+    include_directories(SYSTEM ${DBUSLIB_INCLUDE_DIRS})
+    target_sources(pulsar PRIVATE pulsar/dbus.cxx pulsar/dbus.adaptor.h )
+    target_link_libraries(pulsar ${DBUSLIB_LIBRARIES})
+endif (DBUSLIB_FOUND)
 
 find_package(Doxygen)
 

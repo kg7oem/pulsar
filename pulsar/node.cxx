@@ -46,6 +46,7 @@ size_type next_node_id()
     return ++current_node_id;
 }
 
+#ifdef CONFIG_HAVE_DBUS
 static std::string make_dbus_path(const std::string& name_in)
 {
     return util::to_string(PULSAR_DBUS_NODE_PREFIX, name_in);
@@ -111,6 +112,7 @@ void dbus_node::poke(const std::string& name_in, const std::string& value_in)
     promise.get_future().get();
     return;
 }
+#endif
 
 base::base(const string_type& name_in, std::shared_ptr<pulsar::domain> domain_in, const bool is_forwarder_in)
 : domain(domain_in), name(name_in), is_forwarder(is_forwarder_in), audio(this)
@@ -124,18 +126,22 @@ base::base(const string_type& name_in, std::shared_ptr<pulsar::domain> domain_in
 
 base::~base()
 {
+#ifdef CONFIG_HAVE_DBUS
     for(auto&& dbus : dbus_nodes) {
         assert(dbus != nullptr);
         delete dbus;
     }
 
     dbus_nodes.empty();
+#endif
 }
 
+#ifdef CONFIG_HAVE_DBUS
 void base::add_dbus(const std::string path_in)
 {
     dbus_nodes.push_back(new dbus_node(this, path_in));
 }
+#endif
 
 std::shared_ptr<domain> base::get_domain()
 {
@@ -248,7 +254,9 @@ void base::deactivate()
 
 void base::init()
 {
+#ifdef CONFIG_HAVE_DBUS
     add_dbus(make_dbus_path(std::to_string(id)));
+#endif
 }
 
 bool base::is_ready()
