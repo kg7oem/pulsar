@@ -102,7 +102,7 @@ static void init_debug(std::shared_ptr<pulsar::config::file> config_in)
     if (! debug_section.IsMap()) system_fault("debug section of config file was not a map");
 }
 
-static void alarm_handler(const int signum_in)
+static void alarm_handler(UNUSED const int signum_in)
 {
     assert(signum_in == SIGALRM);
     system_fault("caught alarm");

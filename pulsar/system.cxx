@@ -71,7 +71,10 @@ void bootstrap(const size_type num_threads_in)
 #endif
 
     pulsar::node::init();
+
+#ifdef CONFIG_ENABLE_LADSPA
     pulsar::ladspa::init();
+#endif
 
 #ifdef CONFIG_ENABLE_JACKAUDIO
     pulsar::jackaudio::init();

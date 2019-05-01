@@ -1,14 +1,19 @@
 cmake_minimum_required(VERSION 3.8.2)
+set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/modules/" ${CMAKE_MODULE_PATH})
 
 project(pulsar)
 
-set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/modules/" ${CMAKE_MODULE_PATH})
+option(BUILD_DOC "Build documentation" OFF)
+option(BUILD_PROFILE "Perform a profile build" OFF)
+option(CMAKE_BUILD_TYPE "Build type (Debug, Release, RelWithDebInfo, MinSizeRel)" Debug)
+option(CMAKE_VERBOSE_MAKEFILE "Verbose builds" OFF)
 
-# configuration
-# Debug, Release, RelWithDebInfo, MinSizeRel
-set(CMAKE_BUILD_TYPE Debug)
+option(ENABLE_DBUS "Enable DBUS support" ON)
+option(ENABLE_JACKAUDIO "Enable JACK Audio support" ON)
+option(ENABLE_LADSPA "Enable LADSPA support" ON)
+option(ENABLE_PORTAUDIO "Enable Portaudio support" ON)
+
 # set(CMAKE_VERBOSE_MAKEFILE OFF)
-# set(PULSAR_PROFILE OFF)
 
 # don't change anything below this line
 set(CMAKE_CXX_STANDARD 17)
@@ -39,13 +44,11 @@ include_directories(.)
 include_directories(SYSTEM ${Boost_INCLUDE_DIR})
 include_directories(SYSTEM ext/)
 
-option(BUILD_DOC "Build documentation" ON)
-
-if (PULSAR_PROFILE)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pg")
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -pg")
-set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -pg")
-endif (PULSAR_PROFILE)
+if (BUILD_PROFILE)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pg")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -pg")
+    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -pg")
+endif (BUILD_PROFILE)
 
 add_library(
     pulsar SHARED
@@ -57,7 +60,6 @@ add_library(
     pulsar/daemon.cxx
     pulsar/debug.cxx
     pulsar/domain.cxx
-    pulsar/ladspa.cxx
     pulsar/library.cxx
     pulsar/node.cxx
     pulsar/property.cxx
@@ -86,55 +88,68 @@ target_link_libraries(pulsar yaml-cpp)
 
 target_link_libraries(pulsar-dev pulsar stdc++)
 
-find_package(JACK)
+if (ENABLE_DBUS)
+    pkg_check_modules(DBUSLIB dbus-c++-1)
 
-if (JACK_FOUND)
-    add_definitions(-DCONFIG_ENABLE_JACKAUDIO)
-    target_sources(pulsar PRIVATE pulsar/jackaudio.cxx)
-    target_link_libraries(pulsar ${JACK_LIBRARY})
-endif (JACK_FOUND)
+    if (DBUSLIB_FOUND)
+        add_custom_command(
+            OUTPUT pulsar/dbus.adaptor.h
+            COMMAND dbusxx-xml2cpp pulsar/dbus.adaptor.xml --adaptor=pulsar/dbus.adaptor.h
+            DEPENDS pulsar/dbus.adaptor.xml
+            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        )
 
-find_package(Portaudio)
+        add_definitions(-DCONFIG_ENABLE_DBUS)
+        target_compile_options(pulsar PUBLIC ${DBUSLIB_CFLAGS_OTHER})
+        include_directories(SYSTEM ${DBUSLIB_INCLUDE_DIRS})
+        target_sources(pulsar PRIVATE pulsar/dbus.cxx pulsar/dbus.adaptor.h )
+        target_link_libraries(pulsar ${DBUSLIB_LIBRARIES})
+    endif (DBUSLIB_FOUND)
+endif (ENABLE_DBUS)
 
-if (PORTAUDIO_FOUND)
-    add_definitions(-DCONFIG_ENABLE_PORTAUDIO)
-    target_sources(pulsar PRIVATE pulsar/portaudio.cxx)
-    target_link_libraries(pulsar ${PORTAUDIO_LIBRARY})
-endif (PORTAUDIO_FOUND)
+if (ENABLE_JACKAUDIO)
+    find_package(JACK)
 
-pkg_check_modules(DBUSLIB dbus-c++-1)
+    if (JACK_FOUND)
+        add_definitions(-DCONFIG_ENABLE_JACKAUDIO)
+        target_sources(pulsar PRIVATE pulsar/jackaudio.cxx)
+        target_link_libraries(pulsar ${JACK_LIBRARY})
+    endif (JACK_FOUND)
+endif (ENABLE_JACKAUDIO)
 
-if (DBUSLIB_FOUND)
-    add_custom_command(
-        OUTPUT pulsar/dbus.adaptor.h
-        COMMAND dbusxx-xml2cpp pulsar/dbus.adaptor.xml --adaptor=pulsar/dbus.adaptor.h
-        DEPENDS pulsar/dbus.adaptor.xml
-        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-    )
+if (ENABLE_LADSPA)
+    add_definitions(-DCONFIG_ENABLE_LADSPA)
+    target_sources(pulsar PRIVATE pulsar/ladspa.cxx)
+endif (ENABLE_LADSPA)
 
-    add_definitions(-DCONFIG_ENABLE_DBUS)
-    target_compile_options(pulsar PUBLIC ${DBUSLIB_CFLAGS_OTHER})
-    include_directories(SYSTEM ${DBUSLIB_INCLUDE_DIRS})
-    target_sources(pulsar PRIVATE pulsar/dbus.cxx pulsar/dbus.adaptor.h )
-    target_link_libraries(pulsar ${DBUSLIB_LIBRARIES})
-endif (DBUSLIB_FOUND)
+if (ENABLE_PORTAUDIO)
+    find_package(Portaudio)
 
-find_package(Doxygen)
+    if (PORTAUDIO_FOUND)
+        add_definitions(-DCONFIG_ENABLE_PORTAUDIO)
+        target_sources(pulsar PRIVATE pulsar/portaudio.cxx)
+        target_link_libraries(pulsar ${PORTAUDIO_LIBRARY})
+    endif (PORTAUDIO_FOUND)
+endif (ENABLE_PORTAUDIO)
 
-if (DOXYGEN_FOUND)
-    set(DOXYGEN_IN ${CMAKE_CURRENT_SOURCE_DIR}/etc/Doxyfile.in)
-    set(DOXYGEN_OUT ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
+if (BUILD_DOC)
+    find_package(Doxygen)
 
-    # request to configure the file
-    configure_file(${DOXYGEN_IN} ${DOXYGEN_OUT} @ONLY)
-    message("Setting up Doxygen")
+    if (DOXYGEN_FOUND)
+        set(DOXYGEN_IN ${CMAKE_CURRENT_SOURCE_DIR}/etc/Doxyfile.in)
+        set(DOXYGEN_OUT ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
 
-    # note the option ALL which allows to build the docs together with the application
-    add_custom_target(docs
-        COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYGEN_OUT}
-        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-        COMMENT "Generating API documentation with Doxygen"
-        VERBATIM )
-else (DOXYGEN_FOUND)
-  message("Doxygen missing: documentation will not be built")
-endif (DOXYGEN_FOUND)
+        # request to configure the file
+        configure_file(${DOXYGEN_IN} ${DOXYGEN_OUT} @ONLY)
+        message("Setting up Doxygen")
+
+        # note the option ALL which allows to build the docs together with the application
+        add_custom_target(docs
+            COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYGEN_OUT}
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+            COMMENT "Generating API documentation with Doxygen"
+            VERBATIM )
+    else (DOXYGEN_FOUND)
+        message(SEND_ERROR "BUILD_DOC is ON but Doxygen is missing; aborting build")
+    endif (DOXYGEN_FOUND)
+endif (BUILD_DOC)

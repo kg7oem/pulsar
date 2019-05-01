@@ -138,7 +138,7 @@ void domain::add_ready_node(node::base * node_in)
     log_trace("done adding ready node ", node_in->name);
 }
 
-void domain::add_public_node(node::base * node_in)
+void domain::add_public_node(UNUSED node::base * node_in)
 {
 #ifdef CONFIG_ENABLE_DBUS
     node_in->add_dbus(make_dbus_public_node_path(name, node_in->name));
