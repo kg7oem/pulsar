@@ -119,6 +119,20 @@ void wait_job(T&& cb_in, Args... args_in)
     return;
 }
 
+template <typename T, typename U, typename... Args>
+T wait_job(U&& cb_in, Args... args_in)
+{
+    auto bound = std::bind(cb_in, args_in...);
+    promise_type<T> promise;
+
+    get_boost_io().dispatch([&promise, bound]{
+        T retval = bound();
+        promise.set_value(retval);
+    });
+
+    return promise.get_future().get();
+}
+
 } // namespace async
 
 } // namespace pulsar

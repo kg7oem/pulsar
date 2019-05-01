@@ -86,20 +86,12 @@ std::map<std::string, std::string> dbus_node::properties()
 
 string_type dbus_node::peek(const std::string& name_in)
 {
-    promise_type<std::string> promise;
-    // FIXME find a way to turn this into an async function so wait_job() can return
-    // a value through template args
-    async::submit_job([this, &name_in, &promise] { promise.set_value(parent->peek(name_in)); });
-    return promise.get_future().get();
+    return async::wait_job<string_type>([&] { return parent->peek(name_in); });
 }
 
 void dbus_node::poke(const std::string& name_in, const std::string& value_in)
 {
-    async::wait_job([this, &name_in, &value_in] {
-        parent->poke(name_in, value_in);
-    });
-
-    return;
+    async::wait_job([&] { parent->poke(name_in, value_in); });
 }
 #endif
 
