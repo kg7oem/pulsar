@@ -19,8 +19,7 @@ templates:
   gain:
     class: pulsar::ladspa::node
     plugin:
-      filename: /usr/lib/ladspa/amp.so
-      id: 1048
+      filename: /usr/lib/ladspa/amp_1181.so
   compressor:
     class: pulsar::ladspa::node
     plugin:
@@ -143,7 +142,7 @@ domain:
     - name: gain_left1
       template: gain
       config:
-        Gain: .5
+        Amps gain (dB): .5
       link:
         Output:
           - gain_left2
@@ -152,7 +151,7 @@ domain:
     - name: gain_right1
       template: gain
       config:
-        Gain: .5
+        Amps gain (dB): .5
       link:
         Output:
           - gain_right2
@@ -161,14 +160,14 @@ domain:
     - name: gain_left2
       template: gain
       config:
-        Gain: 2
+        Amps gain (dB): 2
       link:
         Output: jack:left_out
 
     - name: gain_right2
       template: gain
       config:
-        Gain: 2
+        Amps gain (dB): 2
       link:
         Output: jack:right_out
 
