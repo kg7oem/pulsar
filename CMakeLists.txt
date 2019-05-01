@@ -39,7 +39,6 @@ add_definitions(-Wfatal-errors -Werror)
 include_directories(.)
 include_directories(SYSTEM ${Boost_INCLUDE_DIR})
 include_directories(SYSTEM ext/)
-include_directories(SYSTEM ext/ladspa/)
 
 option(BUILD_DOC "Build documentation" ON)
 
