@@ -73,6 +73,13 @@ namespace node {
     *   unblock caller
     *   reset cycle
     *
+    *
+    * forward node cycle
+    *
+    * input ready
+    *   init cycle
+    *   reset cycle
+    *
     */
 
 void init();
