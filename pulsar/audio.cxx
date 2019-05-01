@@ -252,7 +252,7 @@ pulsar::size_type audio::input::get_links_waiting()
     return links_waiting.load();
 }
 
-void audio::input::register_forward(UNUSED input_forward * forward_in)
+void audio::input::register_forward(input_forward *)
 {
     num_forwards_to_us++;
 }
@@ -327,7 +327,7 @@ void audio::output::reset_cycle()
     buffer = nullptr;
 }
 
-void audio::output::register_forward(UNUSED output_forward * forward_in)
+void audio::output::register_forward(output_forward *)
 {
     forwards_to_us++;
 }

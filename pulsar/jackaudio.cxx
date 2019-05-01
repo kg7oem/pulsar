@@ -299,7 +299,7 @@ void connections::register_callbacks()
     if(jack_set_port_registration_callback(
         jack_client,
         wrap_uint32_int_cb,
-        static_cast<void *>(new std::function<void(const uint32_t port_id_in, const int register_in)>([this](const uint32_t UNUSED port_id_in, const int register_in) -> void {
+        static_cast<void *>(new std::function<void(const uint32_t port_id_in, const int register_in)>([this](const uint32_t port_id_in, const int register_in) -> void {
             auto jack_port = jack_port_by_id(jack_client, port_id_in);
             auto port_name = jack_port_name(jack_port);
 

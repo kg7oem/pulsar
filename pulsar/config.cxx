@@ -339,7 +339,7 @@ pulsar::node::base * make_chain_node(const YAML::Node& node_yaml_in, const YAML:
     // FIXME this needs to be made common with other places connections
     // are formed
     for(auto&& i : forward_node) {
-        UNUSED auto output_name = i.first.as<string_type>();
+        auto output_name = i.first.as<string_type>();
         auto target_node = i.second;
 
         if (target_node.IsSequence()) {
