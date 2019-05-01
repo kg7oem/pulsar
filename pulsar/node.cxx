@@ -294,7 +294,7 @@ void io::process(const std::map<string_type, sample_type *>& receives, const std
 {
     log_trace("IO node process() was just invoked");
 
-    auto lock = debug_get_lock(node_mutex);
+    auto node_lock = debug_get_lock(node_mutex);
     auto done_lock = debug_get_lock(done_mutex);
 
     if (done_flag) {
@@ -319,14 +319,15 @@ void io::process(const std::map<string_type, sample_type *>& receives, const std
         output->set_buffer(buffer);
     }
 
-    lock.unlock();
+    node_lock.unlock();
 
     log_trace("waiting for IO node to become done");
     debug_relock(done_lock);
     done_cond.wait(done_lock, [this]{ return done_flag; });
     done_flag = false;
-
     log_trace("IO node is now done");
+
+    debug_relock(node_lock);
 
     for(auto&& name : audio.get_input_names()) {
         auto buffer_size = domain->buffer_size;
