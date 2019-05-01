@@ -26,7 +26,7 @@
 #include <pulsar/system.h>
 #include <pulsar/thread.h>
 
-#ifdef CONFIG_HAVE_DBUS
+#ifdef CONFIG_ENABLE_DBUS
 #include <pulsar/dbus.h>
 #endif
 
@@ -80,7 +80,7 @@ string_type fully_qualify_property_name(const string_type& name_in);
 base * make_chain_node(const string_type& name_in, std::shared_ptr<pulsar::domain> domain_in);
 size_type next_node_id();
 
-#ifdef CONFIG_HAVE_DBUS
+#ifdef CONFIG_ENABLE_DBUS
 struct dbus_node : public ::audio::pulsar::node_adaptor, public DBus::IntrospectableAdaptor, public DBus::ObjectAdaptor {
     base * parent;
 
@@ -99,12 +99,12 @@ struct base {
     friend base * config::make_chain_node(const YAML::Node& node_yaml_in, const YAML::Node& chain_yaml_in, std::shared_ptr<pulsar::config::domain> config_in, std::shared_ptr<pulsar::domain> domain_in);
     // FIXME only run() is needed but run() is static and friend didn't like that
     friend pulsar::domain;
-#ifdef CONFIG_HAVE_DBUS
+#ifdef CONFIG_ENABLE_DBUS
     friend dbus_node;
 #endif
 
     protected:
-#ifdef CONFIG_HAVE_DBUS
+#ifdef CONFIG_ENABLE_DBUS
     std::list<dbus_node *> dbus_nodes{0, nullptr};
 #endif
     mutex_type node_mutex;
@@ -112,7 +112,7 @@ struct base {
     // FIXME pointer because I can't figure out how to make emplace() work
     std::map<string_type, property::property> properties;
     base(const string_type& name_in, std::shared_ptr<pulsar::domain> domain_in, const bool is_forwarder_in = false);
-#ifdef CONFIG_HAVE_DBUS
+#ifdef CONFIG_ENABLE_DBUS
     void add_dbus(const std::string path_in);
 #endif
     // needs to be reachable by templated factory methods

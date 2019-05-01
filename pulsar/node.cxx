@@ -46,7 +46,7 @@ size_type next_node_id()
     return ++current_node_id;
 }
 
-#ifdef CONFIG_HAVE_DBUS
+#ifdef CONFIG_ENABLE_DBUS
 static std::string make_dbus_path(const std::string& name_in)
 {
     return util::to_string(PULSAR_DBUS_NODE_PREFIX, name_in);
@@ -126,7 +126,7 @@ base::base(const string_type& name_in, std::shared_ptr<pulsar::domain> domain_in
 
 base::~base()
 {
-#ifdef CONFIG_HAVE_DBUS
+#ifdef CONFIG_ENABLE_DBUS
     for(auto&& dbus : dbus_nodes) {
         assert(dbus != nullptr);
         delete dbus;
@@ -136,7 +136,7 @@ base::~base()
 #endif
 }
 
-#ifdef CONFIG_HAVE_DBUS
+#ifdef CONFIG_ENABLE_DBUS
 void base::add_dbus(const std::string path_in)
 {
     dbus_nodes.push_back(new dbus_node(this, path_in));
@@ -254,7 +254,7 @@ void base::deactivate()
 
 void base::init()
 {
-#ifdef CONFIG_HAVE_DBUS
+#ifdef CONFIG_ENABLE_DBUS
     add_dbus(make_dbus_path(std::to_string(id)));
 #endif
 }

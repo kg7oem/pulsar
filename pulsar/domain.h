@@ -27,7 +27,7 @@
 #include <pulsar/system.h>
 #include <pulsar/thread.h>
 
-#ifdef CONFIG_HAVE_DBUS
+#ifdef CONFIG_ENABLE_DBUS
 #include <pulsar/dbus.h>
 #endif
 
@@ -36,7 +36,7 @@ namespace pulsar {
 const std::list<std::shared_ptr<domain>>& get_domains();
 void add_domain(std::shared_ptr<domain>);
 
-#ifdef CONFIG_HAVE_DBUS
+#ifdef CONFIG_ENABLE_DBUS
 struct dbus_node : public ::audio::pulsar::domain_adaptor, public DBus::IntrospectableAdaptor, public DBus::ObjectAdaptor {
     std::shared_ptr<domain> parent;
 
@@ -47,7 +47,7 @@ struct dbus_node : public ::audio::pulsar::domain_adaptor, public DBus::Introspe
 
 struct domain : public std::enable_shared_from_this<domain> {
     private:
-#ifdef CONFIG_HAVE_DBUS
+#ifdef CONFIG_ENABLE_DBUS
     dbus_node * dbus = nullptr;
 #endif
     std::shared_ptr<audio::buffer> zero_buffer = audio::buffer::make();

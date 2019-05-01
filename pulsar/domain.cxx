@@ -34,7 +34,7 @@ void add_domain(std::shared_ptr<domain> domain_in)
     domain_list->push_back(domain_in);
 }
 
-#ifdef CONFIG_HAVE_DBUS
+#ifdef CONFIG_ENABLE_DBUS
 // FIXME this should be in the domain namespace
 static string_type make_dbus_path(const string_type& domain_name_in)
 {
@@ -72,7 +72,7 @@ domain::domain(const string_type& name_in, const pulsar::size_type sample_rate_i
 
 domain::~domain()
 {
-#ifdef CONFIG_HAVE_DBUS
+#ifdef CONFIG_ENABLE_DBUS
     if (dbus != nullptr) {
         delete dbus;
         dbus = nullptr;
@@ -82,7 +82,7 @@ domain::~domain()
 
 void domain::init()
 {
-#ifdef CONFIG_HAVE_DBUS
+#ifdef CONFIG_ENABLE_DBUS
     dbus = new dbus_node(this->shared_from_this());
 #endif
 }
@@ -140,7 +140,7 @@ void domain::add_ready_node(node::base * node_in)
 
 void domain::add_public_node(node::base * node_in)
 {
-#ifdef CONFIG_HAVE_DBUS
+#ifdef CONFIG_ENABLE_DBUS
     node_in->add_dbus(make_dbus_public_node_path(name, node_in->name));
 #endif
 }

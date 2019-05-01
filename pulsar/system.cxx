@@ -25,15 +25,15 @@
 #include <pulsar/system.h>
 #include <pulsar/thread.h>
 
-#ifdef CONFIG_HAVE_DBUS
+#ifdef CONFIG_ENABLE_DBUS
 #include <pulsar/dbus.h>
 #endif
 
-#ifdef CONFIG_HAVE_JACKAUDIO
+#ifdef CONFIG_ENABLE_JACKAUDIO
 #include <pulsar/jackaudio.h>
 #endif
 
-#ifdef CONFIG_HAVE_PORTAUDIO
+#ifdef CONFIG_ENABLE_PORTAUDIO
 #include <pulsar/portaudio.h>
 #endif
 
@@ -66,18 +66,18 @@ static std::shared_ptr<logjam::logmemory> memory_logger;
 
 void bootstrap(const size_type num_threads_in)
 {
-#ifdef CONFIG_HAVE_DBUS
+#ifdef CONFIG_ENABLE_DBUS
     pulsar::dbus::init();
 #endif
 
     pulsar::node::init();
     pulsar::ladspa::init();
 
-#ifdef CONFIG_HAVE_JACKAUDIO
+#ifdef CONFIG_ENABLE_JACKAUDIO
     pulsar::jackaudio::init();
 #endif
 
-#ifdef CONFIG_HAVE_PORTAUDIO
+#ifdef CONFIG_ENABLE_PORTAUDIO
     pulsar::portaudio::init();
 #endif
 
