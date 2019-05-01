@@ -79,22 +79,13 @@ static int process_cb(const void *inputBuffer, void *outputBuffer, size_type fra
     log_trace("***************** portaudio process callback was invoked");
     assert(userdata != nullptr);
 
-    promise_type<void> promise;
     // FIXME is this the right way to do this? It is much cleaner than the jackaudio node
     // way of handling callbacks
     auto node = (portaudio::node *) userdata;
 
-    log_trace("creating async job to invoke portaudio::node::process_cb()");
-    async::submit_job([&] {
-        log_trace("async job started");
+    async::wait_job([&] {
         node->process_cb(inputBuffer, outputBuffer, framesPerBuffer, timeInfo, statusFlags);
-
-        log_trace("async job completed; setting promise value");
-        promise.set_value();
     });
-
-    log_trace("waiting for async job to complete");
-    promise.get_future().get();
 
     log_trace("***************** giving control back to portaudio");
     return 0;

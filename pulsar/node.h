@@ -71,7 +71,7 @@ namespace node {
     *   init_cycle
     * input ready
     *   unblock caller
-    * reset cycle
+    *   reset cycle
     *
     */
 

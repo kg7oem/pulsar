@@ -61,17 +61,12 @@ dbus_node::dbus_node(base * parent_in, const std::string& path_in)
 std::vector<string_type> dbus_node::property_names()
 {
     std::vector<string_type> retval;
-    promise_type<void> promise;
 
-    async::submit_job([this, &retval, &promise] {
+    async::wait_job([this, &retval] {
         for (auto&& i : parent->properties) {
             retval.push_back(i.first);
         }
-
-        promise.set_value();
     });
-
-    promise.get_future().get();
 
     return retval;
 }
@@ -79,37 +74,31 @@ std::vector<string_type> dbus_node::property_names()
 std::map<std::string, std::string> dbus_node::properties()
 {
     std::map<std::string, std::string> retval;
-    promise_type<void> promise;
 
-    async::submit_job([this, &retval, &promise] {
+    async::wait_job([this, &retval] {
         for(auto&& i : parent->properties) {
             retval[i.first] = i.second.value->get();
         }
-
-        promise.set_value();
     });
 
-    promise.get_future().get();
     return retval;
 }
 
 string_type dbus_node::peek(const std::string& name_in)
 {
     promise_type<std::string> promise;
+    // FIXME find a way to turn this into an async function so wait_job() can return
+    // a value through template args
     async::submit_job([this, &name_in, &promise] { promise.set_value(parent->peek(name_in)); });
     return promise.get_future().get();
 }
 
 void dbus_node::poke(const std::string& name_in, const std::string& value_in)
 {
-    promise_type<void> promise;
-
-    async::submit_job([this, &name_in, &value_in, &promise] {
+    async::wait_job([this, &name_in, &value_in] {
         parent->poke(name_in, value_in);
-        promise.set_value();
     });
 
-    promise.get_future().get();
     return;
 }
 #endif
@@ -290,6 +279,9 @@ io::io(const string_type& name_in, std::shared_ptr<pulsar::domain> domain_in)
 : base(name_in, domain_in, true)
 { }
 
+// FIXME this is called by a thread outside of Pulsar and could lead to
+// priority inversion - this should be broken up into async jobs that
+// run out of the job queue
 void io::process(const std::map<string_type, sample_type *>& receives, const std::map<string_type, sample_type *>& sends)
 {
     log_trace("IO node process() was just invoked");

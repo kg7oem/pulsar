@@ -202,9 +202,8 @@ void jackaudio::node::handle_jack_process(jack_nframes_t nframes_in)
     }
 
     std::map<string_type, sample_type *> receives, sends;
-    promise_type<void> promise;
 
-    async::submit_job([&] {
+    async::wait_job([&] {
         for(auto&& name : audio.get_output_names()) {
             auto jack_buffer = get_port_buffer(name);
             receives[name] = jack_buffer;
@@ -216,11 +215,7 @@ void jackaudio::node::handle_jack_process(jack_nframes_t nframes_in)
         }
 
         process(receives, sends);
-
-        promise.set_value();
     });
-
-    promise.get_future().get();
 
     log_trace("going to reset watchdog for node", name);
     if (watchdog != nullptr) watchdog->stop();

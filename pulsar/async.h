@@ -104,6 +104,21 @@ void submit_job(T&& cb_in, Args... args_in)
     });
 }
 
+template <typename T, typename... Args>
+void wait_job(T&& cb_in, Args... args_in)
+{
+    auto bound = std::bind(cb_in, args_in...);
+    promise_type<void> promise;
+
+    get_boost_io().dispatch([&promise, bound]{
+        bound();
+        promise.set_value();
+    });
+
+    promise.get_future().get();
+    return;
+}
+
 } // namespace async
 
 } // namespace pulsar
