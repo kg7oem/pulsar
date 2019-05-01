@@ -1,3 +1,8 @@
+# FIXME when building in a directory besides the root
+# of the repo then files are rebuilt even if it is
+# not needed - this is probably because of the generated
+# DBUS interface header which has done this before
+
 cmake_minimum_required(VERSION 3.8.2)
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/modules/" ${CMAKE_MODULE_PATH})
 
