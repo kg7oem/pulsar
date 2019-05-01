@@ -61,6 +61,7 @@ and worked at least at one time:
 
   Debian Stretch GCC 6.3.0
   Ubuntu Bionic GCC 7.4.0 and Clang 6.0.0
+  MacOS X Mojave Clang 10.0.1
 
 The following compilers and OS configurations don't work
 
