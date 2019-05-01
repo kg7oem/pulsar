@@ -8,8 +8,8 @@ project(pulsar)
 # configuration
 # Debug, Release, RelWithDebInfo, MinSizeRel
 set(CMAKE_BUILD_TYPE Debug)
-set(CMAKE_VERBOSE_MAKEFILE OFF)
-set(PULSAR_PROFILE OFF)
+# set(CMAKE_VERBOSE_MAKEFILE OFF)
+# set(PULSAR_PROFILE OFF)
 
 # don't change anything below this line
 set(CMAKE_CXX_STANDARD 17)
