@@ -141,7 +141,7 @@ class filter : public base {
     protected:
     filter(const string_type& name_in, std::shared_ptr<pulsar::domain> domain_in);
     virtual void execute() override;
-    virtual void input_ready();
+    virtual void input_ready() override;
     virtual void run() = 0;
 };
 

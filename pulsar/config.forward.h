@@ -23,8 +23,8 @@ namespace pulsar {
 
 namespace config {
 
-struct domain;
-struct file;
+class domain;
+class file;
 
 pulsar::node::base * make_chain_node(const YAML::Node& node_yaml_in, const YAML::Node& chain_yaml_in, std::shared_ptr<pulsar::config::domain> config_in, std::shared_ptr<pulsar::domain> domain_in);
 std::shared_ptr<pulsar::domain> make_domain(std::shared_ptr<pulsar::config::domain> domain_info_in);

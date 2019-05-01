@@ -28,10 +28,10 @@ namespace pulsar {
 
 namespace audio {
 
-struct input;
+class input;
 struct input_forward;
 struct link;
-struct output;
+class output;
 struct output_forward;
 
 class buffer {
@@ -81,8 +81,8 @@ class input : public channel {
     mutex_type link_buffers_mutex;
 
     public:
-    virtual void init_cycle();
-    virtual void reset_cycle();
+    virtual void init_cycle() override;
+    virtual void reset_cycle() override;
     input(const string_type& name_in, node::base * parent_in);
     pulsar::size_type get_links_waiting();
     void link_to(output * to_in);
