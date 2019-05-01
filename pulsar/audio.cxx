@@ -579,9 +579,6 @@ void audio::component::notify()
 
 void audio::component::source_ready(audio::input *)
 {
-    // FIXME this should signal to the node that the component
-    // is ready instead of running the parent
-
     auto now_waiting = --inputs_waiting;
     log_trace("node ", parent->name, " audio sources now waiting: ", now_waiting);
 
