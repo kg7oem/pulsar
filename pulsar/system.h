@@ -28,6 +28,12 @@
 #define UNUSED [[ maybe_unused ]]
 #endif
 
+#ifdef NDEBUG
+#define NDEBUG_UNUSED UNUSED
+#else
+#define NDEBUG_UNUSED
+#endif
+
 #define system_fault(...) pulsar::system::fault(__FILE__, __LINE__, __PRETTY_FUNCTION__, pulsar::util::to_string(__VA_ARGS__))
 
 namespace pulsar {
