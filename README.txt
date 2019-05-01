@@ -21,11 +21,16 @@ work anyway. You can get a fully compatible version from backports:
 
   apt-get install -t stretch-backports cmake
 
-You'll need these packages to compile on Debian or Ubuntu
+You'll need at least these packages to compile on Debian or Ubuntu
 
-  cmake ladspa-sdk libboost-system-dev libjack-jackd2-dev
-  libyaml-cpp-dev pkg-config libdbus-c++-dev libdbus-1-dev
-  portaudio19-dev
+  cmake pkg-config libboost-system-dev libyaml-cpp-dev
+
+The following features are conditional and require their
+own packages:
+
+  DBUS: libdbus-c++-dev libdbus-1-dev
+  Portaudio: portaudio19-dev
+  JACK Audio: libjack-jackd2-dev
 
 You'll need these packages to use dev-config.yaml
 
@@ -46,7 +51,20 @@ Building
 Once all the dependencies are installed the project can be built
 something like this:
 
-  cmake . && make
+  mkdir build
+  cd build
+  cmake ..
+  make
+
+The following compilers and OS configurations have been tested
+and worked at least at one time:
+
+  Debian Stretch GCC 6.3.0
+  Ubuntu Bionic GCC 7.4.0 and Clang 6.0.0
+
+The following compilers and OS configurations don't work
+
+  Debian Stretch Clang 3.8.1
 
 
 Status
