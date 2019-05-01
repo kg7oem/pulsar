@@ -538,7 +538,7 @@ void audio::component::init_cycle()
 
 void audio::component::reset_cycle()
 {
-    log_trace("audio component is ending cycle for node ", parent->name);
+    log_trace("audio component is resetting cycle for node ", parent->name);
 
     pulsar::size_type inputs_with_links = 0;
 
