@@ -286,55 +286,58 @@ void io::process(const std::map<string_type, sample_type *>& receives, const std
 {
     log_trace("IO node process() was just invoked");
 
-    auto node_lock = debug_get_lock(node_mutex);
-    auto done_lock = debug_get_lock(done_mutex);
+    {
+        auto done_lock = debug_get_lock(done_mutex);
 
-    if (done_flag) {
-        system_fault("IO node process() went reentrant");
+        if (done_flag) {
+            system_fault("IO node process() went reentrant");
+        }
     }
 
-    done_lock.unlock();
+    async::wait_job([&] {
+        auto node_lock = debug_get_lock(node_mutex);
 
-    init_cycle();
+        init_cycle();
 
-    log_trace("IO node is setting up output buffers");
-    for(auto&& name : audio.get_output_names()) {
-        auto output = audio.get_output(name);
-        auto user_buffer = receives.find(name);
-        auto buffer = audio::buffer::make();
+        log_trace("IO node is setting up output buffers");
+        for(auto&& name : audio.get_output_names()) {
+            auto output = audio.get_output(name);
+            auto user_buffer = receives.find(name);
+            auto buffer = audio::buffer::make();
 
-        if (user_buffer == receives.end()) {
-            system_fault("could not find user supplied buffer for IO output: ", name);
+            if (user_buffer == receives.end()) {
+                system_fault("could not find user supplied buffer for IO output: ", name);
+            }
+
+            buffer->init(domain->buffer_size, user_buffer->second);
+            output->set_buffer(buffer);
+        }
+    });
+
+    {
+        log_trace("waiting for IO node to become done");
+        auto done_lock = debug_get_lock(done_mutex);
+        done_cond.wait(done_lock, [this]{ return done_flag; });
+        done_flag = false;
+        log_trace("IO node is now done");
+    }
+
+    async::wait_job([&] {
+        for(auto&& name : audio.get_input_names()) {
+            auto buffer_size = domain->buffer_size;
+            auto input = audio.get_input(name);
+            auto user_buffer = sends.find(name);
+            auto channel_buffer = input->get_buffer();
+
+            if (user_buffer == sends.end()) {
+                system_fault("could not find user supplied buffer for IO input: ", name);
+            }
+
+            audio::util::pcm_set(user_buffer->second, channel_buffer->get_pointer(), buffer_size);
         }
 
-        buffer->init(domain->buffer_size, user_buffer->second);
-        output->set_buffer(buffer);
-    }
-
-    node_lock.unlock();
-
-    log_trace("waiting for IO node to become done");
-    debug_relock(done_lock);
-    done_cond.wait(done_lock, [this]{ return done_flag; });
-    done_flag = false;
-    log_trace("IO node is now done");
-
-    debug_relock(node_lock);
-
-    for(auto&& name : audio.get_input_names()) {
-        auto buffer_size = domain->buffer_size;
-        auto input = audio.get_input(name);
-        auto user_buffer = sends.find(name);
-        auto channel_buffer = input->get_buffer();
-
-        if (user_buffer == sends.end()) {
-            system_fault("could not find user supplied buffer for IO input: ", name);
-        }
-
-        audio::util::pcm_set(user_buffer->second, channel_buffer->get_pointer(), buffer_size);
-    }
-
-    reset_cycle();
+        reset_cycle();
+    });
 }
 
 void io::input_ready()

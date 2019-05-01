@@ -82,10 +82,7 @@ static int process_cb(const void *inputBuffer, void *outputBuffer, size_type fra
     // FIXME is this the right way to do this? It is much cleaner than the jackaudio node
     // way of handling callbacks
     auto node = (portaudio::node *) userdata;
-
-    async::wait_job([&] {
-        node->process_cb(inputBuffer, outputBuffer, framesPerBuffer, timeInfo, statusFlags);
-    });
+    node->process_cb(inputBuffer, outputBuffer, framesPerBuffer, timeInfo, statusFlags);
 
     log_trace("***************** giving control back to portaudio");
     return 0;

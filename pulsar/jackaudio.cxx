@@ -213,9 +213,9 @@ void jackaudio::node::handle_jack_process(jack_nframes_t nframes_in)
             auto jack_buffer = get_port_buffer(name);
             sends[name] = jack_buffer;
         }
-
-        process(receives, sends);
     });
+
+    process(receives, sends);
 
     log_trace("going to reset watchdog for node", name);
     if (watchdog != nullptr) watchdog->stop();
