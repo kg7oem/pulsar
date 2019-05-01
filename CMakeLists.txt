@@ -89,7 +89,7 @@ target_link_libraries(pulsar logjam)
 target_link_libraries(pulsar ${PORTAUDIO_LIBRARY})
 target_link_libraries(pulsar yaml-cpp)
 
-target_link_libraries(pulsar-dev pulsar)
+target_link_libraries(pulsar-dev pulsar stdc++)
 
 pkg_check_modules(DBUSLIB dbus-c++-1)
 
