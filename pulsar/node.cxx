@@ -323,6 +323,8 @@ void io::process(const std::map<string_type, sample_type *>& receives, const std
     }
 
     async::wait_job([&] {
+        auto node_lock = debug_get_lock(node_mutex);
+
         for(auto&& name : audio.get_input_names()) {
             auto buffer_size = domain->buffer_size;
             auto input = audio.get_input(name);
