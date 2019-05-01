@@ -35,8 +35,8 @@ using handle_type = LADSPA_Handle;
 using id_type = size_type;
 using port_descriptor_type = LADSPA_PortDescriptor;
 
-struct file;
-struct instance;
+class file;
+class instance;
 
 pulsar::node::base * make_node(const string_type& name_in, std::shared_ptr<domain> domain_in);
 void init();
