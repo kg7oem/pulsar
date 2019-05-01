@@ -233,12 +233,20 @@ void audio::input::link_ready(audio::link * link_in, std::shared_ptr<audio::buff
 #endif
 
     if (now_waiting == 0) {
+        std::shared_ptr<audio::buffer> forward_buffer = nullptr;
+
+        // If forwarding is happening then the buffer to send along
+        // needs to be fetched before init/reset happens in the cycle.
+        // This isn't really very good but it didn't seem worth a
+        // FIXME though it just got one anyway
+        if (forwards.size() > 0) {
+            forward_buffer = get_buffer();
+        }
+
         log_trace(to_string(), " telling audio component we are ready");
         parent->audio.source_ready(this);
 
-        if (forwards.size() > 0) {
-            auto forward_buffer = get_buffer();
-
+        if (forward_buffer != nullptr) {
             for(auto&& forward : forwards) {
                 llog_trace({ return pulsar::util::to_string("node ", parent->name, " forwarding to ", forward->to->get_parent()->name, ":", forward->to->name); });
                 forward->to->link_ready(link_in, forward_buffer);
