@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.8.2)
 
 project(pulsar)
 
+set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/modules/" ${CMAKE_MODULE_PATH})
+
 # configuration
 # Debug, Release, RelWithDebInfo, MinSizeRel
 set(CMAKE_BUILD_TYPE Debug)
@@ -15,9 +17,6 @@ find_package(Boost 1.58.0 COMPONENTS system REQUIRED)
 find_package(PkgConfig REQUIRED)
 find_package(Threads REQUIRED)
 find_package(yaml-cpp REQUIRED)
-
-find_library(JACK_LIBRARY NAMES jack)
-find_library(PORTAUDIO_LIBRARY NAMES portaudio)
 
 # FIXME how to enable only in Debug build type?
 add_definitions(-Og)
@@ -55,11 +54,9 @@ add_library(
     pulsar/daemon.cxx
     pulsar/debug.cxx
     pulsar/domain.cxx
-    pulsar/jackaudio.cxx
     pulsar/ladspa.cxx
     pulsar/library.cxx
     pulsar/node.cxx
-    pulsar/portaudio.cxx
     pulsar/property.cxx
     pulsar/system.cxx
     pulsar/thread.cxx
@@ -81,12 +78,26 @@ add_executable(
 target_link_libraries(pulsar ${CMAKE_THREAD_LIBS_INIT})
 target_link_libraries(pulsar ${Boost_LIBRARIES})
 target_link_libraries(pulsar dl)
-target_link_libraries(pulsar ${JACK_LIBRARY})
 target_link_libraries(pulsar logjam)
-target_link_libraries(pulsar ${PORTAUDIO_LIBRARY})
 target_link_libraries(pulsar yaml-cpp)
 
 target_link_libraries(pulsar-dev pulsar stdc++)
+
+find_package(JACK)
+
+if (JACK_FOUND)
+    add_definitions(-DCONFIG_HAVE_JACKAUDIO)
+    target_sources(pulsar PRIVATE pulsar/jackaudio.cxx)
+    target_link_libraries(pulsar ${JACK_LIBRARY})
+endif (JACK_FOUND)
+
+find_package(Portaudio)
+
+if (PORTAUDIO_FOUND)
+    add_definitions(-DCONFIG_HAVE_PORTAUDIO)
+    target_sources(pulsar PRIVATE pulsar/portaudio.cxx)
+    target_link_libraries(pulsar ${PORTAUDIO_LIBRARY})
+endif (PORTAUDIO_FOUND)
 
 pkg_check_modules(DBUSLIB dbus-c++-1)
 

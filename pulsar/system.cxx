@@ -19,16 +19,22 @@
 #include <string>
 
 #include <pulsar/async.h>
-#include <pulsar/jackaudio.h>
 #include <pulsar/ladspa.h>
 #include <pulsar/logging.h>
 #include <pulsar/node.h>
-#include <pulsar/portaudio.h>
 #include <pulsar/system.h>
 #include <pulsar/thread.h>
 
 #ifdef CONFIG_HAVE_DBUS
 #include <pulsar/dbus.h>
+#endif
+
+#ifdef CONFIG_HAVE_JACKAUDIO
+#include <pulsar/jackaudio.h>
+#endif
+
+#ifdef CONFIG_HAVE_PORTAUDIO
+#include <pulsar/portaudio.h>
 #endif
 
 #define ALIVE_TICK_INTERVAL 100ms
@@ -65,9 +71,15 @@ void bootstrap(const size_type num_threads_in)
 #endif
 
     pulsar::node::init();
-    pulsar::jackaudio::init();
     pulsar::ladspa::init();
+
+#ifdef CONFIG_HAVE_JACKAUDIO
+    pulsar::jackaudio::init();
+#endif
+
+#ifdef CONFIG_HAVE_PORTAUDIO
     pulsar::portaudio::init();
+#endif
 
     // the timer must exist before async init happens
     alive_timer = async::timer::make(0s, ALIVE_TICK_INTERVAL);
