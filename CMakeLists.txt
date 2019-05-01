@@ -19,6 +19,9 @@ find_package(PkgConfig REQUIRED)
 find_package(Threads REQUIRED)
 find_package(yaml-cpp REQUIRED)
 
+find_library(JACK_LIBRARY NAMES jack)
+find_library(PORTAUDIO_LIBRARY NAMES portaudio)
+
 # FIXME how to enable only in Debug build type?
 add_definitions(-Og)
 
@@ -82,9 +85,9 @@ add_executable(
 target_link_libraries(pulsar ${CMAKE_THREAD_LIBS_INIT})
 target_link_libraries(pulsar ${Boost_LIBRARIES})
 target_link_libraries(pulsar dl)
-target_link_libraries(pulsar jack)
+target_link_libraries(pulsar ${JACK_LIBRARY})
 target_link_libraries(pulsar logjam)
-target_link_libraries(pulsar portaudio)
+target_link_libraries(pulsar ${PORTAUDIO_LIBRARY})
 target_link_libraries(pulsar yaml-cpp)
 
 target_link_libraries(pulsar-dev pulsar)
