@@ -126,10 +126,12 @@ something like this:
 The following compilers and OS configurations have been tested
 and worked at least at one time:
 
+  Armbian Bionic Clang 6.0.0
   Debian Stretch GCC 6.3.0
-  Ubuntu Bionic GCC 7.4.0 and Clang 6.0.0
   MacOS X Mojave Clang 10.0.1
+  Ubuntu Bionic GCC 7.4.0 and Clang 6.0.0
 
 The following compilers and OS configurations don't work
 
   Debian Stretch Clang 3.8.1
+  Armbian Bionic GCC 7.4.0
