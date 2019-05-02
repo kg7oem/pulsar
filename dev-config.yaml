@@ -30,18 +30,18 @@ templates:
       Makeup: 0
       Sidechain: 1
   gate:
-    class: pulsar::ladspa::node
+    class: pulsar::LV2::node
     plugin:
-      filename: /usr/local/lib/ladspa/ZamGate-ladspa.so
+      uri: urn:zamaudio:ZamGate
   delay:
     class: pulsar::ladspa::node
     plugin:
       filename: /usr/lib/ladspa/delay_1898.so
       id: 1899
   tube:
-    class: pulsar::ladspa::node
+    class: pulsar::LV2::node
     plugin:
-      filename: /usr/local/lib/ladspa/ZamTube-ladspa.so
+      uri: urn:zamaudio:ZamTube
 
 chains:
   remove_squelch_tail:
