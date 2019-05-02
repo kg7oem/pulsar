@@ -11,6 +11,8 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
 
+#include <memory>
+
 #include <pulsar/logging.h>
 #include <pulsar/LV2.h>
 
@@ -52,10 +54,6 @@ node::~node()
     if (instance != nullptr) {
         lilv_instance_free(instance);
         instance = nullptr;
-    }
-
-    if (urid_map_instance != nullptr) {
-        free(urid_map_instance);
     }
 }
 
@@ -145,14 +143,16 @@ void node::init()
     assert(domain != nullptr);
     assert(instance == nullptr);
 
-    urid_map_instance = static_cast<LV2_URID_Map *>(malloc(sizeof(LV2_URID_Map)));
+    urid_map_instance = { this, urid_map_wrapper };
+    urid_map_feature.URI = "http://lv2plug.in/ns/ext/urid#map";
+    urid_map_feature.data = static_cast<void *>(&urid_map_instance);
 
-    if (urid_map_instance == nullptr) {
-        system_fault("could not malloc");
-    }
-
-    urid_map_instance->handle = this;
-    urid_map_instance->map = urid_map_wrapper;
+    empty_options_instance[0].subject = 0;
+    empty_options_instance[0].key = 0;
+    empty_options_instance[0].size = 0;
+    empty_options_instance[0].type = 0;
+    empty_options_feature.URI = "http://lv2plug.in/ns/ext/options#options";
+    empty_options_feature.data = empty_options_instance;
 
     auto string_uri = get_property("plugin:uri").value->get_string();
 
@@ -184,9 +184,10 @@ void node::init()
 
     create_ports(plugin);
 
-    LV2_Feature * feature_list[2];
+    LV2_Feature * feature_list[3];
     feature_list[0] = &urid_map_feature;
-    feature_list[1] = nullptr;
+    feature_list[1] = &empty_options_feature;
+    feature_list[2] = nullptr;
     instance = lilv_plugin_instantiate(plugin, domain->sample_rate, feature_list);
 
     if (instance == nullptr) {

@@ -13,6 +13,8 @@
 
 #pragma once
 
+#include </usr/lib/lv2/options.lv2/options.h>
+
 #include <pulsar/node.h>
 #include <pulsar/library.h>
 #include <pulsar/system.h>
@@ -30,8 +32,10 @@ class node : public pulsar::node::filter {
 
     protected:
     LilvInstance * instance = nullptr;
-    LV2_URID_Map * urid_map_instance = nullptr;
-    LV2_Feature urid_map_feature = {"http://lv2plug.in/ns/ext/urid#map", urid_map_instance};
+    LV2_URID_Map urid_map_instance;
+    LV2_Feature urid_map_feature;
+    LV2_Options_Option empty_options_instance[1];
+    LV2_Feature empty_options_feature;
     LV2_URID current_urid = 0;
     std::map<string_type, LV2_URID> urid_map;
 
