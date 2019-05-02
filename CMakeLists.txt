@@ -142,7 +142,7 @@ if (ENABLE_LV2)
         add_definitions(-DCONFIG_ENABLE_LV2)
         include_directories(SYSTEM ${LILV_INCLUDE_DIRS})
         target_sources(pulsar PRIVATE pulsar/LV2.cxx)
-        target_link_libraries(pulsar ${LILV_LIBRARIES})
+        target_link_libraries(pulsar ${LILV_LDFLAGS})
     endif (LILV_FOUND)
 endif (ENABLE_LV2)
 
