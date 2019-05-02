@@ -38,6 +38,7 @@ class node : public pulsar::node::filter {
     LV2_Feature empty_options_feature;
     LV2_URID current_urid = 0;
     std::map<string_type, LV2_URID> urid_map;
+    std::map<string_type, size_type> port_name_to_index;
 
     void create_ports(const LilvPlugin* plugin_in);
     virtual void init() override;
@@ -47,7 +48,7 @@ class node : public pulsar::node::filter {
     node(const string_type& name_in, std::shared_ptr<pulsar::domain> domain_in);
     virtual ~node();
     LV2_URID urid_map_handler(const char * uri_in);
-    // virtual void activate() override;
+    virtual void activate() override;
 };
 
 } // namespace LV2

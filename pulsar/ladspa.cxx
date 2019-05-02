@@ -332,13 +332,13 @@ void node::init()
         }
     }
 
-    pulsar::node::base::init();
+    pulsar::node::filter::init();
 }
 
 void node::activate()
 {
     ladspa->activate();
-    pulsar::node::base::activate();
+    pulsar::node::filter::activate();
 }
 
 void node::run()

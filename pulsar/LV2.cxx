@@ -78,6 +78,8 @@ void node::create_ports(const LilvPlugin * plugin_in)
         auto lilv_port_name = lilv_port_get_name(plugin_in, lport);
         auto string_port_name = lilv_node_as_string(lilv_port_name);
 
+        port_name_to_index[string_port_name] = i;
+
         if (lilv_port_is_a(plugin_in, lport, lv2_AudioPort)) {
             if (lilv_port_is_a(plugin_in, lport, lv2_InputPort)) {
                 audio.add_input(string_port_name);
@@ -199,8 +201,39 @@ void node::init()
     pulsar::node::filter::init();
 }
 
+void node::activate()
+{
+    lilv_instance_activate(instance);
+
+    pulsar::node::filter::activate();
+}
+
 void node::run()
-{ }
+{
+    for (auto&& port_name : audio.get_input_names()) {
+        auto buffer = audio.get_input(port_name)->get_buffer();
+        auto port_num = port_name_to_index[port_name];
+        lilv_instance_connect_port(instance, port_num, buffer->get_pointer());
+    }
+
+    for (auto&& port_name : audio.get_output_names()) {
+        auto buffer = audio.get_output(port_name)->get_buffer();
+        auto port_num = port_name_to_index[port_name];
+        lilv_instance_connect_port(instance, port_num, buffer->get_pointer());
+    }
+
+    lilv_instance_run(instance, domain->buffer_size);
+
+    for (auto&& port_name : audio.get_input_names()) {
+        auto port_num = port_name_to_index[port_name];
+        lilv_instance_connect_port(instance, port_num, nullptr);
+    }
+
+    for (auto&& port_name : audio.get_output_names()) {
+        auto port_num = port_name_to_index[port_name];
+        lilv_instance_connect_port(instance, port_num, nullptr);
+    }
+}
 
 } // namespace LV2
 
