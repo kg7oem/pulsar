@@ -139,11 +139,8 @@ LV2_URID node::urid_map_handler(const char *uri_in)
     return next_urid;
 }
 
-void node::init()
+void node::init_features()
 {
-    assert(domain != nullptr);
-    assert(instance == nullptr);
-
     urid_map_instance = { this, urid_map_wrapper };
     urid_map_feature.URI = "http://lv2plug.in/ns/ext/urid#map";
     urid_map_feature.data = static_cast<void *>(&urid_map_instance);
@@ -154,6 +151,51 @@ void node::init()
     empty_options_instance[0].type = 0;
     empty_options_feature.URI = "http://lv2plug.in/ns/ext/options#options";
     empty_options_feature.data = empty_options_instance;
+}
+
+LV2_Feature * node::handle_feature(const string_type& name_in)
+{
+    if (name_in == "http://lv2plug.in/ns/ext/options#options") {
+        return &empty_options_feature;
+    } else if (name_in == "http://lv2plug.in/ns/ext/urid#map") {
+        return &urid_map_feature;
+    }
+
+    system_fault("LV2 plugin needed an unsupported feature: ", name_in);
+}
+
+void node::create_instance(const LilvPlugin * plugin_in)
+{
+    auto required_features = lilv_plugin_get_required_features(plugin_in);
+    auto num_features = lilv_nodes_size(required_features);
+
+    LV2_Feature * feature_list[num_features + 1];
+    feature_list[num_features] = nullptr;
+    size_type feature_num = 0;
+
+    log_debug("LV2 required features for node ", name, ":");
+    LILV_FOREACH(nodes, i, required_features) {
+        auto node = lilv_nodes_get(required_features, i);
+        auto value = lilv_node_as_string(node);
+        log_debug("  ", value);
+
+        feature_list[feature_num] = handle_feature(value);
+        feature_num++;
+    }
+
+    instance = lilv_plugin_instantiate(plugin_in, domain->sample_rate, feature_list);
+
+    if (instance == nullptr) {
+        system_fault("could not create LV2 instance");
+    }
+}
+
+void node::init()
+{
+    assert(domain != nullptr);
+    assert(instance == nullptr);
+
+    init_features();
 
     auto string_uri = get_property("plugin:uri").value->get_string();
 
@@ -173,26 +215,7 @@ void node::init()
         system_fault("Could not find a LV2 plugin with URI of ", string_uri);
     }
 
-    auto required_features = lilv_plugin_get_required_features(plugin);
-    auto num_required = lilv_nodes_size(required_features);
-
-    log_trace("LV2 required features for ", string_uri, ":");
-    LILV_FOREACH(nodes, i, required_features) {
-        auto node = lilv_nodes_get(required_features, i);
-        auto value = lilv_node_as_string(node);
-        log_trace("  ", value);
-    }
-
-    LV2_Feature * feature_list[3];
-    feature_list[0] = &urid_map_feature;
-    feature_list[1] = &empty_options_feature;
-    feature_list[2] = nullptr;
-    instance = lilv_plugin_instantiate(plugin, domain->sample_rate, feature_list);
-
-    if (instance == nullptr) {
-        system_fault("could not create LV2 instance");
-    }
-
+    create_instance(plugin);
     create_ports(plugin);
 
     lilv_node_free(lilv_uri);

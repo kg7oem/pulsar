@@ -40,6 +40,9 @@ class node : public pulsar::node::filter {
     std::map<string_type, LV2_URID> urid_map;
     std::map<string_type, size_type> port_name_to_index;
 
+    void init_features();
+    LV2_Feature * handle_feature(const string_type& name_in);
+    void create_instance(const LilvPlugin * plugin_in);
     void create_ports(const LilvPlugin* plugin_in);
     virtual void init() override;
     virtual void run() override;
