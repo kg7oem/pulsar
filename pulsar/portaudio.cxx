@@ -94,7 +94,29 @@ void node::process_cb(const void *inputBuffer, void *outputBuffer, size_type fra
     assert(framesPerBuffer == domain->buffer_size);
 
     if (statusFlags) {
-        system_fault("portaudio callback got non-zero statusFlags: ", statusFlags);
+        if (statusFlags & paPrimingOutput) {
+            log_trace("portaudio stream is priming for node ", name);
+            // discard anything that is going to be used for priming
+            return;
+        }
+
+        if (statusFlags & paInputUnderflow) {
+            log_info("portaudio input underflow for node ", name);
+        }
+
+        if (statusFlags & paInputOverflow) {
+            log_info("portaudio input overflow for node ", name);
+        }
+
+        if (statusFlags & paOutputUnderflow) {
+            log_info("portaudio output underflow for node ", name);
+        }
+
+        if (statusFlags & paOutputOverflow) {
+            log_info("portaudio output overflow for node ", name);
+        }
+
+        system_fault("portaudio callback got unknown statusFlags: ", statusFlags);
     }
 
     std::vector<sample_type *> input;
