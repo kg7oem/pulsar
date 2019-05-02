@@ -30,7 +30,10 @@ class node : public pulsar::node::filter {
 
     protected:
     LilvInstance * instance = nullptr;
-    LV2_Feature * features = nullptr;
+    LV2_URID_Map * urid_map_instance = nullptr;
+    LV2_Feature urid_map_feature = {"http://lv2plug.in/ns/ext/urid#map", urid_map_instance};
+    LV2_URID current_urid = 0;
+    std::map<string_type, LV2_URID> urid_map;
 
     void create_ports(const LilvPlugin* plugin_in);
     virtual void init() override;
@@ -39,6 +42,7 @@ class node : public pulsar::node::filter {
     public:
     node(const string_type& name_in, std::shared_ptr<pulsar::domain> domain_in);
     virtual ~node();
+    LV2_URID urid_map_handler(const char * uri_in);
     // virtual void activate() override;
 };
 

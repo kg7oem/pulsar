@@ -53,6 +53,10 @@ node::~node()
         lilv_instance_free(instance);
         instance = nullptr;
     }
+
+    if (urid_map_instance != nullptr) {
+        free(urid_map_instance);
+    }
 }
 
 void node::create_ports(const LilvPlugin * plugin_in)
@@ -116,10 +120,39 @@ void node::create_ports(const LilvPlugin * plugin_in)
     lilv_node_free(lv2_InputPort);
 }
 
+static LV2_URID urid_map_wrapper(LV2_URID_Map_Handle handle, const char *uri_in)
+{
+    auto node = (LV2::node *)handle;
+    return node->urid_map_handler(uri_in);
+}
+
+LV2_URID node::urid_map_handler(const char *uri_in)
+{
+    string_type uri(uri_in);
+    auto found = urid_map.find(uri);
+
+    if (found != urid_map.end()) {
+        return found->second;
+    }
+
+    auto next_urid = ++current_urid;
+    urid_map[uri] = next_urid;
+    return next_urid;
+}
+
 void node::init()
 {
     assert(domain != nullptr);
     assert(instance == nullptr);
+
+    urid_map_instance = static_cast<LV2_URID_Map *>(malloc(sizeof(LV2_URID_Map)));
+
+    if (urid_map_instance == nullptr) {
+        system_fault("could not malloc");
+    }
+
+    urid_map_instance->handle = this;
+    urid_map_instance->map = urid_map_wrapper;
 
     auto string_uri = get_property("plugin:uri").value->get_string();
 
@@ -141,9 +174,8 @@ void node::init()
 
     auto required_features = lilv_plugin_get_required_features(plugin);
     auto num_required = lilv_nodes_size(required_features);
-    features = static_cast<LV2_Feature *>(calloc(num_required, sizeof(LV2_Feature)));
 
-    log_trace("LV2 required features:");
+    log_trace("LV2 required features for ", string_uri, ":");
     LILV_FOREACH(nodes, i, required_features) {
         auto node = lilv_nodes_get(required_features, i);
         auto value = lilv_node_as_string(node);
@@ -152,7 +184,10 @@ void node::init()
 
     create_ports(plugin);
 
-    instance = lilv_plugin_instantiate(plugin, domain->sample_rate, NULL);
+    LV2_Feature * feature_list[2];
+    feature_list[0] = &urid_map_feature;
+    feature_list[1] = nullptr;
+    instance = lilv_plugin_instantiate(plugin, domain->sample_rate, feature_list);
 
     if (instance == nullptr) {
         system_fault("could not create LV2 instance");
