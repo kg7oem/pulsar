@@ -13,8 +13,6 @@
 
 #pragma once
 
-#include </usr/lib/lv2/options.lv2/options.h>
-
 #include <pulsar/node.h>
 #include <pulsar/library.h>
 #include <pulsar/system.h>
@@ -24,6 +22,8 @@ namespace pulsar {
 namespace LV2 {
 
 #include <lilv/lilv.h>
+// FIXME how is this supposed to be handled?
+#include </usr/lib/lv2/options.lv2/options.h>
 
 pulsar::node::base * make_node(const string_type& name_in, std::shared_ptr<domain> domain_in);
 void init();

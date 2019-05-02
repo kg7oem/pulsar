@@ -2,9 +2,9 @@
 
 templates:
   tube:
-    class: pulsar::ladspa::node
+    class: pulsar::LV2::node
     plugin:
-      filename: /usr/local/lib/ladspa/ZamTube-ladspa.so
+      uri: urn:zamaudio:ZamTube
 
 domain:
   config:
