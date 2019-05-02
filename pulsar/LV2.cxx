@@ -103,8 +103,7 @@ void node::create_ports(const LilvPlugin * plugin_in)
 
             auto& control = add_property(property_name, property::value_type::real);
             control.value->set(defaults[i]);
-            // FIXME segfaults
-            // lilv_instance_connect_port(instance, i, &control.value->get_real());
+            lilv_instance_connect_port(instance, i, &control.value->get_real());
         } else {
             system_fault("LV2 port was neither audio nor control");
         }
@@ -184,8 +183,6 @@ void node::init()
         log_trace("  ", value);
     }
 
-    create_ports(plugin);
-
     LV2_Feature * feature_list[3];
     feature_list[0] = &urid_map_feature;
     feature_list[1] = &empty_options_feature;
@@ -195,6 +192,8 @@ void node::init()
     if (instance == nullptr) {
         system_fault("could not create LV2 instance");
     }
+
+    create_ports(plugin);
 
     lilv_node_free(lilv_uri);
 
