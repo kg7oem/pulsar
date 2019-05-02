@@ -83,10 +83,9 @@ class instance : public std::enable_shared_from_this<instance> {
 };
 
 class node : public pulsar::node::filter {
-    virtual void init() override;
-
     protected:
     std::shared_ptr<ladspa::instance> ladspa = nullptr;
+    virtual void init() override;
     virtual void run() override;
 
     public:

@@ -19,7 +19,6 @@
 #include <string>
 
 #include <pulsar/async.h>
-#include <pulsar/ladspa.h>
 #include <pulsar/logging.h>
 #include <pulsar/node.h>
 #include <pulsar/system.h>
@@ -31,6 +30,14 @@
 
 #ifdef CONFIG_ENABLE_JACKAUDIO
 #include <pulsar/jackaudio.h>
+#endif
+
+#ifdef CONFIG_ENABLE_LADSPA
+#include <pulsar/ladspa.h>
+#endif
+
+#ifdef CONFIG_ENABLE_LV2
+#include <pulsar/LV2.h>
 #endif
 
 #ifdef CONFIG_ENABLE_PORTAUDIO
@@ -74,6 +81,10 @@ void bootstrap(const size_type num_threads_in)
 
 #ifdef CONFIG_ENABLE_LADSPA
     pulsar::ladspa::init();
+#endif
+
+#ifdef CONFIG_ENABLE_LV2
+    pulsar::LV2::init();
 #endif
 
 #ifdef CONFIG_ENABLE_JACKAUDIO
