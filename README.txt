@@ -31,6 +31,7 @@ own packages:
   DBUS: libdbus-c++-dev libdbus-1-dev
   Portaudio: portaudio19-dev
   JACK Audio: libjack-jackd2-dev
+  LV2: liblilv-dev
 
 You'll need these packages to use dev-config.yaml
 
