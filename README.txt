@@ -100,6 +100,7 @@ Implemented features
   * JACK audio client - participates in the whole JACK ecosystem
   * PortAudio client (default stream only currently)
   * Load, configure and use any LADSPA plugin
+  * LV2 support with URID map and Options extended features
   * Change effect configuration while audio engine is running.
   * Query and adjust plugin configuration via DBUS.
 
@@ -111,7 +112,7 @@ Planned features
     * Control the headless program via DBUS or other forms of IPC
   * Change the topology around while audio processing is running
   * Posix, Windows, and MacOS support
-  * LV2, VST2 and VST3 plugins on all supported platforms
+  * VST2 and VST3 plugins on all supported platforms
     * Use plugins as filter nodes
     * Access Pulsar itself as a plugin in other applications
   * Native Pulse Audio sources and sinks
