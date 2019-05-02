@@ -16,6 +16,9 @@
 #include <pulsar/logging.h>
 #include <pulsar/LV2.h>
 
+#define OPTIONS_FEATURE_URI "http://lv2plug.in/ns/ext/options#options"
+#define URID_MAP_FEATURE_URI "http://lv2plug.in/ns/ext/urid#map"
+
 namespace pulsar {
 
 namespace LV2 {
@@ -142,22 +145,22 @@ LV2_URID node::urid_map_handler(const char *uri_in)
 void node::init_features()
 {
     urid_map_instance = { this, urid_map_wrapper };
-    urid_map_feature.URI = "http://lv2plug.in/ns/ext/urid#map";
+    urid_map_feature.URI = URID_MAP_FEATURE_URI;
     urid_map_feature.data = static_cast<void *>(&urid_map_instance);
 
     empty_options_instance[0].subject = 0;
     empty_options_instance[0].key = 0;
     empty_options_instance[0].size = 0;
     empty_options_instance[0].type = 0;
-    empty_options_feature.URI = "http://lv2plug.in/ns/ext/options#options";
+    empty_options_feature.URI = OPTIONS_FEATURE_URI;
     empty_options_feature.data = empty_options_instance;
 }
 
 LV2_Feature * node::handle_feature(const string_type& name_in)
 {
-    if (name_in == "http://lv2plug.in/ns/ext/options#options") {
+    if (name_in == OPTIONS_FEATURE_URI) {
         return &empty_options_feature;
-    } else if (name_in == "http://lv2plug.in/ns/ext/urid#map") {
+    } else if (name_in == URID_MAP_FEATURE_URI) {
         return &urid_map_feature;
     }
 
