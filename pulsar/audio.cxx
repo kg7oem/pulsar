@@ -279,13 +279,15 @@ std::shared_ptr<audio::buffer> audio::input::get_buffer()
 {
     auto num_links = links.size() + num_forwards_to_us;
     auto input_name = parent->name + ":" + name;
+    auto lock = debug_get_lock(link_buffers_mutex);
+
+    assert(link_buffers.size() == num_links);
 
     if (num_links == 0) {
         log_trace("returning pointer to zero buffer for ", input_name);
         return parent->get_domain()->get_zero_buffer();
     } else if (num_links == 1) {
         log_trace("returning pointer to link's ready buffer for ", input_name);
-        auto lock = debug_get_lock(link_buffers_mutex);
         assert(link_buffers.begin() != link_buffers.end());
         assert(link_buffers.begin()->second != nullptr);
         return link_buffers.begin()->second;
