@@ -7,10 +7,10 @@ cmake_minimum_required(VERSION 3.8.2)
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/modules/" ${CMAKE_MODULE_PATH})
 
 project(pulsar)
+set(CMAKE_BUILD_TYPE Debug)
 
 option(BUILD_DOC "Build documentation" OFF)
 option(BUILD_PROFILE "Perform a profile build" OFF)
-option(CMAKE_BUILD_TYPE "Build type (Debug, Release, RelWithDebInfo, MinSizeRel)" Debug)
 option(CMAKE_VERBOSE_MAKEFILE "Verbose builds" OFF)
 
 option(ENABLE_DBUS "Enable DBUS support" ON)
