@@ -1,5 +1,7 @@
 author-*
 .vscode
+.kdev4
+compile_commands.json
 
 # things in here have to be
 # added explicitly
