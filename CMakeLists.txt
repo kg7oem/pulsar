@@ -26,10 +26,11 @@ option(MEMPOOL_BUFFER "Use memory pools with audio::buffer" ON)
 # don't change anything below this line
 set(CMAKE_CXX_STANDARD 17)
 
+add_subdirectory(ext/yaml-cpp-0.6.0 EXCLUDE_FROM_ALL)
+
 find_package(Boost 1.58.0 COMPONENTS system REQUIRED)
 find_package(PkgConfig REQUIRED)
 find_package(Threads REQUIRED)
-find_package(yaml-cpp REQUIRED)
 
 # FIXME how to enable only in Debug build type?
 add_definitions(-Og)
@@ -51,6 +52,7 @@ endif (CMAKE_COMPILER_IS_GNUCXX)
 include_directories(.)
 include_directories(SYSTEM ${Boost_INCLUDE_DIR})
 include_directories(SYSTEM ext/)
+include_directories(SYSTEM ext/yaml-cpp-0.6.0/include)
 
 if (BUILD_PROFILE)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pg")
@@ -93,9 +95,8 @@ target_link_libraries(pulsar ${CMAKE_THREAD_LIBS_INIT})
 target_link_libraries(pulsar ${Boost_LIBRARIES})
 target_link_libraries(pulsar dl)
 target_link_libraries(pulsar logjam)
-target_link_libraries(pulsar yaml-cpp)
 
-target_link_libraries(pulsar-dev pulsar stdc++)
+target_link_libraries(pulsar-dev pulsar stdc++ yaml-cpp)
 
 if (MEMPOOL_BUFFER)
     add_definitions(-DCONFIG_MEMPOOL_BUFFER)

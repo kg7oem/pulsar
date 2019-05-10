@@ -89,7 +89,7 @@ work anyway. You can get a fully compatible version from backports:
 
 You'll need at least these packages to compile on Debian or Ubuntu
 
-  cmake pkg-config libboost-system-dev libyaml-cpp-dev
+  cmake pkg-config libboost-system-dev
 
 The following features are conditional and require their
 own packages:
