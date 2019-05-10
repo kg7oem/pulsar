@@ -9,6 +9,7 @@ ext/
 
 pulsar/dbus.adaptor.h
 
+build/
 pulsar-dev
 liblogjam*.a
 libpulsar*.so
