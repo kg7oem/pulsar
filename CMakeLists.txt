@@ -19,6 +19,8 @@ option(ENABLE_LADSPA "Enable LADSPA support" ON)
 option(ENABLE_LV2 "Enable LV2 support" ON)
 option(ENABLE_PORTAUDIO "Enable Portaudio support" ON)
 
+option(MEMPOOL_BUFFER "Use memory pools with audio::buffer" ON)
+
 # set(CMAKE_VERBOSE_MAKEFILE OFF)
 
 # don't change anything below this line
@@ -94,6 +96,10 @@ target_link_libraries(pulsar logjam)
 target_link_libraries(pulsar yaml-cpp)
 
 target_link_libraries(pulsar-dev pulsar stdc++)
+
+if (MEMPOOL_BUFFER)
+    add_definitions(-DCONFIG_MEMPOOL_BUFFER)
+endif (MEMPOOL_BUFFER)
 
 if (ENABLE_DBUS)
     message("Checking for dbus-c++")
