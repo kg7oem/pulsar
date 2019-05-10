@@ -45,8 +45,12 @@ class buffer {
     template <typename... Args>
     static std::shared_ptr<buffer> make(Args&&... args)
     {
+#ifdef CONFIG_MEMPOOL_BUFFER
         static pool_allocator_type<buffer> allocator;
         return std::allocate_shared<buffer>(allocator, args...);
+#else
+        return std::make_shared<buffer>(args...);
+#endif
     }
     pulsar::size_type get_size();
     pulsar::sample_type * get_pointer();
