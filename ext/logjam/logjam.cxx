@@ -539,7 +539,11 @@ void logdest::output(const logevent& event_in) {
 
 // THREAD this function is thread safe
 string_type logconsole::format_event(const logevent& event_in) const {
-    return format_event_console(event_in);
+    if (event_in.level == loglevel::info || event_in.level == loglevel::verbose) {
+        return format_event_console(event_in);
+    }
+
+    return format_event_detailed(event_in);
 }
 
 // THREAD must have the stdio_mutex
