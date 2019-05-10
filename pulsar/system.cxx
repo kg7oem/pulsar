@@ -23,6 +23,7 @@
 #include <pulsar/node.h>
 #include <pulsar/system.h>
 #include <pulsar/thread.h>
+#include <pulsar/zeronode.h>
 
 #ifdef CONFIG_ENABLE_DBUS
 #include <pulsar/dbus.h>
@@ -78,6 +79,7 @@ void bootstrap(const size_type num_threads_in)
 #endif
 
     pulsar::node::init();
+    pulsar::zeronode::init();
 
 #ifdef CONFIG_ENABLE_LADSPA
     pulsar::ladspa::init();

@@ -72,6 +72,7 @@ add_library(
     pulsar/system.cxx
     pulsar/thread.cxx
     pulsar/util.cxx
+    pulsar/zeronode.cxx
 )
 
 add_library(
