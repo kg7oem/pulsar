@@ -5,13 +5,14 @@
 
 cmake_minimum_required(VERSION 3.8.2)
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/modules/" ${CMAKE_MODULE_PATH})
+include(ExternalProject)
 
 project(pulsar)
 set(CMAKE_BUILD_TYPE Debug)
 
 option(BUILD_DOC "Build documentation" OFF)
 option(BUILD_PROFILE "Perform a profile build" OFF)
-option(CMAKE_VERBOSE_MAKEFILE "Verbose builds" OFF)
+option(VERBOSE "Verbose builds" OFF)
 
 option(ENABLE_DBUS "Enable DBUS support" ON)
 option(ENABLE_JACKAUDIO "Enable JACK Audio support" ON)
@@ -19,12 +20,34 @@ option(ENABLE_LADSPA "Enable LADSPA support" ON)
 option(ENABLE_LV2 "Enable LV2 support" ON)
 option(ENABLE_PORTAUDIO "Enable Portaudio support" ON)
 
-# set(CMAKE_VERBOSE_MAKEFILE OFF)
+if (VERBOSE)
+    set(CMAKE_VERBOSE_MAKEFILE ON)
+endif (VERBOSE)
 
 # don't change anything below this line
 set(CMAKE_CXX_STANDARD 17)
 
-find_package(Boost 1.58.0 COMPONENTS system REQUIRED)
+find_package(Boost 1.66.0 COMPONENTS system)
+
+if(NOT Boost_FOUND)
+    ExternalProject_Add(
+        boost
+
+        EXCLUDE_FROM_ALL ON
+        BUILD_IN_SOURCE TRUE
+
+        URL https://dl.bintray.com/boostorg/release/1.66.0/source/boost_1_66_0.tar.gz
+        URL_HASH SHA512=8d537fa1fcd24dfa3bc107741d20d93624851b724883c5cfe0cdcd8b8390939869e0f41a36f52d3051f129a8405a574a1a095897f82ece747740b34a1e52ffdb
+
+        CONFIGURE_COMMAND ./bootstrap.sh
+        BUILD_COMMAND ./b2 --with-system --build-type=minimal --layout=system cxxflags=-fPIC link=static runtime-link=static threading=multi
+        INSTALL_COMMAND ""
+    )
+
+    set(Boost_INCLUDE_DIR "${CMAKE_BINARY_DIR}/boost-prefix/src/boost")
+    set(Boost_LIBRARIES "${CMAKE_BINARY_DIR}/boost-prefix/src/boost/stage/lib/libboost_system.a")
+endif(NOT Boost_FOUND)
+
 find_package(PkgConfig REQUIRED)
 find_package(Threads REQUIRED)
 find_package(yaml-cpp REQUIRED)
@@ -86,6 +109,11 @@ add_executable(
 
     pulsar-dev.cxx
 )
+
+if (NOT Boost_FOUND)
+    add_dependencies(pulsar boost)
+    add_dependencies(logjam boost)
+endif (NOT Boost_FOUND)
 
 target_link_libraries(pulsar ${CMAKE_THREAD_LIBS_INIT})
 target_link_libraries(pulsar ${Boost_LIBRARIES})
