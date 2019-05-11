@@ -33,7 +33,7 @@ class node : public pulsar::node::io {
     void start() override;
     void execute() override;
     void handle_timer();
-    virtual void input_ready();
+    virtual void input_ready() override;
     virtual void stop() override;
 
     public:
