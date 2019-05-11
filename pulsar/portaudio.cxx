@@ -101,22 +101,28 @@ void node::process_cb(const void *inputBuffer, void *outputBuffer, size_type fra
         }
 
         if (statusFlags & paInputUnderflow) {
+            statusFlags &= ~paInputUnderflow;
             log_error("portaudio input underflow for node ", name);
         }
 
         if (statusFlags & paInputOverflow) {
+            statusFlags &= ~paInputOverflow;
             log_error("portaudio input overflow for node ", name);
         }
 
         if (statusFlags & paOutputUnderflow) {
+            statusFlags &= ~paOutputUnderflow;
             log_error("portaudio output underflow for node ", name);
         }
 
         if (statusFlags & paOutputOverflow) {
+            statusFlags &= ~paOutputOverflow;
             log_error("portaudio output overflow for node ", name);
         }
 
-        system_fault("portaudio callback got unknown statusFlags: ", statusFlags);
+        if (statusFlags) {
+            system_fault("portaudio callback got unknown statusFlags: ", statusFlags);
+        }
     }
 
     std::vector<sample_type *> input;
