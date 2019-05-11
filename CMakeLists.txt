@@ -12,6 +12,7 @@ set(CMAKE_BUILD_TYPE Debug)
 
 option(BUILD_DOC "Build documentation" OFF)
 option(BUILD_PROFILE "Perform a profile build" OFF)
+option(DOWNLOAD_DEPS "Download and build missing dependencies" OFF)
 option(VERBOSE "Verbose builds" OFF)
 
 option(ENABLE_DBUS "Enable DBUS support" ON)
@@ -34,22 +35,7 @@ add_subdirectory(ext/yaml-cpp-0.6.0 EXCLUDE_FROM_ALL)
 find_package(Boost 1.66.0 COMPONENTS system)
 
 if(NOT Boost_FOUND)
-    ExternalProject_Add(
-        boost
-
-        EXCLUDE_FROM_ALL ON
-        BUILD_IN_SOURCE TRUE
-
-        URL https://dl.bintray.com/boostorg/release/1.66.0/source/boost_1_66_0.tar.gz
-        URL_HASH SHA512=8d537fa1fcd24dfa3bc107741d20d93624851b724883c5cfe0cdcd8b8390939869e0f41a36f52d3051f129a8405a574a1a095897f82ece747740b34a1e52ffdb
-
-        CONFIGURE_COMMAND ./bootstrap.sh
-        BUILD_COMMAND ./b2 --with-system --build-type=minimal --layout=system cxxflags=-fPIC link=static runtime-link=static threading=multi
-        INSTALL_COMMAND ""
-    )
-
-    set(Boost_INCLUDE_DIR "${CMAKE_BINARY_DIR}/boost-prefix/src/boost")
-    set(Boost_LIBRARIES "${CMAKE_BINARY_DIR}/boost-prefix/src/boost/stage/lib/libboost_system.a")
+    include(cmake/LocalBoost.cmake)
 endif(NOT Boost_FOUND)
 
 find_package(PkgConfig REQUIRED)
@@ -114,10 +100,10 @@ add_executable(
     pulsar-dev.cxx
 )
 
-if (NOT Boost_FOUND)
+if (LOCAL_BOOST)
     add_dependencies(pulsar boost)
     add_dependencies(logjam boost)
-endif (NOT Boost_FOUND)
+endif (LOCAL_BOOST)
 
 target_link_libraries(pulsar ${CMAKE_THREAD_LIBS_INIT})
 target_link_libraries(pulsar ${Boost_LIBRARIES})

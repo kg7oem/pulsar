@@ -89,7 +89,13 @@ work anyway. You can get a fully compatible version from backports:
 
 You'll need at least these packages to compile on Debian or Ubuntu
 
-  cmake pkg-config libboost-system-dev
+  cmake pkg-config
+
+The following packages can come from the system or can be downloaded
+and built automatically by setting DOWNLOAD_DEPS to true; see the
+build example for how to do this.
+
+  Boost: 1.66.0 or newer
 
 The following features are conditional and require their
 own packages:
@@ -120,7 +126,7 @@ something like this:
 
   mkdir build
   cd build
-  cmake ..
+  cmake .. -DDOWNLOAD_DEPS=ON
   make
 
 The following compilers and OS configurations have been tested
