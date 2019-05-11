@@ -75,7 +75,6 @@ add_library(
     pulsar/async.cxx
     pulsar/audio.cxx
     pulsar/audio.util.cxx
-    pulsar/config.cxx
     pulsar/daemon.cxx
     pulsar/debug.cxx
     pulsar/domain.cxx
@@ -98,6 +97,7 @@ add_executable(
     pulsar-dev
 
     pulsar-dev.cxx
+    pulsar/config.cxx
 )
 
 if (LOCAL_BOOST)
@@ -109,6 +109,7 @@ target_link_libraries(pulsar ${CMAKE_THREAD_LIBS_INIT})
 target_link_libraries(pulsar ${Boost_LIBRARIES})
 target_link_libraries(pulsar dl)
 target_link_libraries(pulsar logjam)
+target_link_libraries(pulsar)
 
 target_link_libraries(pulsar-dev pulsar stdc++ yaml-cpp)
 
