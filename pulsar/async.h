@@ -99,7 +99,7 @@ template <typename T, typename... Args>
 void submit_job(T&& cb_in, Args... args_in)
 {
     auto bound = std::bind(cb_in, args_in...);
-    get_boost_io().dispatch([bound]{
+    boost::asio::defer(get_boost_io(), [bound]{
         bound();
     });
 }
@@ -110,7 +110,7 @@ void wait_job(T&& cb_in, Args... args_in)
     auto bound = std::bind(cb_in, args_in...);
     promise_type<void> promise;
 
-    get_boost_io().dispatch([&promise, bound]{
+    boost::asio::defer(get_boost_io(), [&promise, bound]{
         bound();
         promise.set_value();
     });
@@ -125,7 +125,7 @@ T wait_job(U&& cb_in, Args... args_in)
     auto bound = std::bind(cb_in, args_in...);
     promise_type<T> promise;
 
-    get_boost_io().dispatch([&promise, bound]{
+    boost::asio::defer(get_boost_io(), [&promise, bound]{
         T retval = bound();
         promise.set_value(retval);
     });
