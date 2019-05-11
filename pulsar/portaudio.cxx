@@ -28,8 +28,12 @@ void init()
     log_debug("Initializing portaudio support");
 
     {
+        log_trace("inside portaudio init lock block");
         auto lock = debug_get_lock(portaudio_mutex);
+
+        log_trace("calling Pa_Initialize()");
         auto err = Pa_Initialize();
+        log_trace("done calling Pa_Initialize()");
 
         if (err != paNoError) {
             system_fault("Could not initialize portaudio: ",  Pa_GetErrorText(err));
