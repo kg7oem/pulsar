@@ -19,6 +19,14 @@
 #include <pulsar/thread.h>
 #include <pulsar/types.h>
 
+#define NO_FUNCTION "(none)"
+#define NO_FILE "(none)"
+#define NO_LINE 0
+
+#define FOREIGN_FUNCTION "(foreign)"
+#define FOREIGN_FILE "(foreign)"
+#define FOREIGN_LINE 0
+
 namespace pulsar {
 
 namespace thread {
@@ -58,17 +66,47 @@ void lock_block(UNUSED const char *function_in, UNUSED const char *path_in, UNUS
 
 #ifdef CONFIG_LOCK_ASSERT
 
+debug_mutex::debug_mutex()
+{
+    reset();
+}
+
 debug_mutex::~debug_mutex()
 { }
 
+void debug_mutex::reset()
+{
+    available_flag = true;
+    owner_function = NO_FUNCTION;
+    owner_file = NO_FILE;
+    owner_line = NO_LINE;
+}
+
 void debug_mutex::lock()
 {
+    handle_lock(FOREIGN_FUNCTION, FOREIGN_FILE, FOREIGN_LINE);
+}
+
+void debug_mutex::lock(const char *function_in, const char *path_in, const int& line_in)
+{
+    handle_lock(function_in, path_in, line_in);
+}
+
+void debug_mutex::handle_lock(const char *function_in, const char *path_in, const int& line_in)
+{
+    auto&& thread_id = std::this_thread::get_id();
     std::unique_lock lock(our_mutex);
 
+    waiters[thread_id] = pulsar::util::to_string(owner_file, ":", owner_line, " ", owner_function, "()");
     available_condition.wait(lock, [this]{ return available_flag; });
+    NDEBUG_UNUSED auto erased = waiters.erase(thread_id);
+    assert(erased == 1);
 
     available_flag = false;
-    owner = std::this_thread::get_id();
+    owner_thread = std::this_thread::get_id();
+    owner_function = function_in;
+    owner_file = path_in;
+    owner_line = line_in;
 
     return;
 }
@@ -81,18 +119,19 @@ void debug_mutex::unlock()
         system_fault("thread ", std::this_thread::get_id(), " tried to unlock a mutex not owned by any thread");
     }
 
-    if (owner != std::this_thread::get_id()) {
-        system_fault("thread ",  std::this_thread::get_id(), " tried to unlock a mutex owned by thread ", owner);
+    if (owner_thread != std::this_thread::get_id()) {
+        system_fault("thread ",  std::this_thread::get_id(), " tried to unlock a mutex owned by another thread ", owner_thread);
     }
 
-    available_flag = true;
+    reset();
+
     available_condition.notify_one();
 }
 
 bool debug_mutex::is_owned_by(const std::thread::id thread_id_in)
 {
     std::unique_lock lock(our_mutex);
-    return owner == thread_id_in;
+    return owner_thread == thread_id_in;
 }
 
 #endif

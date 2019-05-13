@@ -56,21 +56,30 @@ enum class rt_priorty : int {
 class debug_mutex {
     protected:
     std::mutex our_mutex;
-    bool available_flag = true;
+    bool available_flag = false;
     std::condition_variable available_condition;
-    std::thread::id owner;
+    std::thread::id owner_thread;
+    const char * owner_function = nullptr;
+    const char * owner_file = nullptr;
+    int owner_line = 0;
+    std::map<std::thread::id, std::string> waiters;
+
+    void reset();
+    void handle_lock(const char *function_in, const char *path_in, const int& line_in);
 
     public:
+    debug_mutex();
     virtual ~debug_mutex();
     virtual void lock();
+    virtual void lock(const char *function_in, const char *path_in, const int& line_in);
     virtual void unlock();
     virtual bool is_owned_by(const std::thread::id thread_id_in);
 };
 #endif
 
 void set_realtime_priority(thread_type& thread_in, const rt_priorty& priority_in);
-lock_type get_lock(UNUSED const char *function_in, UNUSED const char *path_in, UNUSED const int& line_in, mutex_type& mutex_in, UNUSED const string_type& name_in);
-void lock_block(UNUSED const char *function_in, UNUSED const char *path_in, UNUSED const int& line_in, mutex_type& mutex_in, const std::function<void ()>& block_in);
+lock_type get_lock(const char *function_in, const char *path_in, const int& line_in, mutex_type& mutex_in, const string_type& name_in);
+void lock_block(const char *function_in, const char *path_in, const int& line_in, mutex_type& mutex_in, const std::function<void ()>& block_in);
 
 } // namespace thread
 
