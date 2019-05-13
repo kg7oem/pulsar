@@ -148,10 +148,7 @@ void audio::input::reset_cycle()
 {
     llog_trace({ return pulsar::util::to_string("resetting audio input ", to_string()); });
 
-    {
-        auto lock = pulsar_get_lock(link_buffers_mutex);
-        link_buffers.empty();
-    }
+    pulsar_lock_block(link_buffers_mutex, { link_buffers.empty(); });
 
     for(auto&& link : links) {
         link->reset();
@@ -218,10 +215,7 @@ void audio::input::link_ready(audio::link * link_in, std::shared_ptr<audio::buff
 
     size_type now_waiting;
 
-    {
-        auto lock = pulsar_get_lock(link_buffers_mutex);
-        link_buffers[link_in] = buffer_in;
-    }
+    pulsar_lock_block(link_buffers_mutex, { link_buffers[link_in] = buffer_in; });
 
     now_waiting = --links_waiting;
 
@@ -420,27 +414,32 @@ void audio::output::notify()
 
 void audio::output::add_forwarded_buffer(std::shared_ptr<audio::buffer> buffer_in)
 {
-    auto lock = pulsar_get_lock(forward_mutex);
-
-    forwarded_buffers.push_back(buffer_in);
     std::shared_ptr<audio::buffer> buffer = nullptr;
-    auto available = forwarded_buffers.size();
 
-    log_trace(parent->name, ":", name, " forwards to us: ", forwards_to_us, "; available buffers: ", available);
+    pulsar_lock_block(forward_mutex, {
+        forwarded_buffers.push_back(buffer_in);
+        auto available = forwarded_buffers.size();
 
-    if (available > forwards_to_us) {
-        system_fault("sanity check failed; available buffers: ", available, "; forwards to us: ", forwards_to_us);
-    }
+        log_trace(parent->name, ":", name, " forwards to us: ", forwards_to_us, "; available buffers: ", available);
 
-    if (available == forwards_to_us) {
-        if (available == 1) {
-            buffer = forwarded_buffers.at(0);
-        } else {
-            system_fault("need to mix forward buffers");
+        if (available > forwards_to_us) {
+            system_fault("sanity check failed; available buffers: ", available, "; forwards to us: ", forwards_to_us);
         }
 
-        forwarded_buffers.clear();
-    }
+        // FIXME this seems buggy like a combination of forwards
+        // and links would cause the system to go ready at the wrong
+        // time but this hasn't been analyzed yet - this is a drive
+        // by thought
+        if (available == forwards_to_us) {
+            if (available == 1) {
+                buffer = forwarded_buffers.at(0);
+            } else {
+                system_fault("need to mix forward buffers");
+            }
+
+            forwarded_buffers.clear();
+        }
+    });
 
     if (buffer != nullptr) {
         set_buffer(buffer);
@@ -464,9 +463,6 @@ void audio::link::reset()
 {
     llog_trace({ return pulsar::util::to_string("resetting link for ",  to_string()); });
 
-    // FIXME does this need a lock? The flag is atomic
-    // and locks are not needed to wake up a condvar
-    auto lock = pulsar_get_lock(available_mutex);
     available_flag = true;
     available_condition.notify_all();
 }
@@ -475,21 +471,21 @@ void audio::link::notify(std::shared_ptr<audio::buffer> ready_buffer_in, const b
 {
     llog_trace({ return pulsar::util::to_string("got notification for ", to_string()); });
 
-    auto lock = pulsar_get_lock(available_mutex);
+    {
+        auto lock = pulsar_get_lock(available_mutex);
 
-    if (! available_flag) {
-        if (blocking_in) {
-            system_fault("until the notify race condition is solved blocking is not ok: ", to_string());
-            llog_trace({ return pulsar::util::to_string("node is blocked on link ", to_string()); });
-            available_condition.wait(lock, [this]{ return available_flag.load(); });
-        } else {
-            system_fault("attempt to set link ready when it was already ready");
+        if (! available_flag) {
+            if (blocking_in) {
+                system_fault("until the notify race condition is solved blocking is not ok: ", to_string());
+                llog_trace({ return pulsar::util::to_string("node is blocked on link ", to_string()); });
+                available_condition.wait(lock, [this]{ return available_flag.load(); });
+            } else {
+                system_fault("attempt to set link ready when it was already ready");
+            }
         }
+
+        available_flag = false;
     }
-
-    available_flag = false;
-
-    lock.unlock();
 
     to->link_ready(this, ready_buffer_in);
 }

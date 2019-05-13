@@ -22,7 +22,8 @@
 #include <pulsar/system.h>
 #include <pulsar/thread.forward.h>
 
-#define pulsar_get_lock(mutex) pulsar::thread::get_lock_wrapper(__PRETTY_FUNCTION__, __FILE__, __LINE__, mutex, #mutex)
+#define pulsar_get_lock(mutex) pulsar::thread::get_lock(__PRETTY_FUNCTION__, __FILE__, __LINE__, mutex, #mutex)
+#define pulsar_lock_block(mutex, block) pulsar::thread::lock_block(__PRETTY_FUNCTION__, __FILE__, __LINE__, mutex, [&]() -> void block)
 
 namespace pulsar {
 
@@ -68,7 +69,8 @@ class debug_mutex {
 #endif
 
 void set_realtime_priority(thread_type& thread_in, const rt_priorty& priority_in);
-lock_type get_lock_wrapper(UNUSED const char *function_in, UNUSED const char *path_in, UNUSED const int& line_in, mutex_type& mutex_in, UNUSED const string_type& name_in);
+lock_type get_lock(UNUSED const char *function_in, UNUSED const char *path_in, UNUSED const int& line_in, mutex_type& mutex_in, UNUSED const string_type& name_in);
+void lock_block(UNUSED const char *function_in, UNUSED const char *path_in, UNUSED const int& line_in, mutex_type& mutex_in, const std::function<void ()>& block_in);
 
 } // namespace thread
 

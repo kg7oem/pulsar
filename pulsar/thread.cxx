@@ -34,7 +34,7 @@ void set_realtime_priority(thread_type& thread_in, const rt_priorty& priority_in
     }
 }
 
-lock_type get_lock_wrapper(UNUSED const char *function_in, UNUSED const char *path_in, UNUSED const int& line_in, mutex_type& mutex_in, UNUSED const string_type& name_in)
+lock_type get_lock(UNUSED const char *function_in, UNUSED const char *path_in, UNUSED const int& line_in, mutex_type& mutex_in, UNUSED const string_type& name_in)
 {
 
 #ifdef CONFIG_LOCK_LOGGING
@@ -48,6 +48,12 @@ lock_type get_lock_wrapper(UNUSED const char *function_in, UNUSED const char *pa
 #endif
 
     return lock;
+}
+
+void lock_block(UNUSED const char *function_in, UNUSED const char *path_in, UNUSED const int& line_in, mutex_type& mutex_in, const std::function<void ()>& block_in)
+{
+    auto lock = pulsar_get_lock(mutex_in);
+    block_in();
 }
 
 #ifdef CONFIG_LOCK_ASSERT
