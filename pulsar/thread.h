@@ -66,6 +66,7 @@ class debug_mutex {
 
     void reset();
     void handle_lock(const char *function_in, const char *path_in, const int& line_in);
+    void handle_unlock(const char *function_in, const char *path_in, const int& line_in);
 
     public:
     debug_mutex();
@@ -73,6 +74,7 @@ class debug_mutex {
     virtual void lock();
     virtual void lock(const char *function_in, const char *path_in, const int& line_in);
     virtual void unlock();
+    virtual void unlock(const char *function_in, const char *path_in, const int& line_in);
     virtual bool is_owned_by(const std::thread::id thread_id_in);
 };
 #endif

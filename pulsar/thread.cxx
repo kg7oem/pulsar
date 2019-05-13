@@ -11,6 +11,7 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
 
+#include <algorithm>
 #include <pthread.h>
 #include <string.h>
 
@@ -30,6 +31,10 @@
 namespace pulsar {
 
 namespace thread {
+
+#ifdef CONFIG_LOCK_ASSERT
+static thread_local std::vector<const mutex_type *> thread_locked_mutexs;
+#endif
 
 // from https://stackoverflow.com/a/31652324
 void set_realtime_priority(thread_type& thread_in, const rt_priorty& priority_in)
@@ -72,7 +77,13 @@ debug_mutex::debug_mutex()
 }
 
 debug_mutex::~debug_mutex()
-{ }
+{
+    if (available_flag == false) {
+        system_fault("mutex was deconstructed but the available flag was false");
+    }
+
+    assert(std::find(thread_locked_mutexs.begin(), thread_locked_mutexs.end(), this) == thread_locked_mutexs.end());
+}
 
 void debug_mutex::reset()
 {
@@ -94,34 +105,58 @@ void debug_mutex::lock(const char *function_in, const char *path_in, const int& 
 
 void debug_mutex::handle_lock(const char *function_in, const char *path_in, const int& line_in)
 {
-    auto&& thread_id = std::this_thread::get_id();
-    std::unique_lock lock(our_mutex);
+    auto thread_id = std::this_thread::get_id();
 
-    waiters[thread_id] = pulsar::util::to_string(owner_file, ":", owner_line, " ", owner_function, "()");
-    available_condition.wait(lock, [this]{ return available_flag; });
-    NDEBUG_UNUSED auto erased = waiters.erase(thread_id);
-    assert(erased == 1);
+    {
+        std::unique_lock lock(our_mutex);
 
-    available_flag = false;
-    owner_thread = std::this_thread::get_id();
-    owner_function = function_in;
-    owner_file = path_in;
-    owner_line = line_in;
+        waiters[thread_id] = pulsar::util::to_string(owner_file, ":", owner_line, " ", owner_function, "()");
+        available_condition.wait(lock, [this]{ return available_flag; });
+        NDEBUG_UNUSED auto erased = waiters.erase(thread_id);
+        assert(erased == 1);
+
+        available_flag = false;
+        owner_thread = thread_id;
+        owner_function = function_in;
+        owner_file = path_in;
+        owner_line = line_in;
+    }
+
+    thread_locked_mutexs.push_back(this);
 
     return;
 }
 
 void debug_mutex::unlock()
 {
+    handle_unlock(FOREIGN_FUNCTION, FOREIGN_FILE, FOREIGN_LINE);
+}
+
+void debug_mutex::unlock(const char *function_in, const char *path_in, const int& line_in)
+{
+    handle_unlock(function_in, path_in, line_in);
+}
+
+void debug_mutex::handle_unlock(const char *function_in, const char *path_in, const int& line_in)
+{
     std::unique_lock lock(our_mutex);
 
     if (available_flag) {
-        system_fault("thread ", std::this_thread::get_id(), " tried to unlock a mutex not owned by any thread");
+        system_fault(path_in, ":", line_in, " ", function_in, "() thread ", std::this_thread::get_id(), " tried to unlock a mutex not owned by any thread");
     }
 
     if (owner_thread != std::this_thread::get_id()) {
-        system_fault("thread ",  std::this_thread::get_id(), " tried to unlock a mutex owned by another thread ", owner_thread);
+        system_fault(path_in, ":", line_in, " ", function_in, "() thread ",  std::this_thread::get_id(), " tried to unlock a mutex owned by another thread ", owner_thread);
     }
+
+    assert(thread_locked_mutexs.size() >= 1);
+    auto last_locked_mutex = thread_locked_mutexs.back();
+
+    if (last_locked_mutex != this) {
+        system_fault("out of order mutex unlocking");
+    }
+
+    thread_locked_mutexs.pop_back();
 
     reset();
 
