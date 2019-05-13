@@ -108,7 +108,7 @@ void debug_mutex::handle_lock(const char *function_in, const char *path_in, cons
     auto thread_id = std::this_thread::get_id();
 
     {
-        std::unique_lock lock(our_mutex);
+        std::unique_lock<std::mutex> lock(our_mutex);
 
         waiters[thread_id] = pulsar::util::to_string(owner_file, ":", owner_line, " ", owner_function, "()");
         available_condition.wait(lock, [this]{ return available_flag; });
@@ -139,7 +139,7 @@ void debug_mutex::unlock(const char *function_in, const char *path_in, const int
 
 void debug_mutex::handle_unlock(const char *function_in, const char *path_in, const int& line_in)
 {
-    std::unique_lock lock(our_mutex);
+    std::unique_lock<std::mutex> lock(our_mutex);
 
     if (available_flag) {
         system_fault(path_in, ":", line_in, " ", function_in, "() thread ", std::this_thread::get_id(), " tried to unlock a mutex not owned by any thread");
@@ -165,7 +165,7 @@ void debug_mutex::handle_unlock(const char *function_in, const char *path_in, co
 
 bool debug_mutex::is_owned_by(const std::thread::id thread_id_in)
 {
-    std::unique_lock lock(our_mutex);
+    std::unique_lock<std::mutex> lock(our_mutex);
     return owner_thread == thread_id_in;
 }
 
