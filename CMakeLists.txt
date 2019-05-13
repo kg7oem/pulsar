@@ -29,14 +29,17 @@ endif (VERBOSE)
 set(CMAKE_CXX_STANDARD 17)
 
 find_package(Boost 1.66.0 COMPONENTS system)
-
-if(NOT Boost_FOUND)
+if (NOT Boost_FOUND)
     include(cmake/LocalBoost.cmake)
-endif(NOT Boost_FOUND)
+endif (NOT Boost_FOUND)
+
+find_package(yaml-cpp 0.6.2)
+if (NOT YAML_CPP_INCLUDE_DIR)
+    include(cmake/LocalYAML-cpp.cmake)
+endif (NOT YAML_CPP_INCLUDE_DIR)
 
 find_package(PkgConfig REQUIRED)
 find_package(Threads REQUIRED)
-find_package(yaml-cpp REQUIRED)
 
 # FIXME how to enable only in Debug build type?
 add_definitions(-Og)
@@ -56,8 +59,9 @@ endif (CMAKE_COMPILER_IS_GNUCXX)
 
 # . gives us pulsar/ so it is not a system directory
 include_directories(.)
-include_directories(SYSTEM ${Boost_INCLUDE_DIR})
 include_directories(SYSTEM ext/)
+include_directories(SYSTEM ${Boost_INCLUDE_DIR})
+include_directories(SYSTEM ${YAML_CPP_INCLUDE_DIR})
 
 if (BUILD_PROFILE)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pg")
@@ -71,7 +75,6 @@ add_library(
     pulsar/async.cxx
     pulsar/audio.cxx
     pulsar/audio.util.cxx
-    pulsar/config.cxx
     pulsar/daemon.cxx
     pulsar/debug.cxx
     pulsar/domain.cxx
@@ -94,6 +97,7 @@ add_executable(
     pulsar-dev
 
     pulsar-dev.cxx
+    pulsar/config.cxx
 )
 
 if (LOCAL_BOOST)
@@ -101,13 +105,16 @@ if (LOCAL_BOOST)
     add_dependencies(logjam boost)
 endif (LOCAL_BOOST)
 
+if (LOCAL_YAML_CPP)
+    add_dependencies(pulsar-dev yaml-cpp)
+endif (LOCAL_YAML_CPP)
+
 target_link_libraries(pulsar ${CMAKE_THREAD_LIBS_INIT})
 target_link_libraries(pulsar ${Boost_LIBRARIES})
 target_link_libraries(pulsar dl)
 target_link_libraries(pulsar logjam)
-target_link_libraries(pulsar yaml-cpp)
 
-target_link_libraries(pulsar-dev pulsar stdc++)
+target_link_libraries(pulsar-dev pulsar stdc++ ${YAML_CPP_LIBRARIES})
 
 if (ENABLE_DBUS)
     message("Checking for dbus-c++")
