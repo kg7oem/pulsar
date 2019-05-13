@@ -51,7 +51,7 @@ lock_type get_lock(UNUSED const char *function_in, UNUSED const char *path_in, U
 {
 
 #ifdef CONFIG_LOCK_LOGGING
-    logjam::send_vargs_logevent(PULSAR_LOG_LOCK_NAME, PULSAR_LOG_LOCK_LEVEL, function_in, path_in, line_in, "getting lock for ", name_in);
+    logjam::send_vargs_logevent(PULSAR_LOG_LOCK_NAME, PULSAR_LOG_LOCK_LEVEL, function_in, path_in, line_in, "getting lock ", name_in);
 #endif
 
     lock_type lock(mutex_in);
@@ -65,7 +65,7 @@ lock_type get_lock(UNUSED const char *function_in, UNUSED const char *path_in, U
 
 void lock_block(UNUSED const char *function_in, UNUSED const char *path_in, UNUSED const int& line_in, mutex_type& mutex_in, const std::function<void ()>& block_in)
 {
-    auto lock = pulsar_get_lock(mutex_in);
+    auto lock = get_lock(function_in, path_in, line_in, mutex_in, "(code block)");
     block_in();
 }
 
