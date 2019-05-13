@@ -13,17 +13,33 @@
 
 #pragma once
 
+#include <cassert>
 #include <condition_variable>
 #include <future>
 #include <mutex>
 #include <thread>
 
+#include <pulsar/system.h>
+#include <pulsar/thread.forward.h>
+
+#define pulsar_get_lock(mutex) pulsar::thread::get_lock_wrapper(__PRETTY_FUNCTION__, __FILE__, __LINE__, mutex, #mutex)
+
 namespace pulsar {
 
+#ifdef CONFIG_LOCK_ASSERT
+#define assert_mutex_owner(mutex) assert(mutex.is_owned_by(std::this_thread::get_id()))
+
+using mutex_type = pulsar::thread::debug_mutex;
+using condition_type = std::condition_variable_any;
+#else
+#define assert_mutex_owner(mutex)
+
 using mutex_type = std::mutex;
+using condition_type = std::condition_variable;
+#endif
+
 using lock_type = std::unique_lock<mutex_type>;
 
-using condition_type = std::condition_variable;
 template <typename T> using promise_type = std::promise<T>;
 using thread_type = std::thread;
 
@@ -35,7 +51,24 @@ enum class rt_priorty : int {
     highest = 10,
 };
 
+#ifdef CONFIG_LOCK_ASSERT
+class debug_mutex {
+    protected:
+    std::mutex our_mutex;
+    bool available_flag = true;
+    std::condition_variable available_condition;
+    std::thread::id owner;
+
+    public:
+    virtual ~debug_mutex();
+    virtual void lock();
+    virtual void unlock();
+    virtual bool is_owned_by(const std::thread::id thread_id_in);
+};
+#endif
+
 void set_realtime_priority(thread_type& thread_in, const rt_priorty& priority_in);
+lock_type get_lock_wrapper(UNUSED const char *function_in, UNUSED const char *path_in, UNUSED const int& line_in, mutex_type& mutex_in, UNUSED const string_type& name_in);
 
 } // namespace thread
 

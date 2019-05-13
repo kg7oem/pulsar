@@ -83,7 +83,6 @@ add_library(
     pulsar/audio.cxx
     pulsar/audio.util.cxx
     pulsar/daemon.cxx
-    pulsar/debug.cxx
     pulsar/domain.cxx
     pulsar/library.cxx
     pulsar/node.cxx
@@ -124,6 +123,8 @@ target_link_libraries(pulsar logjam)
 target_link_libraries(pulsar ${YAML_CPP_LIBRARIES})
 
 target_link_libraries(pulsar-dev pulsar stdc++ ${YAML_CPP_LIBRARIES})
+
+add_definitions(-DCONFIG_LOCK_ASSERT -DCONFIG_LOCK_LOGGING)
 
 if (MEMPOOL_BUFFER)
     add_definitions(-DCONFIG_MEMPOOL_BUFFER)

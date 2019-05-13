@@ -13,7 +13,6 @@
 
 #include <chrono>
 
-#include <pulsar/debug.h>
 #include <pulsar/jackaudio.h>
 #include <pulsar/logging.h>
 #include <pulsar/system.h>
@@ -317,7 +316,7 @@ void connections::start()
     log_info("starting jackaudio connection daemon");
 
     {
-        auto lock = debug_get_lock(jack_mutex);
+        auto lock = pulsar_get_lock(jack_mutex);
 
         assert(jack_client == nullptr);
 
@@ -342,7 +341,7 @@ void connections::start()
 
 void connections::stop()
 {
-    auto lock = debug_get_lock(jack_mutex);
+    auto lock = pulsar_get_lock(jack_mutex);
 
     assert(jack_client != nullptr);
 
@@ -359,7 +358,7 @@ void connections::stop()
 
 void connections::check_port_connections(const string_type&)
 {
-    auto lock = debug_get_lock(jack_mutex);
+    auto lock = pulsar_get_lock(jack_mutex);
 
     // FIXME Attempt to connect everything known about and ignore
     // any stuff like ports not existing or errors that occur.

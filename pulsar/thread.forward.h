@@ -11,15 +11,16 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
 
-#include <atomic>
-
-#include <pulsar/debug.h>
+#pragma once
 
 namespace pulsar {
 
-namespace debug {
+namespace thread {
 
-} // namespace debug
+#ifdef CONFIG_LOCK_ASSERT
+class debug_mutex;
+#endif
+
+} // namespace thread
 
 } // namespace pulsar
-

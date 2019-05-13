@@ -17,7 +17,6 @@
 #include <vector>
 
 #include <pulsar/async.h>
-#include <pulsar/debug.h>
 #include <pulsar/domain.h>
 #include <pulsar/logging.h>
 #include <pulsar/system.h>
@@ -124,7 +123,7 @@ base_timer::~base_timer()
 
 void base_timer::boost_handler(const boost::system::error_code& error_in)
 {
-    auto lock = debug_get_lock(mutex);
+    auto lock = pulsar_get_lock(mutex);
 
     if (error_in == boost::asio::error::operation_aborted) {
         assert(running_flag);
@@ -151,7 +150,7 @@ void base_timer::boost_handler(const boost::system::error_code& error_in)
 
 void base_timer::start()
 {
-    auto lock = debug_get_lock(mutex);
+    auto lock = pulsar_get_lock(mutex);
 
     boost_timer.expires_at(std::chrono::system_clock::now() + initial);
     auto bound = boost::bind(&timer::boost_handler, this, boost::asio::placeholders::error);
@@ -164,7 +163,7 @@ void base_timer::start()
 
 void base_timer::reset()
 {
-    auto lock = debug_get_lock(mutex);
+    auto lock = pulsar_get_lock(mutex);
 
     auto when = std::chrono::system_clock::now() + repeat;
     boost_timer.expires_at(when);
@@ -173,7 +172,7 @@ void base_timer::reset()
 
 void base_timer::stop()
 {
-    auto lock = debug_get_lock(mutex);
+    auto lock = pulsar_get_lock(mutex);
     boost_timer.cancel();
     running_condition.wait(lock, [this]{ return running_flag == false; });
 }
@@ -196,7 +195,7 @@ timer::timer(const duration_type& initial_in, handler_type handler_in)
 
 void timer::watch(timer::handler_type handler_in)
 {
-    auto lock = debug_get_lock(mutex);
+    auto lock = pulsar_get_lock(mutex);
     watchers.push_back(handler_in);
 }
 

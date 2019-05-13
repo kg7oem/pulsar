@@ -34,6 +34,63 @@ void set_realtime_priority(thread_type& thread_in, const rt_priorty& priority_in
     }
 }
 
+lock_type get_lock_wrapper(UNUSED const char *function_in, UNUSED const char *path_in, UNUSED const int& line_in, mutex_type& mutex_in, UNUSED const string_type& name_in)
+{
+
+#ifdef CONFIG_LOCK_LOGGING
+    logjam::send_vargs_logevent(PULSAR_LOG_LOCK_NAME, PULSAR_LOG_LOCK_LEVEL, function_in, path_in, line_in, "getting lock for ", name_in);
+#endif
+
+    lock_type lock(mutex_in);
+
+#ifdef CONFIG_LOCK_LOGGING
+    logjam::send_vargs_logevent(PULSAR_LOG_LOCK_NAME, PULSAR_LOG_LOCK_LEVEL, function_in, path_in, line_in, "got lock for ", name_in);
+#endif
+
+    return lock;
+}
+
+#ifdef CONFIG_LOCK_ASSERT
+
+debug_mutex::~debug_mutex()
+{ }
+
+void debug_mutex::lock()
+{
+    std::unique_lock lock(our_mutex);
+
+    available_condition.wait(lock, [this]{ return available_flag; });
+
+    available_flag = false;
+    owner = std::this_thread::get_id();
+
+    return;
+}
+
+void debug_mutex::unlock()
+{
+    std::unique_lock lock(our_mutex);
+
+    if (available_flag) {
+        system_fault("thread ", std::this_thread::get_id(), " tried to unlock a mutex not owned by any thread");
+    }
+
+    if (owner != std::this_thread::get_id()) {
+        system_fault("thread ",  std::this_thread::get_id(), " tried to unlock a mutex owned by thread ", owner);
+    }
+
+    available_flag = true;
+    available_condition.notify_one();
+}
+
+bool debug_mutex::is_owned_by(const std::thread::id thread_id_in)
+{
+    std::unique_lock lock(our_mutex);
+    return owner == thread_id_in;
+}
+
+#endif
+
 } // namespace thread
 
 } // namespace pulsar

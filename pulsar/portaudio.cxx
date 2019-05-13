@@ -13,7 +13,6 @@
 
 #include <pulsar/audio.util.h>
 #include <pulsar/async.h>
-#include <pulsar/debug.h>
 #include <pulsar/logging.h>
 #include <pulsar/portaudio.h>
 
@@ -29,7 +28,7 @@ void init()
 
     {
         log_trace("inside portaudio init lock block");
-        auto lock = debug_get_lock(portaudio_mutex);
+        auto lock = pulsar_get_lock(portaudio_mutex);
 
         log_trace("calling Pa_Initialize()");
         auto err = Pa_Initialize();
@@ -165,7 +164,7 @@ void node::activate()
     }
 
     {
-        auto lock = debug_get_lock(portaudio_mutex);
+        auto lock = pulsar_get_lock(portaudio_mutex);
         auto userdata = static_cast<void *>(this);
         auto err = Pa_OpenDefaultStream(&stream, num_receives, num_sends, paFloat32, domain->sample_rate, domain->buffer_size, portaudio::process_cb, userdata);
 
@@ -183,7 +182,7 @@ void node::start()
     assert(stream != nullptr);
 
     {
-        auto lock = debug_get_lock(portaudio_mutex);
+        auto lock = pulsar_get_lock(portaudio_mutex);
         auto err = Pa_StartStream(stream);
 
         if (err != paNoError) {
@@ -200,7 +199,7 @@ void node::stop()
     assert(stream != nullptr);
 
     {
-        auto lock = debug_get_lock(portaudio_mutex);
+        auto lock = pulsar_get_lock(portaudio_mutex);
         auto err = Pa_StopStream(stream);
 
         if (err != paNoError) {

@@ -18,7 +18,6 @@
 
 #include <pulsar/audio.h>
 #include <pulsar/audio.util.h>
-#include <pulsar/debug.h>
 #include <pulsar/logging.h>
 #include <pulsar/node.h>
 #include <pulsar/system.h>
@@ -150,7 +149,7 @@ void audio::input::reset_cycle()
     llog_trace({ return pulsar::util::to_string("resetting audio input ", to_string()); });
 
     {
-        auto lock = debug_get_lock(link_buffers_mutex);
+        auto lock = pulsar_get_lock(link_buffers_mutex);
         link_buffers.empty();
     }
 
@@ -220,7 +219,7 @@ void audio::input::link_ready(audio::link * link_in, std::shared_ptr<audio::buff
     size_type now_waiting;
 
     {
-        auto lock = debug_get_lock(link_buffers_mutex);
+        auto lock = pulsar_get_lock(link_buffers_mutex);
         link_buffers[link_in] = buffer_in;
     }
 
@@ -285,7 +284,7 @@ std::shared_ptr<audio::buffer> audio::input::get_buffer()
         return parent->get_domain()->get_zero_buffer();
     } else if (num_links == 1) {
         log_trace("returning pointer to link's ready buffer for ", input_name);
-        auto lock = debug_get_lock(link_buffers_mutex);
+        auto lock = pulsar_get_lock(link_buffers_mutex);
         assert(link_buffers.begin() != link_buffers.end());
         assert(link_buffers.begin()->second != nullptr);
         return link_buffers.begin()->second;
@@ -421,7 +420,7 @@ void audio::output::notify()
 
 void audio::output::add_forwarded_buffer(std::shared_ptr<audio::buffer> buffer_in)
 {
-    auto lock = debug_get_lock(forward_mutex);
+    auto lock = pulsar_get_lock(forward_mutex);
 
     forwarded_buffers.push_back(buffer_in);
     std::shared_ptr<audio::buffer> buffer = nullptr;
@@ -467,7 +466,7 @@ void audio::link::reset()
 
     // FIXME does this need a lock? The flag is atomic
     // and locks are not needed to wake up a condvar
-    auto lock = debug_get_lock(available_mutex);
+    auto lock = pulsar_get_lock(available_mutex);
     available_flag = true;
     available_condition.notify_all();
 }
@@ -476,7 +475,7 @@ void audio::link::notify(std::shared_ptr<audio::buffer> ready_buffer_in, const b
 {
     llog_trace({ return pulsar::util::to_string("got notification for ", to_string()); });
 
-    auto lock = debug_get_lock(available_mutex);
+    auto lock = pulsar_get_lock(available_mutex);
 
     if (! available_flag) {
         if (blocking_in) {

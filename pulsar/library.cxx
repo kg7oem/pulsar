@@ -13,16 +13,13 @@
 
 #include <mutex>
 
-#include <pulsar/debug.h>
 #include <pulsar/library.h>
 #include <pulsar/system.h>
+#include <pulsar/thread.h>
 
 namespace pulsar {
 
 namespace library {
-
-using mutex_type = std::mutex;
-using lock_type = std::unique_lock<mutex_type>;
 
 static mutex_type node_to_factory_mutex;
 static std::map<string_type, node_factory_type> node_to_factory;
@@ -32,7 +29,7 @@ static std::map<string_type, daemon_factory_type> daemon_to_factory;
 
 void register_node_factory(const string_type& name_in, node_factory_type factory_in)
 {
-    auto lock = debug_get_lock(node_to_factory_mutex);
+    auto lock = pulsar_get_lock(node_to_factory_mutex);
 
     auto result = node_to_factory.find(name_in);
 
@@ -45,7 +42,7 @@ void register_node_factory(const string_type& name_in, node_factory_type factory
 
 node::base * make_node(const string_type& class_name_in, const string_type& name_in, std::shared_ptr<domain> domain_in)
 {
-    auto lock = debug_get_lock(node_to_factory_mutex);
+    auto lock = pulsar_get_lock(node_to_factory_mutex);
 
     auto result = node_to_factory.find(class_name_in);
 
@@ -59,7 +56,7 @@ node::base * make_node(const string_type& class_name_in, const string_type& name
 
 void register_daemon_factory(const string_type& class_name_in, daemon_factory_type factory_in)
 {
-    auto lock = debug_get_lock(daemon_to_factory_mutex);
+    auto lock = pulsar_get_lock(daemon_to_factory_mutex);
 
     auto result = daemon_to_factory.find(class_name_in);
 
@@ -72,7 +69,7 @@ void register_daemon_factory(const string_type& class_name_in, daemon_factory_ty
 
 std::shared_ptr<daemon::base> make_daemon(const string_type& class_name_in, const string_type& name_in)
 {
-    auto lock = debug_get_lock(daemon_to_factory_mutex);
+    auto lock = pulsar_get_lock(daemon_to_factory_mutex);
 
     auto result = daemon_to_factory.find(class_name_in);
 

@@ -13,7 +13,6 @@
 
 #include <pulsar/audio.util.h>
 #include <pulsar/async.h>
-#include <pulsar/debug.h>
 #include <pulsar/logging.h>
 #include <pulsar/zeronode.h>
 
@@ -74,7 +73,7 @@ void node::handle_timer()
     log_trace("***************** zero node timer callback was invoked");
 
     {
-        auto busy_lock = debug_get_lock(busy_mutex);
+        auto busy_lock = pulsar_get_lock(busy_mutex);
         if (busy_flag) {
             system_fault("handle_timer() went reentrant for node ", name);
         }
@@ -107,7 +106,7 @@ void node::input_ready()
     log_trace("***************** zero node input ready callback was invoked");
 
     {
-        auto busy_lock = debug_get_lock(busy_mutex);
+        auto busy_lock = pulsar_get_lock(busy_mutex);
 
         if (! busy_flag) {
             system_fault("busy_flag was not true inside input_ready() for node ", name);
@@ -118,7 +117,7 @@ void node::input_ready()
     reset_cycle();
 
     {
-        auto busy_lock = debug_get_lock(busy_mutex);
+        auto busy_lock = pulsar_get_lock(busy_mutex);
         busy_flag = false;
     }
 

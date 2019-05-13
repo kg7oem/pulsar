@@ -22,6 +22,7 @@
 
 #define PULSAR_LOG_NAME "pulsar"
 #define PULSAR_LOG_LOCK_NAME "pulsar.locking"
+#define PULSAR_LOG_LOCK_LEVEL logjam::loglevel::trace
 
 #define log_error(...)    LOGJAM_LOG_VARGS(PULSAR_LOG_NAME, logjam::loglevel::error, __VA_ARGS__)
 #define log_info(...)     LOGJAM_LOG_VARGS(PULSAR_LOG_NAME, logjam::loglevel::info, __VA_ARGS__)

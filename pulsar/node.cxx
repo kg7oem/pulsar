@@ -18,7 +18,6 @@
 
 #include <pulsar/async.h>
 #include <pulsar/audio.util.h>
-#include <pulsar/debug.h>
 #include <pulsar/library.h>
 #include <pulsar/logging.h>
 #include <pulsar/node.h>
@@ -151,14 +150,14 @@ string_type fully_qualify_property_name(const string_type& name_in)
 
 string_type base::peek(const string_type& name_in)
 {
-    auto lock = debug_get_lock(node_mutex);
+    auto lock = pulsar_get_lock(node_mutex);
     auto name = fully_qualify_property_name(name_in);
     return get_property(name).value->get();
 }
 
 void base::poke(const string_type& name_in, const string_type& value_in)
 {
-    auto lock = debug_get_lock(node_mutex);
+    auto lock = pulsar_get_lock(node_mutex);
     auto name = fully_qualify_property_name(name_in);
     get_property(name).value->set(value_in);
 }
@@ -258,7 +257,7 @@ void filter::input_ready()
 void filter::execute()
 {
     log_debug("--------> node ", name, " started executing");
-    auto lock = debug_get_lock(node_mutex);
+    auto lock = pulsar_get_lock(node_mutex);
 
     run();
     notify();
@@ -279,7 +278,7 @@ void io::process(const std::map<string_type, sample_type *>& receives, const std
     log_trace("IO node process() was just invoked");
 
     {
-        auto done_lock = debug_get_lock(done_mutex);
+        auto done_lock = pulsar_get_lock(done_mutex);
 
         if (done_flag) {
             system_fault("IO node process() went reentrant");
@@ -287,7 +286,7 @@ void io::process(const std::map<string_type, sample_type *>& receives, const std
     }
 
     async::wait_job([&] {
-        auto node_lock = debug_get_lock(node_mutex);
+        auto node_lock = pulsar_get_lock(node_mutex);
 
         init_cycle();
 
@@ -308,14 +307,14 @@ void io::process(const std::map<string_type, sample_type *>& receives, const std
 
     {
         log_trace("waiting for IO node to become done");
-        auto done_lock = debug_get_lock(done_mutex);
+        auto done_lock = pulsar_get_lock(done_mutex);
         done_cond.wait(done_lock, [this]{ return done_flag; });
         done_flag = false;
         log_trace("IO node is now done");
     }
 
     async::wait_job([&] {
-        auto node_lock = debug_get_lock(node_mutex);
+        auto node_lock = pulsar_get_lock(node_mutex);
 
         for(auto&& name : audio.get_input_names()) {
             auto buffer_size = domain->buffer_size;
@@ -343,7 +342,7 @@ void io::input_ready()
 void io::unblock_caller()
 {
     log_trace("waking up blocked IO node thread");
-    auto done_lock = debug_get_lock(done_mutex);
+    auto done_lock = pulsar_get_lock(done_mutex);
     done_flag = true;
     done_cond.notify_all();
 }
@@ -356,7 +355,7 @@ void forwarder::input_ready()
 {
     log_trace("forwarder node is short-circuting execute(): ", name);
 
-    auto lock = debug_get_lock(node_mutex);
+    auto lock = pulsar_get_lock(node_mutex);
 
     // a forwarder node does not use any CPU since all inputs and outputs
     // are forwarded but a full cycle still needs to happen so the

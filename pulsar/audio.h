@@ -126,7 +126,7 @@ class output : public channel {
 struct link {
     private:
     mutex_type available_mutex;
-    std::condition_variable available_condition;
+    condition_type available_condition;
     std::atomic<bool> available_flag = ATOMIC_VAR_INIT(true);
 
     public:

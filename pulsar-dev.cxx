@@ -17,7 +17,6 @@
 #include <pulsar/async.h>
 #include <pulsar/daemon.h>
 #include <pulsar/config.h>
-#include <pulsar/debug.h>
 #include <pulsar/library.h>
 #include <pulsar/logging.h>
 #include <pulsar/node.h>

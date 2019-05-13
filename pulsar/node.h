@@ -164,7 +164,7 @@ class filter : public base {
 
 class io : public base {
     protected:
-    std::condition_variable done_cond;
+    condition_type done_cond;
     mutex_type done_mutex;
     bool done_flag = false;
 
