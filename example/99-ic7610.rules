@@ -1,0 +1,9 @@
+SUBSYSTEM=="tty", ATTRS{serial}=="IC-7610 12001834 A", SYMLINK+="tty.IC7610a"
+SUBSYSTEM=="tty", ATTRS{serial}=="IC-7610 12001834 B", SYMLINK+="tty.IC7610b"
+
+SUBSYSTEM!="sound", GOTO="ic7610_audio_end"
+ACTION!="add", GOTO="ic7610_audio_end"
+
+DEVPATH=="/devices/pci0000:00/0000:00:14.0/usb1/1-2/1-2.3/1-2.3.4/1-2.3.4:1.0/sound/card?", ATTR{id}="IC-7610"
+
+LABEL="ic7610_audio_end"

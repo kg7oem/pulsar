@@ -1,0 +1,9 @@
+SUBSYSTEM=="tty", ATTRS{serial}=="IC-7100 02003522 A", SYMLINK+="tty.IC7100a"
+SUBSYSTEM=="tty", ATTRS{serial}=="IC-7100 02003522 B", SYMLINK+="tty.IC7100b"
+
+SUBSYSTEM!="sound", GOTO="ic7100_audio_end"
+ACTION!="add", GOTO="ic7100_audio_end"
+
+DEVPATH=="/devices/pci0000:00/0000:00:14.0/usb1/1-2/1-2.4/1-2.4.2/1-2.4.2:1.0/sound/card?", ATTR{id}="IC-7100"
+
+LABEL="ic7100_audio_end"
