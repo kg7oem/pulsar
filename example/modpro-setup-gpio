@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+
+set -e
+set -x
+
+GREEN_LED=332
+YELLOW_LED=338
+PTT_PIN=329
+
+if ! [ -d /sys/class/gpio/gpio"$PTT_PIN"/ ]; then
+    echo $PTT_PIN > /sys/class/gpio/export
+fi
+
+echo in > /sys/class/gpio/gpio"$PTT_PIN"/direction
+
+for i in $GREEN_LED $YELLOW_LED; do
+    base=/sys/class/gpio/gpio$i
+
+    if ! [ -d "$base" ]; then
+        echo $i > /sys/class/gpio/export
+    fi
+
+    echo out > "$base"/direction
+    # 1 is off, 0 is on
+    echo 1 > "$base"/value
+
+    chgrp audio "$base"/value
+    chmod 664 "$base"/value
+done
