@@ -37,7 +37,7 @@ endif (NOT Boost_FOUND)
 
 find_package(yaml-cpp 0.6.2)
 if (NOT YAML_CPP_INCLUDE_DIR)
-    include(cmake/LocalYAML-cpp.cmake)
+    include(cmake/Localyaml-cpp.cmake)
 endif (NOT YAML_CPP_INCLUDE_DIR)
 
 find_package(PkgConfig REQUIRED)
@@ -108,6 +108,7 @@ if (LOCAL_BOOST)
 endif (LOCAL_BOOST)
 
 if (LOCAL_YAML_CPP)
+    add_dependencies(pulsar yaml-cpp)
     add_dependencies(pulsar-dev yaml-cpp)
 endif (LOCAL_YAML_CPP)
 
