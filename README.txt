@@ -92,7 +92,7 @@ You'll need at least these packages to compile on Debian or Ubuntu
   cmake pkg-config
 
 The following packages can come from the system or can be downloaded
-and built automatically by setting DOWNLOAD_DEPS to true; see the
+and built automatically by setting DOWNLOAD_MISSING to true; see the
 build example for how to do this.
 
   Boost: 1.66.0 or newer
@@ -127,7 +127,7 @@ something like this:
 
   mkdir build
   cd build
-  cmake .. -DDOWNLOAD_DEPS=ON
+  cmake .. -DDOWNLOAD_MISSING=ON
   make
 
 The following compilers and OS configurations have been tested

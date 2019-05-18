@@ -1,7 +1,3 @@
-if (NOT DOWNLOAD_DEPS)
-    message(SEND_ERROR "Could not find a system boost and DOWNLOAD_DEPS is OFF")
-endif (NOT DOWNLOAD_DEPS)
-
 message("  Will download and compile Boost")
 
 ExternalProject_Add(

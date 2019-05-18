@@ -13,9 +13,9 @@ set(CMAKE_BUILD_TYPE Debug)
 
 option(BUILD_DOC "Build documentation" OFF)
 option(BUILD_PROFILE "Perform a profile build" OFF)
-option(DOWNLOAD_DEPS "Download and build missing dependencies" OFF)
-CMAKE_DEPENDENT_OPTION(DOWNLOAD_BOOST "Download and compile Boost" ON "DOWNLOAD_DEPS" OFF)
-CMAKE_DEPENDENT_OPTION(DOWNLOAD_YAML_CPP "Download and compile yaml-cpp" ON "DOWNLOAD_DEPS" OFF)
+option(DOWNLOAD_MISSING "Download and build missing dependencies" OFF)
+option(DOWNLOAD_BOOST "Download and compile Boost" OFF)
+option(DOWNLOAD_YAML_CPP "Download and compile yaml-cpp" OFF)
 option(VERBOSE "Verbose builds" OFF)
 
 option(ENABLE_DBUS "Enable DBUS support" ON)
@@ -36,13 +36,26 @@ set(CMAKE_CXX_STANDARD 17)
 if (DOWNLOAD_BOOST)
     include(cmake/LocalBoost.cmake)
 else (DOWNLOAD_BOOST)
-    find_package(Boost 1.66.0 REQUIRED COMPONENTS system)
+    find_package(Boost 1.66.0 COMPONENTS system)
+
+    if (NOT Boost_FOUND AND NOT DOWNLOAD_MISSING)
+        message(SEND_ERROR "Boost was not found and DOWNLOAD_MISSING is not ON")
+    endif (NOT Boost_FOUND AND NOT DOWNLOAD_MISSING)
+
+    include(cmake/LocalBoost.cmake)
+
 endif (DOWNLOAD_BOOST)
 
 if (DOWNLOAD_YAML_CPP)
     include(cmake/Localyaml-cpp.cmake)
 else (DOWNLOAD_YAML_CPP)
-    find_package(yaml-cpp 0.6.2 REQUIRED)
+    find_package(yaml-cpp 0.6.2)
+
+    if (NOT YAML_CPP_FOUND AND NOT DOWNLOAD_MISSING)
+        message(SEND_ERROR "yaml-cpp was not found and DOWNLOAD_MISSING is not ON")
+    endif (NOT YAML_CPP_FOUND AND NOT DOWNLOAD_MISSING)
+
+    include(cmake/Localyaml-cpp.cmake)
 endif (DOWNLOAD_YAML_CPP)
 
 find_package(PkgConfig REQUIRED)
