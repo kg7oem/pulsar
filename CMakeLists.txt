@@ -116,6 +116,7 @@ target_link_libraries(pulsar ${CMAKE_THREAD_LIBS_INIT})
 target_link_libraries(pulsar ${Boost_LIBRARIES})
 target_link_libraries(pulsar dl)
 target_link_libraries(pulsar logjam)
+target_link_libraries(pulsar ${YAML_CPP_LIBRARIES})
 
 target_link_libraries(pulsar-dev pulsar stdc++ ${YAML_CPP_LIBRARIES})
 
