@@ -41,9 +41,9 @@ else (DOWNLOAD_BOOST)
     if (NOT Boost_FOUND)
         if (NOT DOWNLOAD_MISSING)
             message(SEND_ERROR "Boost was not found and DOWNLOAD_MISSING is not ON")
+        else (NOT DOWNLOAD_MISSING)
+            include(cmake/LocalBoost.cmake)
         endif (NOT DOWNLOAD_MISSING)
-
-        include(cmake/LocalBoost.cmake)
     endif (NOT Boost_FOUND)
 endif (DOWNLOAD_BOOST)
 
@@ -55,9 +55,9 @@ else (DOWNLOAD_YAML_CPP)
     if (NOT YAML_CPP_FOUND)
         if (NOT DOWNLOAD_MISSING)
             message(SEND_ERROR "yaml-cpp was not found and DOWNLOAD_MISSING is not ON")
+        else (NOT DOWNLOAD_MISSING)
+            include(cmake/Localyaml-cpp.cmake)
         endif (NOT DOWNLOAD_MISSING)
-
-        include(cmake/Localyaml-cpp.cmake)
     endif (NOT YAML_CPP_FOUND)
 endif (DOWNLOAD_YAML_CPP)
 
