@@ -19,5 +19,7 @@ ExternalProject_Add(
 )
 
 set(LOCAL_BOOST ON)
-set(Boost_INCLUDE_DIR "${CMAKE_BINARY_DIR}/boost-prefix/src/boost")
-set(Boost_LIBRARIES "${CMAKE_BINARY_DIR}/boost-prefix/src/boost/stage/lib/libboost_system.a")
+
+ExternalProject_Get_Property(boost SOURCE_DIR)
+set(Boost_INCLUDE_DIR "${SOURCE_DIR}")
+set(Boost_LIBRARIES "${SOURCE_DIR}/stage/lib/libboost_system.a")

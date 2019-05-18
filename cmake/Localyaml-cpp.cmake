@@ -17,5 +17,9 @@ ExternalProject_Add(
 )
 
 set(LOCAL_YAML_CPP ON)
-set(YAML_CPP_INCLUDE_DIR "${CMAKE_BINARY_DIR}/yaml-cpp-prefix/src/yaml-cpp/include")
-set(YAML_CPP_LIBRARIES "${CMAKE_BINARY_DIR}/yaml-cpp-prefix/src/yaml-cpp-build/libyaml-cpp.a")
+
+ExternalProject_Get_Property(yaml-cpp SOURCE_DIR)
+set(YAML_CPP_INCLUDE_DIR "${SOURCE_DIR}/include")
+
+ExternalProject_Get_Property(yaml-cpp BINARY_DIR)
+set(YAML_CPP_LIBRARIES "${BINARY_DIR}/libyaml-cpp.a")
