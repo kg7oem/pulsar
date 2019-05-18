@@ -38,12 +38,13 @@ if (DOWNLOAD_BOOST)
 else (DOWNLOAD_BOOST)
     find_package(Boost 1.66.0 COMPONENTS system)
 
-    if (NOT Boost_FOUND AND NOT DOWNLOAD_MISSING)
-        message(SEND_ERROR "Boost was not found and DOWNLOAD_MISSING is not ON")
-    endif (NOT Boost_FOUND AND NOT DOWNLOAD_MISSING)
+    if (NOT Boost_FOUND)
+        if (NOT DOWNLOAD_MISSING)
+            message(SEND_ERROR "Boost was not found and DOWNLOAD_MISSING is not ON")
+        endif (NOT DOWNLOAD_MISSING)
 
-    include(cmake/LocalBoost.cmake)
-
+        include(cmake/LocalBoost.cmake)
+    endif (NOT Boost_FOUND)
 endif (DOWNLOAD_BOOST)
 
 if (DOWNLOAD_YAML_CPP)
@@ -51,11 +52,13 @@ if (DOWNLOAD_YAML_CPP)
 else (DOWNLOAD_YAML_CPP)
     find_package(yaml-cpp 0.6.2)
 
-    if (NOT YAML_CPP_FOUND AND NOT DOWNLOAD_MISSING)
-        message(SEND_ERROR "yaml-cpp was not found and DOWNLOAD_MISSING is not ON")
-    endif (NOT YAML_CPP_FOUND AND NOT DOWNLOAD_MISSING)
+    if (NOT YAML_CPP_FOUND)
+        if (NOT DOWNLOAD_MISSING)
+            message(SEND_ERROR "yaml-cpp was not found and DOWNLOAD_MISSING is not ON")
+        endif (NOT DOWNLOAD_MISSING)
 
-    include(cmake/Localyaml-cpp.cmake)
+        include(cmake/Localyaml-cpp.cmake)
+    endif (NOT YAML_CPP_FOUND)
 endif (DOWNLOAD_YAML_CPP)
 
 find_package(PkgConfig REQUIRED)
