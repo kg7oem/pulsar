@@ -1,7 +1,7 @@
 message("  Will download and compile yaml-cpp")
 
 ExternalProject_Add(
-    local-yaml-cpp
+    pulsar-yaml-cpp
 
     EXCLUDE_FROM_ALL ON
 
@@ -15,8 +15,8 @@ ExternalProject_Add(
 
 set(LOCAL_YAML_CPP ON)
 
-ExternalProject_Get_Property(local-yaml-cpp SOURCE_DIR)
+ExternalProject_Get_Property(pulsar-yaml-cpp SOURCE_DIR)
 set(YAML_CPP_INCLUDE_DIR "${SOURCE_DIR}/include")
 
-ExternalProject_Get_Property(local-yaml-cpp BINARY_DIR)
+ExternalProject_Get_Property(pulsar-yaml-cpp BINARY_DIR)
 set(YAML_CPP_LIBRARIES "${BINARY_DIR}/libyaml-cpp.a")

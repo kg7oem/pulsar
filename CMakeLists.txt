@@ -52,13 +52,13 @@ if (DOWNLOAD_YAML_CPP)
 else (DOWNLOAD_YAML_CPP)
     find_package(yaml-cpp 0.6.2)
 
-    if (NOT YAML_CPP_FOUND)
+    if (NOT YAML_CPP_INCLUDE_DIR)
         if (NOT DOWNLOAD_MISSING)
             message(SEND_ERROR "yaml-cpp was not found and DOWNLOAD_MISSING is not ON")
         else (NOT DOWNLOAD_MISSING)
             include(cmake/Localyaml-cpp.cmake)
         endif (NOT DOWNLOAD_MISSING)
-    endif (NOT YAML_CPP_FOUND)
+    endif (NOT YAML_CPP_INCLUDE_DIR)
 endif (DOWNLOAD_YAML_CPP)
 
 find_package(PkgConfig REQUIRED)
@@ -124,13 +124,13 @@ add_executable(
 )
 
 if (LOCAL_BOOST)
-    add_dependencies(pulsar local-boost)
-    add_dependencies(logjam local-boost)
+    add_dependencies(pulsar pulsar-boost)
+    add_dependencies(logjam pulsar-boost)
 endif (LOCAL_BOOST)
 
 if (LOCAL_YAML_CPP)
-    add_dependencies(pulsar local-yaml-cpp)
-    add_dependencies(pulsar-dev local-yaml-cpp)
+    add_dependencies(pulsar pulsar-yaml-cpp)
+    add_dependencies(pulsar-dev pulsar-yaml-cpp)
 endif (LOCAL_YAML_CPP)
 
 target_link_libraries(pulsar ${CMAKE_THREAD_LIBS_INIT})
