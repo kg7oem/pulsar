@@ -6,7 +6,6 @@
 cmake_minimum_required(VERSION 3.8.2)
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/modules/" ${CMAKE_MODULE_PATH})
 include(ExternalProject)
-include(CMakeDependentOption)
 
 project(pulsar)
 set(CMAKE_BUILD_TYPE Debug)
