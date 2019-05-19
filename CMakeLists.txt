@@ -129,8 +129,8 @@ if (LOCAL_BOOST)
 endif (LOCAL_BOOST)
 
 if (LOCAL_YAML_CPP)
-    add_dependencies(pulsar yaml-cpp)
-    add_dependencies(pulsar-dev yaml-cpp)
+    add_dependencies(pulsar local-yaml-cpp)
+    add_dependencies(pulsar-dev local-yaml-cpp)
 endif (LOCAL_YAML_CPP)
 
 target_link_libraries(pulsar ${CMAKE_THREAD_LIBS_INIT})
