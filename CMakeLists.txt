@@ -124,8 +124,8 @@ add_executable(
 )
 
 if (LOCAL_BOOST)
-    add_dependencies(pulsar boost)
-    add_dependencies(logjam boost)
+    add_dependencies(pulsar local-boost)
+    add_dependencies(logjam local-boost)
 endif (LOCAL_BOOST)
 
 if (LOCAL_YAML_CPP)

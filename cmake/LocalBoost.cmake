@@ -1,7 +1,7 @@
 message("  Will download and compile Boost")
 
 ExternalProject_Add(
-    boost
+    local-boost
 
     EXCLUDE_FROM_ALL ON
     BUILD_IN_SOURCE TRUE
@@ -17,6 +17,6 @@ ExternalProject_Add(
 
 set(LOCAL_BOOST ON)
 
-ExternalProject_Get_Property(boost SOURCE_DIR)
+ExternalProject_Get_Property(local-boost SOURCE_DIR)
 set(Boost_INCLUDE_DIR "${SOURCE_DIR}")
 set(Boost_LIBRARIES "${SOURCE_DIR}/stage/lib/libboost_system.a")
