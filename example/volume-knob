@@ -1,0 +1,116 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+use v5.10;
+
+use Device::SerialPort qw( :PARAM :STAT 0.07 );
+use FileHandle;
+use Net::DBus;
+
+use constant VOL_KNOB_MAX => 1023;
+use constant VOL_DB_MAX => 10;
+use constant VOL_DB_MIN => -90;
+use constant DBUS_PULSAR_NAME => "audio.pulsar";
+use constant DBUS_NODE_API => "audio.pulsar.node";
+use constant DBUS_SPEAKER_NODE => "/Domain/main/Node/speaker";
+use constant SERIAL_READ_TIMEOUT => 2000;
+use constant SERIAL_DATABITS => 8;
+use constant SERIAL_PARITY => "none";
+use constant SERIAL_STOPBITS => 1;
+use constant SERIAL_HANDSHAKE => "none";
+
+END {
+    cleanup();
+}
+
+main();
+
+sub make_serial {
+    my ($device, $speed) = @_;
+    my $serial = Device::SerialPort->new($device);
+
+    $serial->read_const_time(SERIAL_READ_TIMEOUT);
+
+    $serial->baudrate($speed);
+    $serial->databits(SERIAL_DATABITS);
+    $serial->stopbits(SERIAL_STOPBITS);
+    $serial->parity(SERIAL_PARITY);
+    $serial->handshake(SERIAL_HANDSHAKE);
+
+    return $serial;
+}
+
+sub make_speaker {
+    my $dbus = Net::DBus->session;
+    my $modpro = $dbus->get_service(DBUS_PULSAR_NAME);
+    my $speaker = $modpro->get_object(DBUS_SPEAKER_NODE, DBUS_NODE_API);
+
+    return $speaker;
+}
+
+sub get_line {
+    my ($serial) = @_;
+    my $buf;
+
+    while(1) {
+        my ($bytes, $char) = $serial->read(1);
+
+	die "could not read" unless $bytes == 1;
+
+	if ($char eq "\n") {
+            return $buf;
+	}
+
+	$buf .= $char;
+    }
+}
+
+sub cleanup {
+    update_volume(0);
+}
+
+sub exit_signal {
+    exit(0);
+}
+
+sub main {
+    local $SIG{INT} = \&exit_signal;
+    local $SIG{TERM} = \&exit_signal;
+
+    my $device = shift(@ARGV) or die "must specify a serial device";
+    my $speed = shift(@ARGV) or die "must specify a serial speed";
+    my $serial = make_serial($device, $speed);
+
+    print STDERR "Initializing volume knob... ";
+    get_line($serial);
+    say STDERR "done";
+
+    while(1) {
+        my $line = get_line($serial);
+
+	if ($line =~ /^vol (\d+)/) {
+            update_volume($1);
+	} else {
+            die "unknown input: '$line'";
+	}
+    }
+}
+
+sub safe_log {
+    my ($value) = @_;
+
+    return 0 if $value == 0;
+    return log($value);
+}
+
+sub update_volume {
+    my ($knob) = @_;
+    my $db_range = VOL_DB_MAX - VOL_DB_MIN;
+    my $knob_float = safe_log($knob) / log(VOL_KNOB_MAX);
+    my $speaker_db = VOL_DB_MIN + $db_range * $knob_float;
+    state $speaker = make_speaker();
+
+    $speaker->poke("config:Amps gain (dB)", $speaker_db);
+}
+

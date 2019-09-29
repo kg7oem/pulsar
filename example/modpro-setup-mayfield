@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+# https://www.reddit.com/r/Atomic_Pi/comments/bssotr/mayfield_audio_drivers/eotzqgt/
+
+set -e
+set -x
+
+if ! [ -e /sys/class/gpio/gpio349/direction ]; then
+    echo 349 >/sys/class/gpio/export
+fi
+
+echo low >/sys/class/gpio/gpio349/direction
+sleep 5
+echo high >/sys/class/gpio/gpio349/direction
