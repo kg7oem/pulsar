@@ -23,8 +23,13 @@ use Time::HiRes qw(gettimeofday sleep);
 # also check the alsa mixer levels for the
 # audio devices - gain should be 100%
 use constant TRANSMIT_MODE_GAIN => {
-    _default => -10,
+    _default => -20,
     FM => -30,
+};
+
+use constant RECEIVE_MODE_GAIN => {
+    _default => 0,
+    WFM => 10,
 };
 
 Hamlib::rig_set_debug($Hamlib::RIG_DEBUG_NONE);
@@ -54,6 +59,7 @@ my $modpro = $bus->get_service("audio.pulsar");
 my $voice_gate = $modpro->get_object("/Domain/main/Node/voice", "audio.pulsar.node");
 my $receive_gate = $modpro->get_object("/Domain/main/Node/receive_$radio_name", "audio.pulsar.node");
 my $transmit_gain = $modpro->get_object("/Domain/main/Node/transmit_$radio_name", "audio.pulsar.node");
+my $receive_gain = $modpro->get_object("/Domain/main/Node/receive_$radio_name", "audio.pulsar.node");
 
 #my $serial = IO::Termios->open("/dev/tty.PTT") or die "could not open serial port: $!";
 #$serial->set_modem({ rts => 1 }) or die "could not set RTS";
@@ -78,15 +84,11 @@ while(1) {
 
     my $started_at = gettimeofday();
     my $mode = get_mode($rig);
-
-    if ($mode =~ m/FM$/) {
-        set_gain($transmit_gain, TRANSMIT_MODE_GAIN->{FM});
-    } else {
-        set_gain($transmit_gain, TRANSMIT_MODE_GAIN->{_default});
-    }
-
-    #my $global_ptt = get_serial_ptt($serial);
+    my ($receive_level, $transmit_level) = get_gains($mode);
     my $global_ptt = get_gpio_ptt($ptt_gpio);
+
+    set_gain($transmit_gain, $transmit_level);
+    set_gain($receive_gain, $receive_level);
 
     if ($global_ptt) {
         open_gate($voice_gate);
@@ -106,6 +108,17 @@ while(1) {
 
 clean_exit();
 die "should not get here";
+
+sub get_gains {
+    my ($mode) = @_;
+    my $transmit = TRANSMIT_MODE_GAIN->{$mode};
+    my $receive = RECEIVE_MODE_GAIN->{$mode};
+
+    $transmit = TRANSMIT_MODE_GAIN->{_default} unless defined $transmit;
+    $receive = RECEIVE_MODE_GAIN->{_default} unless defined $receive;
+
+    return ($receive, $transmit);
+}
 
 sub set_gpio_led {
     my ($path, $enabled) = @_;
