@@ -9,7 +9,7 @@ use FileHandle;
 use Net::DBus;
 
 use constant VOL_KNOB_MAX => 1023;
-use constant VOL_DB_MAX => 10;
+use constant VOL_DB_MAX => 11;
 use constant VOL_DB_MIN => -90;
 use constant DBUS_PULSAR_NAME => "audio.pulsar";
 use constant DBUS_NODE_API => "audio.pulsar.node";
