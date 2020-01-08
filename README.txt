@@ -1,3 +1,7 @@
+This project is now dead and has been replaced with the Jackalope
+engine at https://github.com/kg7oem/jackalope/
+
+
 Pulsar Audio Engine
 
 This is a proof of concept signal processing system suitable for live
