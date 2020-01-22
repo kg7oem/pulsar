@@ -285,7 +285,7 @@ std::shared_ptr<audio::buffer> audio::input::get_buffer()
         return parent->get_domain()->get_zero_buffer();
     } else if (num_links == 1) {
         log_trace("returning pointer to link's ready buffer for ", input_name);
-        auto lock = pulsar_get_lock(link_buffers_mutex);
+        auto lock = debug_get_lock(link_buffers_mutex);
         assert(link_buffers.size() == 1);
         assert(link_buffers.begin()->second != nullptr);
         return link_buffers.begin()->second;
